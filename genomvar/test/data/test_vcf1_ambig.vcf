@@ -1,0 +1,17 @@
+##fileformat=VCFv4.1
+##FILTER=<ID=PASS,Description="All filters passed">
+##contig=<ID=chr15rgn,length=6926085>
+##FILTER=<ID=haplotype,Description="Variant near filtered variant on same haplotype.">
+##FILTER=<ID=n_ratio,Description="Ratio of N to alt exceeds specified ratio">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Phased Genotype">
+##INFO=<ID=NSV,Number=1,Type=Integer,Description="Number of Simple Variants">
+##INFO=<ID=AF,Number=A,Type=Float,Description="Allele Frequency">
+##INFO=<ID=DP4,Number=4,Type=Integer,Description="Test for multinumber field">
+##INFO=<ID=ECNT,Number=1,Type=Integer,Description="Number of events in haplotype">
+##INFO=<ID=pl,Number=1,Type=Integer,Description="Dummy description">
+##INFO=<ID=mt,Number=1,Type=String,Description="Variant Type: SUBSTITUTE/INSERT/DELETE">
+##INFO=<ID=RECN,Number=1,Type=Integer,Description="Variant ID: Integer numbering the variants">
+##INFO=<ID=STR,Number=0,Type=Flag,Description="Flag; indicates if a short tandem repeat">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	SAMP1
+chr15rgn	23	1	AG	A,AGG	100	PASS	NSV=2;AF=0.5,0.5;ECNT=1;DP4=11,22,33,44;pl=3;RECN=18	GT	0/1/2
+chr15rgn	152	2	G	GT	100	haplotype	NSV=1;AF=1;ECNT=1;DP4=11,22,33,44;pl=3;mt=INSERT;RECN=15	GT	1|1

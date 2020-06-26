@@ -1,0 +1,176 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Variant sets &#8212; genomvar  documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Comparing two VCF files from command line" href="Command_line_utility.html" />
+    <link rel="prev" title="Variants" href="Variants.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Command_line_utility.html" title="Comparing two VCF files from command line"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="Variants.html" title="Variants"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">genomvar  documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-genomvar.varset">
+<span id="variant-sets"></span><h1>Variant sets<a class="headerlink" href="#module-genomvar.varset" title="Permalink to this headline">¶</a></h1>
+<p>Module <code class="docutils literal notranslate"><span class="pre">varset</span></code> defines variant set classes which are containers of variants
+supporting set-like operations, searching variants, export to NumPy and some
+other goodies.</p>
+<p>There are several classes depending on whether all the variants should be loaded
+into memory or not and whether the object should be mutable:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="Package_contents.html#genomvar.varset.VariantSet" title="genomvar.varset.VariantSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">VariantSet</span></code></a> is immutable, in-memory, random
+access supporting class</p></li>
+<li><p><a class="reference internal" href="Package_contents.html#genomvar.varset.MutableVariantSet" title="genomvar.varset.MutableVariantSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">MutableVariantSet</span></code></a> mutable, in-memory, random
+access</p></li>
+<li><p><a class="reference internal" href="Package_contents.html#genomvar.varset.VariantFileSet" title="genomvar.varset.VariantFileSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">VariantFileSet</span></code></a> immutable, VCF file storage, no
+random access</p></li>
+<li><p><a class="reference internal" href="Package_contents.html#genomvar.varset.IndexedVariantFileSet" title="genomvar.varset.IndexedVariantFileSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">IndexedVariantFileSet</span></code></a> immutable, VCF file
+storage, random access Module</p></li>
+</ul>
+</div></blockquote>
+<p>Important operation on variant sets is their comparison, answering a
+common question of finding variants present in one set and absent in
+the other. In-memory variant sets support
+<a class="reference internal" href="Package_contents.html#genomvar.varset.VariantSet.diff" title="genomvar.varset.VariantSet.diff"><code class="xref py py-meth docutils literal notranslate"><span class="pre">diff()</span></code></a> and
+<a class="reference internal" href="Package_contents.html#genomvar.varset.VariantSet.comm" title="genomvar.varset.VariantSet.comm"><code class="xref py py-meth docutils literal notranslate"><span class="pre">comm()</span></code></a> methods returning in-memory
+variant sets of corrresponding type:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fac</span> <span class="o">=</span> <span class="n">VariantFactory</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mnp</span> <span class="o">=</span> <span class="n">fac</span><span class="o">.</span><span class="n">from_edit</span><span class="p">(</span><span class="s1">&#39;1&#39;</span><span class="p">,</span><span class="mi">100000</span><span class="p">,</span><span class="s1">&#39;AG&#39;</span><span class="p">,</span><span class="s1">&#39;TT&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">vs1</span> <span class="o">=</span> <span class="n">varset</span><span class="o">.</span><span class="n">VariantSet</span><span class="o">.</span><span class="n">from_variants</span><span class="p">([</span><span class="n">mnp</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Now the same two variants but split:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">snp1</span> <span class="o">=</span> <span class="n">fac</span><span class="o">.</span><span class="n">from_edit</span><span class="p">(</span><span class="s1">&#39;1&#39;</span><span class="p">,</span><span class="mi">100000</span><span class="p">,</span><span class="s1">&#39;A&#39;</span><span class="p">,</span><span class="s1">&#39;T&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">snp2</span> <span class="o">=</span> <span class="n">fac</span><span class="o">.</span><span class="n">from_edit</span><span class="p">(</span><span class="s1">&#39;1&#39;</span><span class="p">,</span><span class="mi">100001</span><span class="p">,</span><span class="s1">&#39;G&#39;</span><span class="p">,</span><span class="s1">&#39;T&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">vs2</span> <span class="o">=</span> <span class="n">varset</span><span class="o">.</span><span class="n">VariantSet</span><span class="o">.</span><span class="n">from_variants</span><span class="p">([</span><span class="n">snp1</span><span class="p">,</span><span class="n">snp2</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Evaluate the difference using <code class="docutils literal notranslate"><span class="pre">comm</span></code> method:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">vs1</span><span class="o">.</span><span class="n">comm</span><span class="p">(</span><span class="n">vs2</span><span class="p">,</span><span class="n">match_partial</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">iter_vrt</span><span class="p">())</span>
+<span class="go">[GenomVariant(MNP(&quot;1&quot;,100000,&quot;TT&quot;), GT=None)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">vs1</span><span class="o">.</span><span class="n">comm</span><span class="p">(</span><span class="n">vs2</span><span class="p">,</span><span class="n">match_partial</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">iter_vrt</span><span class="p">())</span>
+<span class="go">[]</span>
+</pre></div>
+</div>
+<p>Note that when <code class="docutils literal notranslate"><span class="pre">match_partial</span></code> is <code class="docutils literal notranslate"><span class="pre">False</span></code> there are no common
+variants.</p>
+<p>Alternatively methods <code class="docutils literal notranslate"><span class="pre">diff_vrt</span></code> and <code class="docutils literal notranslate"><span class="pre">comm_vrt</span></code> avaible for all
+variant set classes and yield variants. These methods return
+intermediate comparison object of class
+<a class="reference internal" href="Package_contents.html#genomvar.varset.CmpSet" title="genomvar.varset.CmpSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmpSet</span></code></a>, which can be further inspected. Lets assume
+some file <code class="docutils literal notranslate"><span class="pre">test.vcf</span></code> contains only the two lines corresponding to
+variants in <code class="docutils literal notranslate"><span class="pre">vs2</span></code> above:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#CHROM        POS     ID      REF     ALT     QUAL    FILTER  INFO</span>
+<span class="mi">1</span>     <span class="mi">100001</span>  <span class="o">.</span>       <span class="n">A</span>       <span class="n">T</span>       <span class="mi">100</span>     <span class="n">PASS</span>    <span class="n">DP</span><span class="o">=</span><span class="mi">10</span>
+<span class="mi">1</span>     <span class="mi">100002</span>  <span class="o">.</span>       <span class="n">G</span>       <span class="n">T</span>       <span class="mi">100</span>     <span class="n">PASS</span>    <span class="n">DP</span><span class="o">=</span><span class="mi">10</span>
+</pre></div>
+</div>
+<p>Lets create a toy variant set wrapper for this file and compare it
+to <code class="docutils literal notranslate"><span class="pre">vs1</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">vs3</span> <span class="o">=</span> <span class="n">varset</span><span class="o">.</span><span class="n">VariantFileSet</span><span class="p">(</span><span class="s1">&#39;test.vcf&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">vrt</span> <span class="ow">in</span> <span class="n">vs3</span><span class="o">.</span><span class="n">comm_vrt</span><span class="p">(</span><span class="n">vs1</span><span class="p">)</span><span class="o">.</span><span class="n">iter_vrt</span><span class="p">():</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">vrt</span><span class="p">)</span>
+<span class="go">&lt;SNP 1:100000 A/T GT:None&gt;</span>
+<span class="go">&lt;SNP 1:100001 G/T GT:None&gt;</span>
+</pre></div>
+</div>
+<p>This does not require any indexes because <code class="docutils literal notranslate"><span class="pre">test.vcf</span></code> is assumed to
+be sorted by coordinate. Using
+<a class="reference internal" href="Package_contents.html#genomvar.varset.IndexedVariantFileSet" title="genomvar.varset.IndexedVariantFileSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">IndexedVariantFileSet</span></code></a> would give the same
+result. The latter is actually preferred because when comparing object of
+<a class="reference internal" href="Package_contents.html#genomvar.varset.VariantFileSet" title="genomvar.varset.VariantFileSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">VariantFileSet</span></code></a> class on the first pass
+chromosome ordering will be evaluated and then the actual result will
+start to be processed.</p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="Variants.html"
+                        title="previous chapter">Variants</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="Command_line_utility.html"
+                        title="next chapter">Comparing two VCF files from command line</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/Variant_sets.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Command_line_utility.html" title="Comparing two VCF files from command line"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="Variants.html" title="Variants"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">genomvar  documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, AcademGene LLC.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.0.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,123 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Comparing two VCF files from command line &#8212; genomvar  documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Package contents" href="Package_contents.html" />
+    <link rel="prev" title="Variant sets" href="Variant_sets.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Package_contents.html" title="Package contents"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="Variant_sets.html" title="Variant sets"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">genomvar  documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="comparing-two-vcf-files-from-command-line">
+<h1>Comparing two VCF files from command line<a class="headerlink" href="#comparing-two-vcf-files-from-command-line" title="Permalink to this headline">¶</a></h1>
+<p>For convenience a common operation of VCF comparison can
+be done from command line like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python3 -m genomvar compare_vcf vcf1.vcf vcf2.vcf &gt; comparison.vcf
+Unit variants:
+   first only: 1
+   second only: 2
+   both: 105
+</pre></div>
+</div>
+<p>The numbers can be used for plotting Venn diagram and indicate
+corresponding patch sizes.</p>
+<p>File <code class="docutils literal notranslate"><span class="pre">comparison.vcf</span></code> will contain something like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">chr1</span>    <span class="mi">18353435</span>        <span class="o">.</span>       <span class="n">C</span>       <span class="n">G</span>       <span class="mi">100</span>     <span class="o">.</span>       <span class="n">mt</span><span class="o">=</span><span class="n">SNP</span><span class="p">;</span><span class="n">whichVCF</span><span class="o">=</span><span class="n">both</span><span class="p">;</span><span class="n">ln</span><span class="o">=</span><span class="mi">186</span><span class="p">;</span><span class="n">ln2</span><span class="o">=</span><span class="mi">374</span>
+<span class="n">chr1</span>    <span class="mi">18704102</span>        <span class="o">.</span>       <span class="n">T</span>       <span class="n">A</span>       <span class="mi">100</span>     <span class="o">.</span>       <span class="n">mt</span><span class="o">=</span><span class="n">SNP</span><span class="p">;</span><span class="n">whichVCF</span><span class="o">=</span><span class="n">both</span><span class="p">;</span><span class="n">ln</span><span class="o">=</span><span class="mi">187</span><span class="p">;</span><span class="n">ln2</span><span class="o">=</span><span class="mi">375</span>
+</pre></div>
+</div>
+<p>INFO fields indicate which VCF contains the variant on the line. <code class="docutils literal notranslate"><span class="pre">ln</span></code> and <code class="docutils literal notranslate"><span class="pre">ln2</span></code> indicate line numbers in original files.</p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="Variant_sets.html"
+                        title="previous chapter">Variant sets</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="Package_contents.html"
+                        title="next chapter">Package contents</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/Command_line_utility.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Package_contents.html" title="Package contents"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="Variant_sets.html" title="Variant sets"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">genomvar  documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, AcademGene LLC.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.0.
+    </div>
+  </body>
+</html>

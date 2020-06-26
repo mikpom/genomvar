@@ -1,0 +1,9 @@
+##fileformat=VCFv4.2
+{% for ctg, ln in ctg_len.items() -%}
+   ##contig=<ID={{ctg}},length={{ln}}>
+{% endfor -%}
+{% if samp %}##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+{% else %}{% endif -%}
+{% block INFO %}{% endblock -%}
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO{% if samp %}	FORMAT	{{samp}}{% else %}{% endif %}
+

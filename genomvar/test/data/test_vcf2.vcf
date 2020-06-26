@@ -1,0 +1,21 @@
+##fileformat=VCFv4.1
+##contig=<ID=chr11rgn,length=6926085>
+##contig=<ID=chr15rgn,length=6926085>
+##FILTER=<ID=haplotype,Description="Variant near filtered variant on same haplotype.">
+##FILTER=<ID=n_ratio,Description="Ratio of N to alt exceeds specified ratio">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Phased Genotype">
+##INFO=<ID=AF,Number=A,Type=Float,Description="Allele Frequency">
+##INFO=<ID=NSV,Number=1,Type=Integer,Description="Number of Simple Variants">
+##INFO=<ID=pl,Number=1,Type=Integer,Description="Phasing: 1 - HET contig 1, #2 - HET contig #2, 3 - HOM both contigs">
+##INFO=<ID=mt,Number=1,Type=String,Description="Variant Type: SUBSTITUTE/INSERT/DELETE">
+##INFO=<ID=RECN,Number=1,Type=Integer,Description="Variant ID: Integer numbering the variants">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	SAMP1
+chr11rgn	7462	.	G	T	100	PASS	NSV=1;AF=1.0;pl=3;mt=SUBSTITUTE;RECN=1;	GT	0/1
+chr11rgn	7465	.	TCT	GCT,GAC,CCT	100	PASS	NSV=;AF=0.1,0.1,0.1;pl=3;mt=SUBSTITUTE;RECN=2;	GT	0/1/2/3
+chr11rgn	7467	.	TG	CG,CA,AG	100	n_ratio	NSV=;AF=0.1,0.1,0.1;pl=3;mt=SUBSTITUTE;RECN=3;	GT	0/1/2/3
+chr11rgn	7468	.	G	T	100	n_ratio	NSV=;AF=1.0;pl=3;mt=INSERT;RECN=4;	GT	0/1
+chr11rgn	7469	.	G	C	100	PASS	NSV=;AF=1.0;pl=3;mt=INSERT;RECN=7;	GT	0|1
+chr15rgn	6146	.	T	C	100	PASS	NSV=;AF=1.0;pl=3;mt=INSERT;RECN=8	GT	0|1
+chr15rgn	6146	.	T	G	100	PASS	NSV=;AF=1.0;pl=3;mt=INSERT;RECN=20	GT	1|0
+chr15rgn	10045	.	C	G	100	PASS	NSV=;AF=1.0;pl=3;mt=INSERT;RECN=11	GT	0|1
+chr15rgn	10045	.	C	T	100	PASS	NSV=;AF=1.0;pl=3;mt=INSERT;RECN=10	GT	1|0
