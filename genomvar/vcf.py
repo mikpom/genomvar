@@ -405,6 +405,7 @@ class VCFReader(object):
         with openfn(self.fl,'rt') as fh:
             cnt = 0
             for line in dropwhile(lambda l: l.startswith('#'),fh):
+                # TODO maybe avoid stripping
                 row = VCFRow(*line.strip().split('\t',maxsplit=9),
                              rnum=cnt)
                 yield row

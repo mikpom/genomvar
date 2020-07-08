@@ -68,7 +68,7 @@ purpose::
     >>> dbSNP = varset.IndexedVariantFileSet('DBSNP.vcf.gz')
     >>> annots = []
     >>> for vrt in vs.iter_vrt():
-    >>>     m = dbsnp.match(vrt)
+    >>>     m = dbSNP.match(vrt)
     >>>     annots.append(m[0].attrib['id'] if m else None)
     >>> annots
     [None, None, 'rs540057607', 'rs367710686', 'rs940651103', ...]

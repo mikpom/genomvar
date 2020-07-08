@@ -16,7 +16,7 @@ into memory or not and whether the object should be mutable:
       random access
 
     - :class:`~genomvar.varset.IndexedVariantFileSet` immutable, VCF file
-      storage, random access Module
+      storage, random access
 """
 import warnings
 from copy import copy
