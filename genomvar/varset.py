@@ -740,6 +740,9 @@ class VariantSet(VariantSetBase):
                                   and ref1==ref2 and alt1==alt2:
                             if action=='comm':
                                 ind2take.append(ind1)
+                        else:
+                            if action=='diff':
+                                ind2take.append(ind1)
                     else: # now through variant objects
                         vrt1 = VariantSet._get_vrt(var1)
                         locus_vrt = [VariantSet._get_vrt(v) for v in locus]

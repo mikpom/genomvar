@@ -745,6 +745,20 @@ class TestSetComparisonCase(TestCase):
         diff = vset1.diff(vset2)
         self.assertEqual(len(list(diff.iter_vrt())),0)
 
+    def test_variant_cluster(self):
+        vs1 = varset.VariantSet.from_variants(
+            [variant.SNP("chr1",13366968,"A"),
+             variant.SNP("chr1",13366969,"T"),
+             variant.SNP("chr1",13366970,"G")])
+
+        vs2 = varset.VariantSet.from_variants(
+            [variant.Del("chr1",13366967,13366969),
+             variant.Ins("chr1",13366971,"TG")])
+
+        diff = list(vs1.diff(vs2).iter_vrt())
+        self.assertEqual(len(diff), 3)
+        
+
     def test_mnp_com_split(self):
         #                           23
         #    TTCACTTAGCATAATGTCTTCAAGATT
