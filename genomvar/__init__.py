@@ -3,7 +3,7 @@
 Package allows to work with genomic variations in Python.
 """
 import collections
-import pyfaidx
+import pysam
 import numpy as np
 
 class OverlappingHaplotypeVars(Exception):
@@ -49,25 +49,26 @@ class ChromSet(collections.abc.Set):
         return 'ChromSet({})'.format(repr(list(self.elements)))
 
 class Reference(object):
-    """A wrapper around pyfaidx Fasta class.
+    """A wrapper around pysam FastaFile class.
     It supports cached fetching of reference sequence.
     Speed up is achieved by minimizing disk IO
     when consequtive queries are close to one another.
     """
-    def __init__(self,fl,cache_dst=100000):
+    def __init__(self,fl,cache_dst=1000000):
         self.fl = fl
-        self.REF = pyfaidx.Fasta(self.fl)
-        self.ctg_len = {k:len(v) for k,v in self.REF.records.items()} 
+        self.REF = pysam.FastaFile(self.fl)
+        self.ctg_len = {r:self.REF.get_reference_length(r) \
+                          for r in self.REF.references} 
         self.cache_dst = cache_dst
         self.cache = {}
 
     def get(self,chrom,start,end):
         """Reference object uses cache to improve performance on consequtive
-        locations by reducing number IO requests."""
+        locations by reducing IO."""
         if start<0:
             raise IndexError('start should be >=0')
         if end - start >= self.cache_dst: # Large sequence is requested
-            return str(self.REF[chrom][start:end])
+            return str(self.REF.fetch(chrom,start,end))
         c = self.cache.get(chrom,None)
         if c: # if chrom in cache, try it
             start2 = start - c[0] # c[0] is a start of seq in cache
@@ -78,13 +79,13 @@ class Reference(object):
             else: # new location on chrom, new cache for chrom
                 cstart = max(start-self.cache_dst,0)
                 cend = cstart+2*self.cache_dst
-                refseq = str(self.REF[chrom][cstart:cend])
+                refseq = str(self.REF.fetch(chrom,cstart,cend))
                 self.cache[chrom] = (cstart,refseq)
                 return refseq[start-cstart:end-cstart]
         else:
             cstart = max(start-self.cache_dst,0)
             cend = cstart+2*self.cache_dst
-            refseq = str(self.REF[chrom][cstart:cend])
+            refseq = str(self.REF.fetch(chrom,cstart,cend))
             self.cache[chrom] = (cstart,refseq)
             return refseq[start-cstart:end-cstart]
 
@@ -92,7 +93,7 @@ class Reference(object):
         self.REF.close()
 
     def get_chroms(self):
-        return list(self.REF.records)
+        return list(self.REF.references)
 
 singleton = -1
 

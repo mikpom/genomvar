@@ -814,7 +814,7 @@ access</p></li>
 <li><p><a class="reference internal" href="#genomvar.varset.VariantFileSet" title="genomvar.varset.VariantFileSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">VariantFileSet</span></code></a> immutable, VCF file storage, no
 random access</p></li>
 <li><p><a class="reference internal" href="#genomvar.varset.IndexedVariantFileSet" title="genomvar.varset.IndexedVariantFileSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">IndexedVariantFileSet</span></code></a> immutable, VCF file
-storage, random access Module</p></li>
+storage, random access</p></li>
 </ul>
 </div></blockquote>
 <dl class="py class">
@@ -1193,8 +1193,19 @@ these). <em>Default: True</em></p></li>
 <dl class="py method">
 <dt id="genomvar.varset.VariantSet.to_vcf">
 <code class="sig-name descname">to_vcf</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">fh</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.VariantSet.to_vcf" title="Permalink to this definition">¶</a></dt>
-<dd><p>Writes a minimal VCF to <code class="docutils literal notranslate"><span class="pre">fh</span></code>. INFO and SAMPLE data
-from source data is not preserved.</p>
+<dd><p>Writes a minimal VCF with variants from the set.</p>
+<p>INFO and SAMPLE data from source data is not preserved.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>fh</strong> (<em>handle</em><em> or </em><em>str</em>) – Where to write variants.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -1577,8 +1588,19 @@ these). <em>Default: True</em></p></li>
 <dl class="py method">
 <dt id="genomvar.varset.MutableVariantSet.to_vcf">
 <code class="sig-name descname">to_vcf</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">fh</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.MutableVariantSet.to_vcf" title="Permalink to this definition">¶</a></dt>
-<dd><p>Writes a minimal VCF to <code class="docutils literal notranslate"><span class="pre">fh</span></code>. INFO and SAMPLE data
-from source data is not preserved.</p>
+<dd><p>Writes a minimal VCF with variants from the set.</p>
+<p>INFO and SAMPLE data from source data is not preserved.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>fh</strong> (<em>handle</em><em> or </em><em>str</em>) – Where to write variants.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -1805,8 +1827,19 @@ these). <em>Default: True</em></p></li>
 <dl class="py method">
 <dt id="genomvar.varset.VariantFileSet.to_vcf">
 <code class="sig-name descname">to_vcf</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">fh</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.VariantFileSet.to_vcf" title="Permalink to this definition">¶</a></dt>
-<dd><p>Writes a minimal VCF to <code class="docutils literal notranslate"><span class="pre">fh</span></code>. INFO and SAMPLE data
-from source data is not preserved.</p>
+<dd><p>Writes a minimal VCF with variants from the set.</p>
+<p>INFO and SAMPLE data from source data is not preserved.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>fh</strong> (<em>handle</em><em> or </em><em>str</em>) – Where to write variants.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -2053,8 +2086,19 @@ these). <em>Default: True</em></p></li>
 <dl class="py method">
 <dt id="genomvar.varset.IndexedVariantFileSet.to_vcf">
 <code class="sig-name descname">to_vcf</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">fh</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.IndexedVariantFileSet.to_vcf" title="Permalink to this definition">¶</a></dt>
-<dd><p>Writes a minimal VCF to <code class="docutils literal notranslate"><span class="pre">fh</span></code>. INFO and SAMPLE data
-from source data is not preserved.</p>
+<dd><p>Writes a minimal VCF with variants from the set.</p>
+<p>INFO and SAMPLE data from source data is not preserved.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>fh</strong> (<em>handle</em><em> or </em><em>str</em>) – Where to write variants.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>

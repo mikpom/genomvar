@@ -1,6 +1,7 @@
 from unittest import TestCase
 from pkg_resources import resource_filename as pkg_file
 import io
+import warnings
 import itertools
 from genomvar.cmdutils import _cmp_vcf
 from genomvar.vcf import VCFRow
@@ -16,7 +17,8 @@ class TestStreamCmp(TestCase):
             kval = map(lambda i: i.split('=',maxsplit=1),tokenized)
             return {k:v for (k,v) in kval}
         out = io.StringIO()
-        cnt = _cmp_vcf(self.f1,self.f2,out=out)
+        with warnings.catch_warnings(record=True):
+            cnt = _cmp_vcf(self.f1,self.f2,out=out)
         self.assertEqual(cnt[0],14)
         self.assertEqual(cnt[2],4)
         self.assertEqual(cnt[1],12)
@@ -52,6 +54,7 @@ class TestStreamCmp(TestCase):
             fh.writelines(header)
             fh.writelines(reversed(lines))
         out = io.StringIO()
-        
-        with self.assertRaises(UnsortedVariantFileError):
-            _cmp_vcf(pkg_file('genomvar.test','data/test_vcf.vcf'),tf.name,out=out)
+        with warnings.catch_warnings(record=True):
+            with self.assertRaises(UnsortedVariantFileError):
+                _cmp_vcf(pkg_file('genomvar.test','data/test_vcf.vcf'),
+                         tf.name,out=out)

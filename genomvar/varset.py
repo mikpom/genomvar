@@ -318,8 +318,20 @@ class VariantSetBase(object):
                       match_ambig=match_ambig)
     
     def to_vcf(self,fh):
-        """Writes a minimal VCF to ``fh``. INFO and SAMPLE data 
-        from source data is not preserved."""
+        """Writes a minimal VCF with variants from the set. 
+
+        INFO and SAMPLE data from source data is not preserved.
+
+        Parameters
+        ----------
+
+        fh : handle or str
+           Where to write variants.
+
+        Returns
+        -------
+        None
+        """
         header = header_simple.render(ctg_len=self.ctg_len)
         fh.write(header)
         for vrt in self.find_vrt(expand=True):

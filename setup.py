@@ -5,7 +5,7 @@ def readme():
         return f.read()
 
 setup(name='genomvar',
-      version='0.1',
+      version='0.1.1',
       description='Sequence variant analysis in Python',
       long_description=readme(),
       classifiers=[
@@ -25,7 +25,6 @@ setup(name='genomvar',
       install_requires=[
           'bx-python',
           'jinja2',
-          'pyfaidx',
           'pysam'],
       test_suite='unittest',
       tests_require=['setuptools'],
