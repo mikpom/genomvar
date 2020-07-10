@@ -5,7 +5,7 @@ def readme():
         return f.read()
 
 setup(name='genomvar',
-      version='0.1.12',
+      version='0.1.13',
       description='Sequence variant analysis in Python',
       long_description=readme(),
       classifiers=[

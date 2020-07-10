@@ -148,7 +148,7 @@ class VariantSetBase(object):
         :class:`genomvar.variant.GenomVariant`
         """
         for chrom in sorted(self.chroms):
-            for vrt in self._find_vrt(chrom,start=0,end=self.ctg_len[chrom],
+            for vrt in self._find_vrt(chrom,start=0,end=MAX_END,
                                        expand=expand):
                 yield vrt
 
@@ -371,8 +371,8 @@ class VariantSet(VariantSetBase):
         if reference was not provided. If reference was given ``ctg_len`` 
         is taken from length of chromosomes in the reference.
     """
-    def __init__(self,variants,vcf_notation=None,
-                 info=None,sampdata=None,reference=None):
+    def __init__(self,variants,vcf_notation=None,info=None,
+                 sampdata=None,reference=None):
         super().__init__(reference=reference)
         self._variants = variants
         self._info = info
@@ -382,9 +382,19 @@ class VariantSet(VariantSetBase):
                             self._variants['start'],self._variants['end'])):
             self._data.setdefault(chrom,IntervalTree())\
                      .add_interval(bxiv(start,end,ind))
-            self.chroms.add(chrom)
             if not reference:
                 self.ctg_len[chrom] = max(self.ctg_len.get(chrom,0),end)
+                self.chroms.add(chrom)
+            else:
+                try:
+                    if end > self.ctg_len[chrom]:
+                        msg = 'Variant at {}:{}-{} is out of reference range'\
+                            .format(chrom,start,end)
+                        raise ValueError(msg)
+                except KeyError as exc:
+                    if not chrom in self.chroms:
+                        msg = 'Chromosome {} not in reference'.format(chrom)
+                        raise ValueError(msg)
 
     @staticmethod
     def _get_vrt(row):
@@ -426,7 +436,8 @@ class VariantSet(VariantSetBase):
             else:
                 cnt += 1
         _variants = np.zeros(dtype=dtype0,shape=cnt)
-        zipped = list(itertools.zip_longest(*VariantSet._get_tups(variants),fillvalue=0))
+        zipped = list(itertools.zip_longest(*VariantSet._get_tups(variants),
+                                            fillvalue=0))
         for ind,field in enumerate(dtype0.fields):
             try:
                 _variants[field] = zipped[ind]
@@ -724,7 +735,7 @@ class VariantSet(VariantSetBase):
         vrt2add = []
         for ind1,subit in itertools.groupby(aligned,key=lambda p: p[0][0]):
             var1,var2 = next(subit)
-            if var2[0] is None: # actuall it is array of Nones
+            if var2[0] is None: # array of Nones
                 if action=='diff':
                     ind2take.append(var1[0])
                 elif action=='comm':

@@ -107,11 +107,24 @@ class TestVariantSetCase(TestCase):
         self.assertEqual(len(s1.ovlp(vb)),0)
         vb2 = factory.from_edit(chrom='chr15rgn',start=23,ref='G',alt='GG')
         self.assertEqual(len(s1.ovlp(vb2,match_ambig=False)),1)
+
     def test_from_variants(self):
         vfset = VariantFileSet(test_vcf1)
         vset = VariantSet.from_variants(list(vfset.iter_vrt()))
         vrt = list(vset.find_vrt('chr15rgn',1200,1210))
         self.assertEqual(len(vrt),2)
+
+        # Test error on out of reference bounds
+        with self.assertRaises(ValueError):
+            VariantSet.from_variants(
+                list(vfset.iter_vrt())+[variant.SNP('chr15rgn',10000000,'C')],
+                reference=Reference(CHR15RGN))
+
+        with self.assertRaises(ValueError):
+            vs = VariantSet.from_variants(
+                list(vfset.iter_vrt())+[variant.SNP('chr2',10,'C')],
+                reference=Reference(CHR15RGN))
+            print(vs.chroms)
 
     def test_from_vcf(self):
         vset = VariantSet.from_vcf(test_vcf1)
