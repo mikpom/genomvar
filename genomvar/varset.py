@@ -734,16 +734,17 @@ class VariantSet(VariantSetBase):
                 if vt1.is_subclass(variant.MNP):
                     locus = [var2,*[t[1] for t in subit]]
                     # For performance treat specially case SNP-SNP match
-                    if vt1.is_subclass(variant.MNP) and len(locus)==1:
+                    if vt1.is_subclass(variant.SNP) and len(locus)==1 \
+                             and locus[0][7].is_subclass(variant.SNP):
                         ind2,h,chrom2,start2,end2,ref2,alt2,vt2,*rest = locus[0]
-                        if vt2==vt1 and start1==start2 \
-                                  and ref1==ref2 and alt1==alt2:
+                        if start1==start2 and alt1==alt2:
                             if action=='comm':
                                 ind2take.append(ind1)
                         else:
                             if action=='diff':
                                 ind2take.append(ind1)
                     else: # now through variant objects
+                        #print('!! here')
                         vrt1 = VariantSet._get_vrt(var1)
                         locus_vrt = [VariantSet._get_vrt(v) for v in locus]
                         mt = ops.matchv(vrt1,locus_vrt,match_partial=match_partial,

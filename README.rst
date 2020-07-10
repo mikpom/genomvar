@@ -14,8 +14,10 @@ Installation
 Requirements:
 
 1. bx-python
-3. jinja2
-4. pysam
+
+2. jinja2
+
+3. pysam
 
 To install::
 

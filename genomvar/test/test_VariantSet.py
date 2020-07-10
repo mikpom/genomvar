@@ -747,16 +747,29 @@ class TestSetComparisonCase(TestCase):
 
     def test_variant_cluster(self):
         vs1 = varset.VariantSet.from_variants(
-            [variant.SNP("chr1",13366968,"A"),
-             variant.SNP("chr1",13366969,"T"),
-             variant.SNP("chr1",13366970,"G")])
+            [variant.SNP('chr1',13366968,'A'),
+             variant.SNP('chr1',13366969,'T'),
+             variant.SNP('chr1',13366970,'G')])
 
         vs2 = varset.VariantSet.from_variants(
-            [variant.Del("chr1",13366967,13366969),
-             variant.Ins("chr1",13366971,"TG")])
+            [variant.Del('chr1',13366967,13366969),
+             variant.Ins('chr1',13366971,'TG')])
+
+        
 
         diff = list(vs1.diff(vs2).iter_vrt())
         self.assertEqual(len(diff), 3)
+
+        vs3 = varset.VariantSet.from_variants(
+            [variant.MNP("chr1",13366968,'ATG')])
+        self.assertEqual(len(list(vs1.diff(vs3,match_partial=True)\
+                                     .iter_vrt())), 0)
+        self.assertEqual(len(list(vs3.diff(vs1,match_partial=True)\
+                                     .iter_vrt())), 0)
+        self.assertEqual(len(list(vs1.diff(vs3,match_partial=False)\
+                                     .iter_vrt())), 3)
+        self.assertEqual(len(list(vs3.diff(vs1,match_partial=False)\
+                                     .iter_vrt())), 1)
         
 
     def test_mnp_com_split(self):
