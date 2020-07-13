@@ -847,26 +847,51 @@ class VCFReader(object):
         
 def _vcf_row(vrt,template,reference=None):
     """Renders a VCF row from genomic variant"""
-    if vrt.is_instance(variant.Indel):
+    def _get_ref_seq(start,end):
         try:
-            start = vrt.start-1-int(vrt.attrib['vcf_notation']['start'])
-            anchor = vrt.attrib['vcf_notation']['ref'][start:start+1]
-        except KeyError as exc:
-            if not 'vcf_notation' in vrt.attrib:
-                if not reference is None:
-                    anchor = str(reference.get(vrt.chrom,
-                                               vrt.start-1,vrt.start))
-                else:
-                    raise RuntimeError('Reference required')
+            return reference.get(vrt.chrom,start,end)
+        except AttributeError as exc:
+            if reference is None:
+                raise ValueError('Reference required')
             else:
                 raise exc
-        ref = anchor + vrt.ref
-        alt = anchor + vrt.alt
-        pos = vrt.start
-    else:
-        ref = vrt.ref
+    def _get_vcf_ref(start,end):
+        try:
+            vcf_notation = vrt.attrib['vcf_notation']
+            start_ = start-vcf_notation['start']
+            end_ = end-vcf_notation['start']
+            if start_>=0 and end_<=len(vcf_notation['ref']):
+                ref = vcf_notation['ref'][start_:end_]
+            else:
+                ref = _get_ref_seq(start_,end_)
+        except KeyError as exc:
+            if not 'vcf_notation' in vrt.attrib:
+                ref = _get_ref_seq(start,end)
+            else:
+                raise exc
+        return ref
+
+    if vrt.is_instance(variant.MNP):
+        ref = vrt.ref if vrt.ref else _get_vcf_ref(vrt.start,vrt.end)
         alt = vrt.alt
-        pos = vrt.start+1
+        pos = vrt.start + 1 # to 1-based
+    elif vrt.is_instance(variant.Del):
+        start = vrt.start - 1 # because need one more for VCF
+        end = vrt.end if not vrt.is_instance(variant.AmbigDel) else \
+            vrt.start + (vrt.act_end-vrt.act_start)
+        ref = _get_vcf_ref(start,end)
+        alt = ref[0]
+        pos = start + 1 # to 1-based
+    elif vrt.is_instance(variant.Ins):
+        start = vrt.start - 1
+        ref = _get_vcf_ref(start,start+1)
+        if vrt.is_instance(variant.AmbigIns):
+            a = (vrt.act_start-vrt.start) % len(vrt.seq)
+            shifted = vrt.seq[-a:]+vrt.seq[:-a]
+            alt = ref + shifted
+        else:
+            alt = ref + vrt.alt
+        pos = start + 1 # to 1-based
     vartype = type(vrt.base).__name__
     info = ['mt='+vartype]
     if 'info' in vrt.attrib:

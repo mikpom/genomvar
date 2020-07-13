@@ -54,6 +54,7 @@ class VariantSetBase(object):
         is taken from length of chromosomes in reference.
     """
 
+
     def __init__(self,variants=None,data=None,reference=None):
         if not reference is None:
             if isinstance(reference,Reference):

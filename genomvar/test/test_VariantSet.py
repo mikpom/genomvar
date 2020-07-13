@@ -1087,10 +1087,16 @@ class TestIO(TestCase):
 
     def test_to_vcf(self):
         s1 = MutableVariantSet(reference=CHR15RGN)
-        vb = factory.from_edit('chr15rgn',22,'AG','A')
-        s1.add_vrt(vb,GT=(1,0))
-        vb = factory.from_edit('chr15rgn',1206,'G','C')
-        s1.add_vrt(vb,GT=(1,0))
+        s1.add_vrt(variant.Del("chr15rgn",23,24),GT=(1,0))
+        s1.add_vrt(variant.SNP("chr15rgn",1206,"C"),GT=(1,0))
+        s1.add_vrt(variant.MNP("chr15rgn",2093,"CCC"),GT=(1,0))
+
+        # Ambigous indels
+        vf = s1.get_factory(normindel=True)
+        vb = vf.from_edit('chr15rgn',2343,'TTTCCA','TTCCATTCCA')
+        s1.add_vrt(vb,GT=(0,1))
+        vb = vf.from_edit('chr15rgn',9947,'TTT','T')
+        s1.add_vrt(vb,GT=(0,1))
 
         stream = io.StringIO()
         s1.to_vcf(stream)
@@ -1116,26 +1122,14 @@ class TestIO(TestCase):
         self.assertEqual([row1.CHROM,row1.POS,row1.REF,row1.ALT],
                          ['chr15rgn',1207,'G','C'])
 
-    def test_to_vcf_with_indel(self):
-        #   9945
-        #   CTTTTTCAT
-        vset = MutableVariantSet(reference=CHR15RGN)
-        vb = vset.get_factory(normindel=True)\
-                 .from_edit('chr15rgn',9947,'TTT','T')
-        vset.add_vrt(vb,GT=(0,1))
-        stream = io.StringIO()
-        vset.to_vcf(stream)
-        stream.seek(0)
+        row3 = rows[3]
+        self.assertEqual([row3.CHROM,row3.POS,row3.REF,row3.ALT],
+                         ['chr15rgn',2344,'T','TTCCA'])
 
-        for line in stream:
-            if line.startswith('#'):
-                continue
-            chrom,pos,_,ref,alt,qual,flt,info,*rest = line.split('\t')
-            break
-
-        self.assertEqual([chrom,int(pos),ref,alt],
+        row4 = rows[4]
+        self.assertEqual([row4.CHROM,row4.POS,row4.REF,row4.ALT],
                          ['chr15rgn',9946,'CTT','C'])
-
+        
     def test_from_to_vcf(self):
         variants1 = list(VCFReader(test_vcf1).iter_vrt())
         vs = VariantSet.from_vcf(test_vcf1)

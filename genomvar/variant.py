@@ -37,8 +37,8 @@ objects.  This class can work with VCF-like notation. For example, ::
     >>> print(vrt)
     <Del chr15:576-577 A/->
 
-Position is **0-based** so this creates a deletion of A in 577th
-position of chromosome 15.
+Position is **0-based** so it creates a deletion at position 577
+of chromosome 15.
 
 Alternatively, limited subset of HGVS notation is supported (numbering
 in HGVS strings is **1-based** following the spec)::
