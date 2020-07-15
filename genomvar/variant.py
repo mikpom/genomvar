@@ -63,7 +63,7 @@ from genomvar.utils import _strip_ref_alt
 from genomvar import Reference,MAX_END
 
 hgvs_regex = {'SNP':'([0-9]+)([AGTC])>([AGTC])',
-              'Del':'([0-9]+)_([0-9]+)del',
+              'Del':'([0-9]+)(?:_([0-9]+))?del',
               'Ins':'[0-9]+_([0-9]+)ins([AGTC]+)',
               'DelIns':{0:'([0-9]+)_([0-9]+)delins([ATGC]+)',
                         1:'([0-9]+)delins([ATGC]+)'}}
@@ -617,7 +617,7 @@ class VariantFactory(object):
             match = re.match(hgvs_regex['Del'],posedit)
             pos1,pos2 = match.groups()
             start = int(pos1)-1
-            end = int(pos2)
+            end = int(pos2) if pos2 else start+1
             if not self.normindel:
                 return Del(chrom=chrom,start=start,end=end)
             else:

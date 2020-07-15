@@ -77,6 +77,10 @@ class TestVariantsCase(unittest.TestCase):
         vb = svf.from_hgvs('NG_012232.1:g.19_21del')
         self.assertEqual([vb.chrom,vb.start,vb.end,vb.ref,vb.alt],
                          ['NG_012232.1',18,21,None,None])
+        vb = svf.from_hgvs('NG_012232.1:g.19del')
+        self.assertTrue(vb.is_instance(variant.Del))
+        self.assertEqual([vb.chrom,vb.start,vb.end,vb.ref,vb.alt],
+                         ['NG_012232.1',18,19,None,None])
         vb = svf.from_hgvs('NC_000023.10:g.10_11insCCT')
         self.assertEqual([vb.chrom,vb.start,vb.end,vb.ref,vb.alt],
                          ['NC_000023.10',10,11,None,'CCT'])
