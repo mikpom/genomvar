@@ -93,8 +93,9 @@ def novlp_grp(variants):
         for vrt in variants: #sorted(variants,key=lambda o: o.start):
             start2 = vrt.start
             if start2<start1:
-                raise ValueError('Unsorted: {} seen after {}'\
-                                 .format(start2,start1))
+                raise ValueError(
+                    'Unsorted:  variant {} seen after {}'\
+                    .format(str(vrt),start1))
             if len(grp)>0:
                 if start2 < cend:
                     if vrt.end > cend:

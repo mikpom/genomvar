@@ -1,10 +1,9 @@
 import itertools
 import warnings
-from genomvar import UnsortedVariantFileError,\
-    DifferentlySortedChromsError,Reference
 from genomvar.vcf import VCFReader,header_simple,header_info,\
     row_tmpl,dtype2string,_vcf_row,_isindexed
 from genomvar.varset import VariantFileSet,IndexedVariantFileSet
+from genomvar import variant
 
 def _same_order(chroms1,chroms2):
     common_chroms = set(chroms1).intersection(chroms2)
@@ -61,7 +60,14 @@ def _cmp_vcf(f1,f2,out,match_partial=False,chunk=1000):
                               'ln':lineno,
                               'ln2':','.join(map(str,lineno2)) if which==2\
                                   else '.'}
+        try:
+            row = _vcf_row(vrt,template=row_tmpl)
+        except ValueError as exc:
+            if vrt.is_instance(variant.Haplotype) \
+                    or vrt.is_instance(variant.Asterisk):
+                continue
+            else:
+                raise exc
             
-        row = _vcf_row(vrt,template=row_tmpl)
         out.write(row+'\n')
     return nof_vrt

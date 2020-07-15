@@ -120,6 +120,7 @@ class TestVariantSetCase(TestCase):
                 list(vfset.iter_vrt())+[variant.SNP('chr15rgn',10000000,'C')],
                 reference=Reference(CHR15RGN))
 
+        # Test error on chromosome not in reference
         with self.assertRaises(ValueError):
             vs = VariantSet.from_variants(
                 list(vfset.iter_vrt())+[variant.SNP('chr2',10,'C')],

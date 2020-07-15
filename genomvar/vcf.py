@@ -689,6 +689,41 @@ class VCFReader(object):
         for vrt in ensure_sorted(variants):
             yield vrt
 
+    def iter_vrt_by_chrom(self,parse_info=False,
+                          parse_samples=False,normindel=False,
+                          check_order=False):
+        """
+        Generates variants grouped by chromosome
+        
+        Parameters
+        ----------
+        parse_info : bool
+            Incates whether INFO fields should be parsed.  *Default: False*
+        parse_samples : bool
+            Incates whether SAMPLE data should be parsed.  *Default: False*
+        parse_samples : bool
+            If True indels will be normalized. ``VCFReader`` should have been
+            instantiated with reference. *Default: False*
+        check_order : bool
+            If True VCF will be checked for sorting. *Default: False*
+        yields
+        -------
+        (chrom,it) : tuple of str and iterator
+            ``it`` yields :class:`variant.Genomvariant` objects
+        """
+        factory = self.get_factory(normindel)
+        def _iter_vrt(rowit):
+            for row in rowit:
+                for base in self._parse_vrt(row,factory,
+                                            parse_info=parse_info,
+                                            parse_samples=parse_samples):
+                    yield base
+        samps = self._normalize_samples(parse_samples)
+        for chrom,it in self.iter_rows_by_chrom(check_order=check_order):
+            variants = self._variants_from_rows(
+                it,factory,parse_info,samps)
+            yield chrom,ensure_sorted(variants)
+
     def _normalize_samples(self,parse_samples):
         if isinstance(parse_samples,str):
             if not parse_samples in self._samples:
@@ -744,38 +779,6 @@ class VCFReader(object):
             if vrt.start>=end or vrt.end<=start:
                 continue
             yield vrt
-
-    def iter_vrt_by_chrom(self,parse_info=False,
-                          parse_samples=False,normindel=False,
-                          check_order=False):
-        """
-        Generates variants grouped by chromosome
-        
-        Parameters
-        ----------
-        parse_info : bool
-            Incates whether INFO fields should be parsed.  *Default: False*
-        parse_samples : bool
-            Incates whether SAMPLE data should be parsed.  *Default: False*
-        parse_samples : bool
-            If True indels will be normalized. ``VCFReader`` should have been
-            instantiated with reference. *Default: False*
-        check_order : bool
-            If True VCF will be checked for sorting. *Default: False*
-        yields
-        -------
-        (chrom,it) : tuple of str and iterator
-            ``it`` yields :class:`variant.Genomvariant` objects
-        """
-        factory = self.get_factory(normindel)
-        def _iter_vrt(rowit):
-            for row in rowit:
-                for base in self._parse_vrt(row,factory,
-                                            parse_info=parse_info,
-                                            parse_samples=parse_samples):
-                    yield base
-        for chrom,it in self.iter_rows_by_chrom(check_order=check_order):
-            yield chrom,_iter_vrt(it)
 
     def _query(self,chrom,start=None,end=None):
         """User tabix index to fetch VCFRow's"""
@@ -892,6 +895,8 @@ def _vcf_row(vrt,template,reference=None):
         else:
             alt = ref + vrt.alt
         pos = start + 1 # to 1-based
+    else:
+        raise ValueError("Don't know how to format"+str(vrt))
     vartype = type(vrt.base).__name__
     info = ['mt='+vartype]
     if 'info' in vrt.attrib:

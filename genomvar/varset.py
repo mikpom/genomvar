@@ -318,7 +318,7 @@ class VariantSetBase(object):
         return CmpSet(self,other,action,match_partial=match_partial,
                       match_ambig=match_ambig)
     
-    def to_vcf(self,fh):
+    def to_vcf(self,out):
         """Writes a minimal VCF with variants from the set. 
 
         INFO and SAMPLE data from source data is not preserved.
@@ -326,21 +326,38 @@ class VariantSetBase(object):
         Parameters
         ----------
 
-        fh : handle or str
-           Where to write variants.
+        out : handle or str
+           If string then it's path to file, otherwise a handle 
+           to write variants.
 
         Returns
         -------
         None
         """
-        header = header_simple.render(ctg_len=self.ctg_len)
+        if isinstance(out,str):
+            fh = open(out,'wt')
+            opened = True
+        else:
+            fh = out
+            opened = False
+        
+        header = header_simple.render(
+            ctg_len=self.ctg_len if self.reference else {})
         fh.write(header)
         for vrt in self.find_vrt(expand=True):
-            if vrt.is_instance(variant.Haplotype):
-                continue
-            row = _vcf_row(vrt,template=row_tmpl,
+            try:
+                row = _vcf_row(vrt,template=row_tmpl,
                                reference=self.reference)
+            except ValueError as exc:
+                if vrt.is_instance(variant.Haplotype) \
+                        or vrt.is_instance(variant.Asterisk):
+                    continue
+                else:
+                    raise exc
             fh.write(row+'\n')
+
+        if opened:
+            fh.close()
 
     def get_factory(self,normindel=False):
         """Returns a VariantFactory object. It will inherit the same reference
