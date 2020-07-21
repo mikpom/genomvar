@@ -1,73 +1,6 @@
 import numpy as np
 from genomvar import variant
 
-def _get_vartype(ref1,alt1):
-    """ref1 and alt1 assumed to be stripped of identical nucleotides.
-    Function returns Ins,Del,SNP or MNP"""
-    if len(ref1)==0:
-        return variant.Ins
-    elif len(alt1)==0:
-        return variant.Del
-    else:
-        if len(ref1)==len(alt1):
-            if len(ref1)==1:
-                return variant.SNP
-            elif len(ref1)>1:
-                return variant.MNP
-            else:
-                raise ValueError('Empty ref and alt given')
-        else:
-            return variant.Haplotype
-
-def diff_slice(s1,s2):
-    """
-    >>> s1='ABCD'; s2='AXYD'; diff_slice(s1,s2)
-    (1,3)
-    >>> s1='TT'; s2='GT'; diff_slice(s1,s2)
-    (0,1)
-    """
-    if len(s1) != len(s2):
-        raise ValueError('Unequal lengths')
-    start = 0
-    end = len(s1)
-    for pos in range(len(s1)):
-        if s1[pos] == s2[pos]:
-            start += 1
-        else:
-            break
-    for pos in range(len(s1)):
-        if s1[-(pos+1)] == s2[-(pos+1)]:
-            end -= 1
-        else:
-            break
-    if start > end:
-        raise ValueError('Weird')
-    return (start,end)
-
-def ligate_mnp(mnps):
-    """
-    ligates a list of MNPs into one inserting '-'.
-    mnps assumed to be non-overlapping.
-    """
-    _mnps = sorted(mnps,key=lambda o: o.start)
-    prev = _mnps[0]
-    alt = list(prev.alt)
-    ref = list(prev.ref)
-
-    for mnp in _mnps[1:]:
-        alt += ['-']*(mnp.start-prev.end)
-        alt += list(mnp.alt)
-        ref += ['-']*(mnp.start-prev.end)
-        ref += list(mnp.ref)
-        prev = mnp
-
-    chrom = _mnps[0].chrom
-    start = _mnps[0].start
-    end = _mnps[-1].end
-
-    return  VariantBase(chrom=chrom,start=start,end=end,ref=''.join(ref),
-                  alt=''.join(alt),vartype='mnp')
-
 def novlp_grp(variants):
     """Returns non-overlapping groups of variants.
     Variants assumed to be sorted.
@@ -239,26 +172,6 @@ def _cmp_mnps(vrt,variants,action):
 
     return rt
 
-def apply_vrt(s,vrt,start=None):
-    if not start:
-        start = 0
-    _s = dict(enumerate(s))
-    for ind in range(vrt.start-start,vrt.end-start):
-        _s.pop(ind)
-    _s[vrt.start-start] = vrt.alt
-    r = [_s[i] for i in sorted(_s)]
-    return ''.join(r)
-
-def gt_ovlp(gt1,gt2):
-    return tuple([all(t) for t in zip(gt1,gt2)])
-
-def are_complementary(*gt):
-    shape = len(gt[0])
-    if sum([any(t) for t in zip(*gt)]) == shape:
-        return True
-    else:
-        return False
-
 def nof_snp_vrt(mnps):
     rng = [min([o.start for o in mnps]),
            max([o.end for o in mnps])]
@@ -275,48 +188,7 @@ def nof_snp_vrt(mnps):
         cnt += len(unq)
     return cnt
     
-
-def compl_blk(*variants):
-    rng = [min([o.start for o in variants]),max([o.end for o in variants])]
-
-    ref = np.zeros(shape=(rng[1]-rng[0],),dtype='U1')
-    dt = np.zeros(shape=(len(variants[0].GT),rng[1]-rng[0]),dtype='U1')
-
-
-    for ind,vrt in enumerate(variants):
-        dt[np.array(vrt.GT)==1,vrt.start-rng[0]:vrt.end-rng[0]] \
-            = list(vrt.alt)
-        ref[vrt.start-rng[0]:vrt.end-rng[0]] = list(vrt.ref)
-
-    blocks = []
-    left = 0
-    right = 0
-    while right < dt.shape[1]:
-        unq = np.unique(dt[:,right])
-        if not (unq.shape==(1,) and unq[0]!='' and are_complementary([o.GT for o in variants])):
-            if left != right:
-                blocks.append( (left,right) )
-                right += 1
-                left = right
-            else:
-                right += 1
-                left += 1
-        else:
-            right += 1
-    if left != right:
-        blocks.append( (left,right) )
-
-    ret_variants = []
-    for blk in blocks:
-        alt = ''.join(dt[0,blk[0]:blk[1]])
-        ref = ''.join(ref[blk[0]:blk[1]])
-        vrt = VariantBase(chrom=variants[0].chrom,start=blk[0]+rng[0],end=blk[1]+rng[0],
-                     ref=ref,alt=alt,vartype='mnp')
-        ret_variants.append(vrt)
-
-    return ret_variants
-
-def _matchv2(v1,v2,match_partial=True,match_ambig=False):
+def matchv2(v1,v2,match_partial=True,match_ambig=False):
     """Take v1 (non-compound) and v2 (maybe Compound) and returns a 
     list of [(sub-v2,score),...]"""
     
@@ -358,17 +230,10 @@ def _matchv2(v1,v2,match_partial=True,match_ambig=False):
     return m
 
 def matchv(target,locus,match_partial=True,match_ambig=False):
+    """If target is a haplotype returns a dictionary with the variant keys 
+    from target as keys and list of corresponding matches from locus as values.
+    If not a haplotype just a corresponding list.
     """
-    Returns a dictionary with the best VariantBase IDs from locu
-    matching variant target. target can be a haplotype.
-
-    Dict is structured like this:
-    {vrt_id (from vrt):[vrt_self]}
-
-    In the return dictionary all vrt result from traversing the
-    haplotypes if any encountered.
-    """
-    
     if len(locus)==0:
         return {}
     if not target.is_instance(variant.Haplotype):
@@ -381,7 +246,7 @@ def matchv(target,locus,match_partial=True,match_ambig=False):
                     cmb_score = 0
                     _dt = []
                     for locusv in cmb:
-                        m = _matchv2(target,locusv,match_ambig=match_ambig,
+                        m = matchv2(target,locusv,match_ambig=match_ambig,
                                      match_partial=match_partial)
                         # m is {target_key:([vrt_key from locus],score)}
                         for locus_vrts,vrt_score in m:
@@ -393,12 +258,20 @@ def matchv(target,locus,match_partial=True,match_ambig=False):
                 tot_dt.extend(grp_dt)
             return tot_dt
         elif target.is_instance(variant.Indel):
-            # this could be done using _matchv2 but dealing
-            # with it explicitely for performance
-            if target.is_instance(variant.AmbigIndel) and match_ambig:
-                return list(filter(lambda v: target.ambig_equal(v),locus))
+            if not any((v.is_instance(variant.Haplotype) for v in locus)):
+                # this could be done using matchv2 but dealing
+                # with it explicitely for performance
+                if target.is_instance(variant.AmbigIndel) and match_ambig:
+                    return list(filter(lambda v: target.ambig_equal(v),locus))
+                else:
+                    return list(filter(lambda v: target.edit_equal(v),locus))
             else:
-                return list(filter(lambda v: target.edit_equal(v),locus))
+                ret = []
+                for locusv in locus:
+                    ret.extend( (v for v,s in matchv2(
+                        target,locusv,match_ambig=match_ambig,
+                        match_partial=match_partial)) )
+                return ret
         else:
             return list(filter(lambda v:v.edit_equal(target),locus))
     else:
@@ -412,7 +285,7 @@ def matchv(target,locus,match_partial=True,match_ambig=False):
                 for locusv in cmb:
                     m = {}
                     for vrt in target.find_vrt(locusv.start,locusv.end):
-                        sm = _matchv2(vrt,locusv,match_ambig=match_ambig,
+                        sm = matchv2(vrt,locusv,match_ambig=match_ambig,
                                      match_partial=match_partial)
                         if sm:
                             m[vrt.key] = sm
@@ -432,14 +305,14 @@ def matchv(target,locus,match_partial=True,match_ambig=False):
                     tot_dt[target_key] = vals
         return tot_dt
 
-def _cmpv2(target,match,action,callback=None):
-    """Takes non-Compound target and a list of matching and returns
-    a comparison result"""
+def cmpv2(target,match,action,callback=None):
+    """Takes non-haplotype target and a list of matching variants. 
+    Returns a comparison result."""
     if not match:
         raise ValueError('no match')
     if target.is_instance(variant.MNP):
         vrt2add = []
-        if isinstance(target,variant.GenomVariant):
+        if isinstance(target,variant.GenomVariant) or callback:
             for vrt in _cmp_mnps(target,match,action=action):
                 _vrt = variant.GenomVariant(vrt,
                                 attrib=getattr(target,'attrib',None))
@@ -450,10 +323,7 @@ def _cmpv2(target,match,action,callback=None):
             vrt2add.extend(_cmp_mnps(target,match,action=action))
         return vrt2add
     else: # target.is_instance(variant.Indel):
-        if action=='diff':
-            return [] # Generally should not be here because cmpv
-                      # returned already
-        elif action=='comm':
+        if action=='comm':
             if callback:
                 cv = callback(match)
                 try:
@@ -468,6 +338,9 @@ def _cmpv2(target,match,action,callback=None):
                 return [target]
             else:
                 return [target]
+        elif action=='diff':
+            return [] # Generally should not be here because cmpv
+                      # returned already
     
 def cmpv(target,match,action,callback=None):
     """
@@ -496,7 +369,7 @@ def cmpv(target,match,action,callback=None):
             else:
                 return []
         else:
-            return _cmpv2(target,match,action=action,callback=callback)
+            return cmpv2(target,match,action=action,callback=callback)
     else:
         vrt2add = []
         for target_vrt in target.variants:
@@ -506,8 +379,7 @@ def cmpv(target,match,action,callback=None):
                 elif action=='comm':
                     continue
             else:
-                vrt2add.extend(_cmpv2(target_vrt,match[target_vrt.key],
+                vrt2add.extend(cmpv2(target_vrt,match[target_vrt.key],
                                       action=action,callback=callback))
         return vrt2add
-
 

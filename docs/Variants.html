@@ -1,9 +1,10 @@
 
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Variants &#8212; genomvar  documentation</title>
     <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -34,7 +35,8 @@
         <li class="right" >
           <a href="Introduction.html" title="Introduction / Quick start"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">genomvar  documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">genomvar  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Variants</a></li> 
       </ul>
     </div>  
 
@@ -79,8 +81,8 @@ objects.  This class can work with VCF-like notation. For example,</p>
 <span class="go">&lt;Del chr15:576-577 A/-&gt;</span>
 </pre></div>
 </div>
-<p>Position is <strong>0-based</strong> so this creates a deletion of A in 577th
-position of chromosome 15.</p>
+<p>Position is <strong>0-based</strong> so it creates a deletion at position 577
+of chromosome 15.</p>
 <p>Alternatively, limited subset of HGVS notation is supported (numbering
 in HGVS strings is <strong>1-based</strong> following the spec):</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">vrt</span> <span class="o">=</span> <span class="n">fac</span><span class="o">.</span><span class="n">from_hgvs</span><span class="p">(</span><span class="s1">&#39;chr1:g.15C&gt;A&#39;</span><span class="p">)</span>
@@ -105,7 +107,7 @@ polimorphism.</p>
 <dd><p>Single-nucleotide polymorphism.</p>
 <p>For instantiation it requires chromosome, position and
 alternative sequence.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">genomvar</span> <span class="kn">import</span> <span class="n">variant</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">genomvar</span> <span class="k">import</span> <span class="n">variant</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">variant</span><span class="o">.</span><span class="n">SNP</span><span class="p">(</span><span class="s1">&#39;chr1&#39;</span><span class="p">,</span><span class="mi">154678</span><span class="p">,</span><span class="s1">&#39;T&#39;</span><span class="p">)</span>
 <span class="go">SNP(&quot;chr1&quot;,154678,&quot;T&quot;)</span>
 </pre></div>
@@ -120,7 +122,7 @@ reference for N other nucleotides.</p>
 <p>For instantiation it requires chromosome,position and
 alternative sequence. <code class="docutils literal notranslate"><span class="pre">end</span></code> will inferred from <code class="docutils literal notranslate"><span class="pre">start</span></code> and <code class="docutils literal notranslate"><span class="pre">alt</span></code>.
 <code class="docutils literal notranslate"><span class="pre">ref</span></code> is also optional.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">genomvar</span> <span class="kn">import</span> <span class="n">variant</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">genomvar</span> <span class="k">import</span> <span class="n">variant</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">variant</span><span class="o">.</span><span class="n">MNP</span><span class="p">(</span><span class="s1">&#39;chr1&#39;</span><span class="p">,</span><span class="mi">154678</span><span class="p">,</span><span class="s1">&#39;GT&#39;</span><span class="p">)</span>
 <span class="go">MNP(&quot;chr1&quot;,154678,&quot;GT&quot;)</span>
 </pre></div>
@@ -138,7 +140,7 @@ inserted sequence (<code class="docutils literal notranslate"><span class="pre">
 <p>Start and end denote the nucleotide after the inserted sequence,
 i.e. <code class="docutils literal notranslate"><span class="pre">start</span></code> is 0-based number of a nucleotide after insertion,
 <code class="docutils literal notranslate"><span class="pre">end</span></code> is <code class="docutils literal notranslate"><span class="pre">start+1</span></code> by definition.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">genomvar.variant</span> <span class="kn">import</span> <span class="n">Ins</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">genomvar.variant</span> <span class="k">import</span> <span class="n">Ins</span>
 <span class="go"># Insertion of TA before position chr2:100543.</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">Ins</span><span class="p">(</span><span class="s1">&#39;chr2&#39;</span><span class="p">,</span><span class="mi">100543</span><span class="p">,</span><span class="s1">&#39;TA&#39;</span><span class="p">))</span>
 <span class="go">&lt;Ins chr2:100543 -/TA&gt;</span>
@@ -152,7 +154,7 @@ i.e. <code class="docutils literal notranslate"><span class="pre">start</span></
 <dd><p>Deletion of nucleotides. For instantiation <code class="docutils literal notranslate"><span class="pre">chrom</span></code>,
 <code class="docutils literal notranslate"><span class="pre">start</span></code> (0-based),
 and <code class="docutils literal notranslate"><span class="pre">end</span></code> (position <code class="docutils literal notranslate"><span class="pre">end</span></code> is excluded) are required.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">genomvar.variant</span> <span class="kn">import</span> <span class="n">Del</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">genomvar.variant</span> <span class="k">import</span> <span class="n">Del</span>
 <span class="go"># Deletion of 3 nucleotides starting at chr3:7843488 (0-based)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">Del</span><span class="p">(</span><span class="s1">&#39;chr3&#39;</span><span class="p">,</span><span class="mi">7843488</span><span class="p">,</span><span class="mi">7843488</span><span class="o">+</span><span class="mi">3</span><span class="p">))</span>
 <span class="go">&lt;Del chr3:7843488-7843491 NNN/-&gt;</span>
@@ -181,8 +183,8 @@ resulting in the same alternative sequence.</p>
 <p>Consider a variant extending  3 <code class="docutils literal notranslate"><span class="pre">T</span></code> s in the beginning by one
 more T. It can be done in several places so the corresponding
 insertion can be given as and <code class="docutils literal notranslate"><span class="pre">AmbigIns</span></code> object:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">genomvar</span> <span class="kn">import</span> <span class="n">Reference</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">genomvar.variant</span> <span class="kn">import</span> <span class="n">VariantFactory</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">genomvar</span> <span class="k">import</span> <span class="n">Reference</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">genomvar.variant</span> <span class="k">import</span> <span class="n">VariantFactory</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">fac</span> <span class="o">=</span> <span class="n">VariantFactory</span><span class="p">(</span><span class="n">Reference</span><span class="p">(</span><span class="s1">&#39;test.fasta&#39;</span><span class="p">),</span><span class="n">normindel</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span> <span class="n">fac</span><span class="o">.</span><span class="n">from_edit</span><span class="p">(</span><span class="s1">&#39;seq1&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="s1">&#39;T&#39;</span><span class="p">,</span><span class="s1">&#39;TT&#39;</span><span class="p">)</span> <span class="p">)</span>
 <span class="go">&lt;AmbigIns seq1:0-4(1-2) -/T&gt;</span>
@@ -220,7 +222,7 @@ alteration.</p>
 of objects of variant classes above.</p>
 <dl class="py class">
 <dt>
-<em class="property">class </em><code class="sig-prename descclassname">genomvar.variant.</code><code class="sig-name descname">Haplotype</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">chrom</span></em>, <em class="sig-param"><span class="n">start</span></em>, <em class="sig-param"><span class="n">end</span></em>, <em class="sig-param"><span class="n">variants</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
+<em class="property">class </em><code class="sig-prename descclassname">genomvar.variant.</code><code class="sig-name descname">Haplotype</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">chrom</span></em>, <em class="sig-param"><span class="n">variants</span></em><span class="sig-paren">)</span></dt>
 <dd><p>An object representing genome variants on the
 same chromosome (or contig).</p>
 <p>Can be instantiated from a list of GenomVariant objects using
@@ -234,6 +236,7 @@ Asterisk (for * in the ALT field of VCF files).</p>
 </div>
 
 
+            <div class="clearer"></div>
           </div>
         </div>
       </div>
@@ -289,12 +292,13 @@ Asterisk (for * in the ALT field of VCF files).</p>
         <li class="right" >
           <a href="Introduction.html" title="Introduction / Quick start"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">genomvar  documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">genomvar  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Variants</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2020, AcademGene LLC.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.1.0.
     </div>
   </body>
 </html>

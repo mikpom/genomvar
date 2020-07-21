@@ -103,3 +103,15 @@ class TestVariantsCase(unittest.TestCase):
                          [3300,3310,'',variant.AmbigDel])
         self.assertFalse(vb.edit_equal(ve))
         self.assertTrue(vb.ambig_equal(ve))
+
+    def test_haplotype_edit_equality(self):
+        factory = variant.VariantFactory()
+        v1 = factory.from_edit('chr15rgn',2093,'TGG','CCC')
+        v2 = factory.from_edit('chr15rgn',2098,'TT','GG')
+        v3 = factory.from_edit('chr15rgn',2098,'TT','CC')
+        h1 = variant.Haplotype.from_variants([v1,v2])
+        h1_ = variant.Haplotype.from_variants([v1,v2])
+        h2 = variant.Haplotype.from_variants([v1,v3])
+        self.assertTrue(h1.edit_equal(h1_))
+        self.assertFalse(h1.edit_equal(h2))
+        

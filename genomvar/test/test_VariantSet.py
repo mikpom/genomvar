@@ -6,14 +6,13 @@ import itertools
 import re
 from pkg_resources import resource_filename as pkg_file
 import numpy as np
-from genomvar.varset import MutableVariantSet,OverlappingHaplotypeVars,\
+from genomvar.varset import MutableVariantSet,\
     VariantFileSet,IndexedVariantFileSet,VariantSet
-from genomvar import varset,DifferentlySortedChromsError
 from genomvar.variant import VariantBase,AmbigIndel,Haplotype,VariantFactory
-from genomvar import OverlappingHaplotypeVars,UnNormIndelError,\
-    UnsortedVariantFileError,\
-    ReferenceMismatchError,VCFSampleMismatch,UnknownChromError,VCFFormatError,\
-    Reference
+from genomvar import varset,Reference
+from genomvar import OverlappingHaplotypeVars,\
+    UnsortedVariantFileError,VCFSampleMismatch,\
+    DuplicateVariants,DifferentlySortedChromsError
 from genomvar.vcf import VCFRow,VCFReader
 from genomvar import variant
 
@@ -215,6 +214,28 @@ class TestVariantSetCase(TestCase):
         self.assertEqual(len(vs1.match(vrt_CC)),0)
         self.assertEqual(len(vs1.match(vrt_CC,match_partial=False)),0)
 
+    def test_drop_duplicates2(self):
+        with open(pkg_file('genomvar.test','data/test_vcf.vcf')) as fh:
+            header = []
+            variants = []
+            for line in fh:
+                if line.startswith('#'):
+                    header.append(line)
+                else:
+                    variants.append(line)
+        tf = tempfile.NamedTemporaryFile(suffix='.vcf')
+        with open(tf.name,'wt') as fh:
+            for line in header:
+                fh.write(line)
+            for i in range(2):
+                for line in variants:
+                    fh.write(line)
+        vs = VariantSet.from_vcf(tf.name)
+        vs2,dropped = vs.drop_duplicates(return_dropped=True)
+        self.assertEqual(vs.nof_unit_vrt()/2,vs2.nof_unit_vrt())
+        self.assertEqual(vs2.nof_unit_vrt(),
+                         sum([v.nof_unit_vrt() for v in dropped]))
+
 class TestIndexedVariantFileCase(TestCase):
     vcf1_bgz = pkg_file('genomvar.test','data/test_vcf.vcf.gz')
     vcf4_bgz = pkg_file('genomvar.test','data/test_vcf4.vcf.gz')
@@ -342,21 +363,6 @@ class TestVariantFileCase(TestCase):
         vs2 = VariantFileSet(tf.name)
         with self.assertRaises(UnsortedVariantFileError):
             list(vs1.diff_vrt(vs2).iter_vrt())
-
-class TestHaplotype(TestCase):
-    def test_overlaping_haplotypes_and_genotype_param(self):
-        # REF      TGG   TT    G-
-        #          2093  2099  3200
-        # varset1  CCC   GG
-        #                CC    GG
-        #          v1   v2,v3   r4
-        v1 = factory.from_edit('chr15rgn',2093,'TGG','CCC')
-        v2 = factory.from_edit('chr15rgn',2098,'TT','GG')
-        v3 = factory.from_edit('chr15rgn',2098,'TT','CC')
-        s1 = MutableVariantSet(reference=CHR15RGN)
-        s1.add_vrt(v3,GT=(0,1))
-        a = s1.add_hap_variants([v1,v2],GT=(1,0))
-        self.assertEqual(a.vtp,variant.Haplotype)
 
 class MutableVariantSetTestCase(TestCase):
     def test_sort_chroms(self):
@@ -769,8 +775,6 @@ class TestSetComparisonCase(TestCase):
             [variant.Del('chr1',13366967,13366969),
              variant.Ins('chr1',13366971,'TG')])
 
-        
-
         diff = list(vs1.diff(vs2).iter_vrt())
         self.assertEqual(len(diff), 3)
 
@@ -970,6 +974,34 @@ class TestSetComparisonCase(TestCase):
         comm = list(vs2.comm_vrt(vs1).region(rgn='7:152134922-152436005'))
         self.assertGreater(len(comm),0)
             
+    def test_haplotypes(self):
+        # REF      TGG   TT    G-
+        #          2093  2099  3200
+        # varset1  CCC   GG
+        #                CC    GG
+        #          v1   v2,v3   v4
+        v1 = factory.from_edit('chr15rgn',2093,'TGG','CCC')
+        v2 = factory.from_edit('chr15rgn',2098,'TT','GG')
+        v3 = factory.from_edit('chr15rgn',2098,'TT','CC')
+        v4 = factory.from_edit('chr15rgn',3200,'G','GG')
+        s1 = MutableVariantSet(reference=CHR15RGN)
+        s1.add_hap_variants([v1,v2],GT=(1,0))
+        s1.add_vrt(v3,GT=(0,1))
+        s1.add_vrt(v4,GT=(0,1))
+        s2 = VariantSet.from_variants(s1.iter_vrt())
+        vrt = list(s2.find_vrt('chr15rgn',2090,2095,expand=True))
+        self.assertEqual(len(vrt),2)
+        self.assertEqual(s2.nof_unit_vrt(),8)
+        self.assertEqual(s1.diff(s2).nof_unit_vrt(), 0)
+        self.assertEqual(len(list(s2.diff_vrt(s1).iter_vrt())), 0)
+
+        h1 = Haplotype.from_variants([v1,v2])
+        h2 = Haplotype.from_variants([v3,v4])
+        s3 = varset.VariantSet.from_variants([h1,h2])
+        
+        self.assertEqual(s3.diff(s2).nof_unit_vrt(),0)
+        self.assertEqual(s2.diff(s3).nof_unit_vrt(),0)
+
 class TestIO(TestCase):
     def test_from_vcf(self):
         vset = MutableVariantSet.from_vcf(test_vcf1,
@@ -1077,6 +1109,7 @@ class TestIO(TestCase):
         self.assertTrue(True if v2.GT in [(0,1),(1,0)] else False)
         self.assertNotEqual(v1,v2)
 
+
     def test_from_vcf2(self):
         _vcf = pkg_file('genomvar.test','data/test_vcf7.vcf')
         vset = MutableVariantSet.from_vcf(_vcf)
@@ -1141,6 +1174,7 @@ class TestIO(TestCase):
         cnt = 0
         for v1,v2 in zip(variants1,variants2):
             self.assertTrue(v1.edit_equal(v2))
+
         
 if __name__ == '__main__':
     unittest.main()

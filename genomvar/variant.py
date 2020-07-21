@@ -97,11 +97,10 @@ class VariantBase(object):
         """
         Returns True if ``self`` represents the same alteration as the ``other``
         """
-        return self.vtp==other.vtp \
-            and self.chrom==other.chrom\
-            and self.start==other.start \
-            and self.end==other.end \
-            and self.alt==other.alt
+        return self.key==other.key
+
+    def get_key(self):
+        return (type(self),self.chrom,self.start,self.end,self.alt)
 
     def __getattribute__(self,name):
         return object.__getattribute__(self,name)
@@ -142,14 +141,8 @@ class VariantBase(object):
         try:
             return self._key
         except AttributeError:
-            self._key = (self.chrom,self.start,self.end,
-                         getattr(self,'ref',None),
-                         getattr(self,'alt',None))
+            self._key = self.get_key()
             return self._key
-
-    @key.setter
-    def key(self,value):
-        raise NotImplementedError
 
     @key.deleter
     def key(self,value):
@@ -188,6 +181,9 @@ class MNP(VariantBase):
     def nof_unit_vrt(self):
         return self.end-self.start
 
+    def get_key(self):
+        return ('MNP',self.chrom,self.start,self.end,self.alt)
+
 class SNP(MNP):
     """
     Single-nucleotide polymorphism.
@@ -215,6 +211,9 @@ class SNP(MNP):
 
     def nof_unit_vrt(self):
         return 1
+
+    def get_key(self):
+        return ('SNP',self.chrom,self.start,self.alt)
 
 class Indel(VariantBase):
     """Abstract class to accomodate insertion/deletion subclasses"""
@@ -249,13 +248,9 @@ class Ins(Indel):
             .format(type(self).__name__,self.chrom,self.start,
                     self.alt if self.alt else '-')
 
-    def edit_equal(self,other,**kwds):
-        return other.is_instance(Ins) \
-            and self.chrom==other.chrom\
-            and self.start==(other.act_start if other.is_instance(AmbigIns) \
-                       else other.start)\
-            and self.alt==other.alt
-
+    def get_key(self):
+        return ('Ins',self.chrom,self.start,self.alt)
+    
 class Del(Indel):
     """
     Deletion of nucleotides. For instantiation ``chrom``,
@@ -279,14 +274,9 @@ class Del(Indel):
             .format(type(self).__name__,self.chrom,self.start,self.end,
                     self.ref if self.ref else 'N'*(self.end-self.start))
 
-    def edit_equal(self,other,**kwds):
-        v =  other.is_instance(Del) \
-            and self.chrom==other.chrom\
-            and self.start==(other.act_start if other.is_instance(AmbigDel) \
-                       else other.start)\
-            and self.end==(other.act_end if other.is_instance(AmbigDel) \
-                       else other.end)
-        return v
+    def get_key(self):
+        return ('Del',self.chrom,self.start,self.end)
+    
 
 class AmbigIndel(Indel):
     """Class representing indel which position is ambigous.  Ambiguity means the
@@ -350,12 +340,12 @@ class AmbigIns(AmbigIndel,Ins):
         VariantBase.__init__(self,chrom=chrom,start=start,end=end,
                              ref=ref,alt=alt)
         
-    def edit_equal(self,other):
-        return other.is_instance(Ins) \
-            and self.chrom==other.chrom\
-            and self.act_start==(other.act_start \
-                      if other.is_instance(AmbigIns) else other.start)\
-            and self.alt==other.alt
+    # def edit_equal(self,other):
+    #     return other.is_instance(Ins) \
+    #         and self.chrom==other.chrom\
+    #         and self.act_start==(other.act_start \
+    #                   if other.is_instance(AmbigIns) else other.start)\
+    #         and self.alt==other.alt
 
     @property
     def seq(self):
@@ -365,6 +355,9 @@ class AmbigIns(AmbigIndel,Ins):
         return 'AmbigIns("{}",start=({},{}),end=({},{}),alt="{}")'\
             .format(self.chrom,self.start,self.act_start,self.end,
                     self.act_end,self.alt)
+
+    def get_key(self):
+        return ('Ins',self.chrom,self.act_start,self.alt)
 
 class AmbigDel(AmbigIndel,Del):
     """
@@ -397,12 +390,8 @@ class AmbigDel(AmbigIndel,Del):
             .format(self.chrom,self.start,self.act_start,
                     self.end,self.act_end)
 
-    def edit_equal(self,other):
-        return other.is_instance(Del) \
-            and self.chrom==other.chrom\
-            and self.act_start==(other.act_start \
-                      if other.is_instance(AmbigDel) else other.start)\
-            and self.alt==other.alt
+    def get_key(self):
+        return ('Del',self.chrom,self.act_start,self.act_end)
 
     @property
     def seq(self):
@@ -423,6 +412,9 @@ class Mixed(VariantBase):
     def nof_unit_vrt(self):
         return min(len(self.alt),self.end-self.start) + 1
 
+    def get_key(self):
+        return ('Mixed',self.chrom,self.start,self.end,self.alt)
+
 class Haplotype(VariantBase):
     """
     An object representing genome variants on the
@@ -431,7 +423,10 @@ class Haplotype(VariantBase):
     Can be instantiated from a list of GenomVariant objects using
     :meth:`Haplotype.from_variants` class method.
     """
-    def __init__(self,chrom,start,end,variants=None):
+    def __init__(self,chrom,variants):
+        start = min([v.start for v in variants])
+        end = max([v.end for v in variants])
+
         super().__init__(chrom,start,ref='-',alt='-',end=end)
         self._variants = OrderedDict([(v.key,v) for v in variants]) \
                  if variants else OrderedDict()
@@ -455,13 +450,12 @@ class Haplotype(VariantBase):
         
         Parameters
         ----------
-        start : int, this description is getting a little bit 
-            Start. *Default: 0*
+        start : int 
+            Start of search interval. *Default: 0*
 
-            Here is longer description of this parameter
-            which can involve elaborate details
-        end : int
-            End. *Default: end of haplotype*
+        end: int
+            End of search interval. *Defaults to MAX_END*
+
         yields
         -------
         vrt : variants
@@ -472,12 +466,13 @@ class Haplotype(VariantBase):
     @classmethod
     def from_variants(cls,variants):
         """
-        Create haplotype from an iterable of variants
+        Create haplotype from a list of variants.
 
         Parameters
         ----------
         variants : list of variants
             Variants to instantiate haplotype from.
+
         Returns
         -------
         hap : Haplotype
@@ -495,18 +490,26 @@ class Haplotype(VariantBase):
             chrom = list(chroms)[0]
         else:
             raise ValueError('Chromosome not set')
-        start = min([v.start for v in variants])
-        end = max([v.end for v in variants])
-
+        seen = {}
+        for vrt in variants:
+            if vrt.key in seen:
+                raise ValueError('Non-unique variants {} and {}'\
+                                 .format(vrt,seen[vrt.key]))
+            else:
+                seen[vrt.key] = vrt
         hap = cls.__new__(cls)
-        hap.__init__(chrom,start,end,variants=variants)
-
+        hap.__init__(
+            chrom,variants=sorted(
+                variants,key=lambda v: (v.start,v.end)))
         return hap
 
     @property
     def variants(self):
         for vrt in self._variants.values():
             yield vrt
+
+    def get_key(self):
+        return tuple([v.key for v in self.variants])
 
 class Null(VariantBase):
     def nof_unit_vrt(self):

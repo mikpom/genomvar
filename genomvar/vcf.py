@@ -265,7 +265,7 @@ class VCFReader(object):
     def __init__(self,vcf,index=False,reference=None):
 
         self.fl = vcf
-        if self.fl.endswith('.gz'):
+        if self.fl.endswith('.gz') or self.fl.endswith('.bgz'):
             self.compressed = True
         else:
             self.compressed = False
@@ -456,6 +456,7 @@ class VCFReader(object):
                     sampd[samp] = dict(zip(self._dtype['format'],_sampdata[sn]))
             else:
                 sampd = {}
+            # FIXME avoid dictionaries
             attrib = {'info':infod,'samples':sampd,
                       'allele_num':ind,'filters':row.FILTER.split(';'),
                       'id':row.ID}
@@ -675,11 +676,9 @@ class VCFReader(object):
                  normindel=False,parse_samples=False):
         """Yields variant objects"""
         factory = self.get_factory(normindel=normindel)
-        _rows = self.iter_rows()
+        rows = self.iter_rows()
         if check_order:
-            rows = check_VCF_order(_rows)
-        else:
-            rows = _rows
+            rows = check_VCF_order(rows)
         if parse_samples==True:
             samps = 'all'
         else:
@@ -706,7 +705,7 @@ class VCFReader(object):
             instantiated with reference. *Default: False*
         check_order : bool
             If True VCF will be checked for sorting. *Default: False*
-        yields
+        Yields
         -------
         (chrom,it) : tuple of str and iterator
             ``it`` yields :class:`variant.Genomvariant` objects

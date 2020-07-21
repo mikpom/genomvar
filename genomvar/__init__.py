@@ -10,19 +10,13 @@ class OverlappingHaplotypeVars(Exception):
     def __init__(self,message,ovlp=None):
         self.message = message
         self.ovlp = ovlp
-class UnknownChromError(Exception):
-    pass
-class UnNormIndelError(Exception):
-    pass
-class ReferenceMismatchError(Exception):
-    pass
 class VCFSampleMismatch(Exception):
     pass
 class UnsortedVariantFileError(Exception):
     pass
 class DifferentlySortedChromsError(Exception):
     pass
-class VCFFormatError(Exception):
+class DuplicateVariants(Exception):
     pass
 
 class ChromSet(collections.abc.Set):
