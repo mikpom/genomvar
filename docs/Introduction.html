@@ -1,10 +1,9 @@
 
 <!DOCTYPE html>
 
-<html lang="en">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Introduction / Quick start &#8212; genomvar  documentation</title>
     <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -35,8 +34,7 @@
         <li class="right" >
           <a href="index.html" title="genomvar’s documentation"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">genomvar  documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">Introduction / Quick start</a></li> 
+        <li class="nav-item nav-item-0"><a href="index.html">genomvar  documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -50,16 +48,18 @@
 <p>Package <code class="docutils literal notranslate"><span class="pre">genomvar</span></code> works with genomic variants and implements
 set-like operations on them. It supports import from VCF files and
 export to NumPy.</p>
+<p>For documentation see <a class="reference external" href="https://mikpom.github.io/genomvar/">here</a>.</p>
 <div class="section" id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
 <p>Requirements:</p>
 <ol class="arabic simple">
-<li><p>bx-python</p></li>
+<li><p>Python &gt;=3.6</p></li>
+<li><p>rbi-tree</p></li>
 <li><p>jinja2</p></li>
 <li><p>pysam</p></li>
 </ol>
 <p>To install:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip3</span> <span class="n">install</span> <span class="n">genomvar</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">genomvar</span>
 </pre></div>
 </div>
 </div>
@@ -73,7 +73,7 @@ and the differences should be investigated.</p>
 <p>First we read the VCF files
 into genomvar <a class="reference internal" href="Package_contents.html#genomvar.varset.VariantSet" title="genomvar.varset.VariantSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">genomvar.varset.VariantSet</span></code></a> objects which
 hold the variants with underlying data contained in INFO fields:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">genomvar.varset</span> <span class="k">import</span> <span class="n">VariantSet</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">genomvar.varset</span> <span class="kn">import</span> <span class="n">VariantSet</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">vs1</span> <span class="o">=</span> <span class="n">VariantSet</span><span class="o">.</span><span class="n">from_vcf</span><span class="p">(</span><span class="s1">&#39;caller1.out.vcf.gz&#39;</span><span class="p">,</span><span class="n">parse_info</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">vs2</span> <span class="o">=</span> <span class="n">VariantSet</span><span class="o">.</span><span class="n">from_vcf</span><span class="p">(</span><span class="s1">&#39;caller2.out.vcf.gz&#39;</span><span class="p">,</span><span class="n">parse_info</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
@@ -81,7 +81,7 @@ hold the variants with underlying data contained in INFO fields:</p>
 <p>To find variants detected by caller #1 but not caller #2 <code class="docutils literal notranslate"><span class="pre">diff</span></code>
 method is used. Then differences are exported to <code class="docutils literal notranslate"><span class="pre">numpy</span></code> for futher
 analysis:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">diff</span> <span class="o">=</span> <span class="n">vs1</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">vs2</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">diff</span> <span class="o">=</span> <span class="n">vs1</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">vs2</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">recs</span> <span class="o">=</span> <span class="n">diff</span><span class="o">.</span><span class="n">to_records</span><span class="p">()</span> <span class="c1"># recs is a numpy structured dtype array</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">recs</span><span class="p">[[</span><span class="s1">&#39;chrom&#39;</span><span class="p">,</span><span class="s1">&#39;start&#39;</span><span class="p">,</span><span class="s1">&#39;end&#39;</span><span class="p">,</span><span class="s1">&#39;ref&#39;</span><span class="p">,</span><span class="s1">&#39;alt&#39;</span><span class="p">,</span><span class="s1">&#39;vartype&#39;</span><span class="p">]]</span>
 <span class="go">[(&#39;chr1&#39;,  1046755,  1046756, &#39;T&#39;, &#39;G&#39;, &#39;SNP&#39;)</span>
@@ -103,7 +103,7 @@ with some data associated with variants in the latter.</p>
 comfortably fit into memory. Class
 <a class="reference internal" href="Package_contents.html#genomvar.varset.IndexedVariantFileSet" title="genomvar.varset.IndexedVariantFileSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">IndexedVariantFileSet</span></code></a> can be used for this
 purpose:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">vs</span> <span class="o">=</span> <span class="n">varset</span><span class="o">.</span><span class="n">VariantSet</span><span class="o">.</span><span class="n">from_vcf</span><span class="p">(</span><span class="s1">&#39;vcf_of_interest.vcf&#39;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">vs</span> <span class="o">=</span> <span class="n">varset</span><span class="o">.</span><span class="n">VariantSet</span><span class="o">.</span><span class="n">from_vcf</span><span class="p">(</span><span class="s1">&#39;vcf_of_interest.vcf&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dbSNP</span> <span class="o">=</span> <span class="n">varset</span><span class="o">.</span><span class="n">IndexedVariantFileSet</span><span class="p">(</span><span class="s1">&#39;DBSNP.vcf.gz&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">annots</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">vrt</span> <span class="ow">in</span> <span class="n">vs</span><span class="o">.</span><span class="n">iter_vrt</span><span class="p">():</span>
@@ -123,7 +123,6 @@ numbers in this particular case).</p>
 </div>
 
 
-            <div class="clearer"></div>
           </div>
         </div>
       </div>
@@ -184,13 +183,12 @@ numbers in this particular case).</p>
         <li class="right" >
           <a href="index.html" title="genomvar’s documentation"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">genomvar  documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">Introduction / Quick start</a></li> 
+        <li class="nav-item nav-item-0"><a href="index.html">genomvar  documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2020, AcademGene LLC.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.1.0.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.0.
     </div>
   </body>
 </html>

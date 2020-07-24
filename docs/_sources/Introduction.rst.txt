@@ -5,18 +5,21 @@ Package ``genomvar`` works with genomic variants and implements
 set-like operations on them. It supports import from VCF files and
 export to NumPy.
 
+For documentation see `here <https://mikpom.github.io/genomvar/>`_.
+
 Installation
 ============
 
 Requirements:
 
-1. bx-python
-2. jinja2
-3. pysam
+1. Python >=3.6
+2. rbi-tree
+3. jinja2
+4. pysam
 
 To install::
 
-  pip3 install genomvar
+  pip install genomvar
 
 Sample usage
 ============
@@ -30,7 +33,9 @@ and the differences should be investigated.
 
 First we read the VCF files
 into genomvar :class:`genomvar.varset.VariantSet` objects which 
-hold the variants with underlying data contained in INFO fields::
+hold the variants with underlying data contained in INFO fields:
+
+.. code-block:: python
 
   >>> from genomvar.varset import VariantSet
   >>> vs1 = VariantSet.from_vcf('caller1.out.vcf.gz',parse_info=True)
@@ -38,7 +43,9 @@ hold the variants with underlying data contained in INFO fields::
 
 To find variants detected by caller #1 but not caller #2 ``diff``
 method is used. Then differences are exported to ``numpy`` for futher
-analysis::
+analysis:
+
+.. code-block:: python
 
   >>> diff = vs1.diff(vs2)
   >>> recs = diff.to_records() # recs is a numpy structured dtype array
@@ -61,7 +68,9 @@ with some data associated with variants in the latter.
 This case is different from the previous in that DB file might not
 comfortably fit into memory. Class
 :class:`~genomvar.varset.IndexedVariantFileSet` can be used for this
-purpose::
+purpose:
+
+.. code-block:: python
 
     >>> vs = varset.VariantSet.from_vcf('vcf_of_interest.vcf')
     >>> dbSNP = varset.IndexedVariantFileSet('DBSNP.vcf.gz')

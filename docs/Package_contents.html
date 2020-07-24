@@ -1,10 +1,9 @@
 
 <!DOCTYPE html>
 
-<html lang="en">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Package contents &#8212; genomvar  documentation</title>
     <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -31,8 +30,7 @@
         <li class="right" >
           <a href="Command_line_utility.html" title="Comparing two VCF files from command line"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">genomvar  documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">Package contents</a></li> 
+        <li class="nav-item nav-item-0"><a href="index.html">genomvar  documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -141,7 +139,7 @@ reference for N other nucleotides.</p>
 <p>For instantiation it requires chromosome,position and
 alternative sequence. <code class="docutils literal notranslate"><span class="pre">end</span></code> will inferred from <code class="docutils literal notranslate"><span class="pre">start</span></code> and <code class="docutils literal notranslate"><span class="pre">alt</span></code>.
 <code class="docutils literal notranslate"><span class="pre">ref</span></code> is also optional.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">genomvar</span> <span class="k">import</span> <span class="n">variant</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">genomvar</span> <span class="kn">import</span> <span class="n">variant</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">variant</span><span class="o">.</span><span class="n">MNP</span><span class="p">(</span><span class="s1">&#39;chr1&#39;</span><span class="p">,</span><span class="mi">154678</span><span class="p">,</span><span class="s1">&#39;GT&#39;</span><span class="p">)</span>
 <span class="go">MNP(&quot;chr1&quot;,154678,&quot;GT&quot;)</span>
 </pre></div>
@@ -187,7 +185,7 @@ class hierarchy.</p>
 <dd><p>Single-nucleotide polymorphism.</p>
 <p>For instantiation it requires chromosome, position and
 alternative sequence.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">genomvar</span> <span class="k">import</span> <span class="n">variant</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">genomvar</span> <span class="kn">import</span> <span class="n">variant</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">variant</span><span class="o">.</span><span class="n">SNP</span><span class="p">(</span><span class="s1">&#39;chr1&#39;</span><span class="p">,</span><span class="mi">154678</span><span class="p">,</span><span class="s1">&#39;T&#39;</span><span class="p">)</span>
 <span class="go">SNP(&quot;chr1&quot;,154678,&quot;T&quot;)</span>
 </pre></div>
@@ -275,7 +273,7 @@ inserted sequence (<code class="docutils literal notranslate"><span class="pre">
 <p>Start and end denote the nucleotide after the inserted sequence,
 i.e. <code class="docutils literal notranslate"><span class="pre">start</span></code> is 0-based number of a nucleotide after insertion,
 <code class="docutils literal notranslate"><span class="pre">end</span></code> is <code class="docutils literal notranslate"><span class="pre">start+1</span></code> by definition.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">genomvar.variant</span> <span class="k">import</span> <span class="n">Ins</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">genomvar.variant</span> <span class="kn">import</span> <span class="n">Ins</span>
 <span class="go"># Insertion of TA before position chr2:100543.</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">Ins</span><span class="p">(</span><span class="s1">&#39;chr2&#39;</span><span class="p">,</span><span class="mi">100543</span><span class="p">,</span><span class="s1">&#39;TA&#39;</span><span class="p">))</span>
 <span class="go">&lt;Ins chr2:100543 -/TA&gt;</span>
@@ -322,7 +320,7 @@ class hierarchy.</p>
 <dd><p>Deletion of nucleotides. For instantiation <code class="docutils literal notranslate"><span class="pre">chrom</span></code>,
 <code class="docutils literal notranslate"><span class="pre">start</span></code> (0-based),
 and <code class="docutils literal notranslate"><span class="pre">end</span></code> (position <code class="docutils literal notranslate"><span class="pre">end</span></code> is excluded) are required.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">genomvar.variant</span> <span class="k">import</span> <span class="n">Del</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">genomvar.variant</span> <span class="kn">import</span> <span class="n">Del</span>
 <span class="go"># Deletion of 3 nucleotides starting at chr3:7843488 (0-based)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">Del</span><span class="p">(</span><span class="s1">&#39;chr3&#39;</span><span class="p">,</span><span class="mi">7843488</span><span class="p">,</span><span class="mi">7843488</span><span class="o">+</span><span class="mi">3</span><span class="p">))</span>
 <span class="go">&lt;Del chr3:7843488-7843491 NNN/-&gt;</span>
@@ -418,8 +416,8 @@ resulting in the same alternative sequence.</p>
 <p>Consider a variant extending  3 <code class="docutils literal notranslate"><span class="pre">T</span></code> s in the beginning by one
 more T. It can be done in several places so the corresponding
 insertion can be given as and <code class="docutils literal notranslate"><span class="pre">AmbigIns</span></code> object:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">genomvar</span> <span class="k">import</span> <span class="n">Reference</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">genomvar.variant</span> <span class="k">import</span> <span class="n">VariantFactory</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">genomvar</span> <span class="kn">import</span> <span class="n">Reference</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">genomvar.variant</span> <span class="kn">import</span> <span class="n">VariantFactory</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">fac</span> <span class="o">=</span> <span class="n">VariantFactory</span><span class="p">(</span><span class="n">Reference</span><span class="p">(</span><span class="s1">&#39;test.fasta&#39;</span><span class="p">),</span><span class="n">normindel</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span> <span class="n">fac</span><span class="o">.</span><span class="n">from_edit</span><span class="p">(</span><span class="s1">&#39;seq1&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="s1">&#39;T&#39;</span><span class="p">,</span><span class="s1">&#39;TT&#39;</span><span class="p">)</span> <span class="p">)</span>
 <span class="go">&lt;AmbigIns seq1:0-4(1-2) -/T&gt;</span>
@@ -749,8 +747,8 @@ without arguments or an instance of <code class="xref py py-class docutils liter
 be given. Additionnaly if <code class="docutils literal notranslate"><span class="pre">normindel=True</span></code> (reference should be
 given) indels will be checked for ambiguity, and if ambigous instance
 of <a class="reference internal" href="#genomvar.variant.AmbigIndel" title="genomvar.variant.AmbigIndel"><code class="xref py py-class docutils literal notranslate"><span class="pre">genomvar.variant.AmbigIndel</span></code></a> will be returned.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">genomvar</span> <span class="k">import</span> <span class="n">Reference</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">genomvar.variant</span> <span class="k">import</span> <span class="n">VariantFactory</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">genomvar</span> <span class="kn">import</span> <span class="n">Reference</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">genomvar.variant</span> <span class="kn">import</span> <span class="n">VariantFactory</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">reference</span> <span class="o">=</span> <span class="n">Reference</span><span class="p">(</span><span class="s1">&#39;test.fasta&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">fac</span> <span class="o">=</span> <span class="n">VariantFactory</span><span class="p">(</span><span class="n">reference</span><span class="p">,</span><span class="n">normindel</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
@@ -800,8 +798,7 @@ but start is 0-based) and returns a variant object.</p>
 <div class="section" id="module-genomvar.varset">
 <span id="module-varset-py"></span><h2>Module varset.py<a class="headerlink" href="#module-genomvar.varset" title="Permalink to this headline">¶</a></h2>
 <p>Module <code class="docutils literal notranslate"><span class="pre">varset</span></code> defines variant set classes which are containers of variants
-supporting set-like operations, searching variants, export to NumPy and some
-other goodies.</p>
+supporting set-like operations, searching variants, export to NumPy…</p>
 <p>There are several classes depending on whether all the variants are loaded
 into memory or not and whether the object is mutable:</p>
 <blockquote>
@@ -826,17 +823,27 @@ Can be instantiated from a VCF file (see
 containing variants (see <a class="reference internal" href="#genomvar.varset.VariantSet.from_variants" title="genomvar.varset.VariantSet.from_variants"><code class="xref py py-meth docutils literal notranslate"><span class="pre">VariantSet.from_variants()</span></code></a>).</p>
 <dl class="py attribute">
 <dt id="genomvar.varset.VariantSet.reference">
-<code class="sig-name descname">reference</code><em class="property">: Reference</em><a class="headerlink" href="#genomvar.varset.VariantSet.reference" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">reference</code><a class="headerlink" href="#genomvar.varset.VariantSet.reference" title="Permalink to this definition">¶</a></dt>
 <dd><p>Genome reference.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Reference</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt id="genomvar.varset.VariantSet.ctg_len">
-<code class="sig-name descname">ctg_len</code><em class="property">: dict</em><a class="headerlink" href="#genomvar.varset.VariantSet.ctg_len" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">ctg_len</code><a class="headerlink" href="#genomvar.varset.VariantSet.ctg_len" title="Permalink to this definition">¶</a></dt>
 <dd><p>dict mapping Chromosome name to corresponding lengths.</p>
 <p>This keeps track of the rightmost position of variants in the set
 if reference was not provided. If reference was given <code class="docutils literal notranslate"><span class="pre">ctg_len</span></code>
 is taken from length of chromosomes in the reference.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -865,7 +872,7 @@ is edit-equal. Haplotypes are left as is.</p>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p><strong>vs</strong> (<em>VariantSet</em>) – Variant set with unique variants.</p></li>
-<li><p><strong>dropped</strong> (<em>list of variants, optional</em>) – if <code class="docutils literal notranslate"><span class="pre">return_dropped</span></code> is True it will hold dropped variants.</p></li>
+<li><p><strong>dropped</strong> (<em>list of variants, optional</em>) – if <code class="docutils literal notranslate"><span class="pre">return_dropped</span></code> is True dropped variants are also returned.</p></li>
 </ul>
 </p>
 </dd>
@@ -1111,7 +1118,7 @@ traverses all variants.</p>
 are traversed and <code class="docutils literal notranslate"><span class="pre">start</span></code> and <code class="docutils literal notranslate"><span class="pre">end</span></code> parameters ignored.</p></li>
 <li><p><strong>start</strong> (<em>int</em><em>, </em><em>optional</em>) – Start of search region (0-based). <em>Default: 0</em></p></li>
 <li><p><strong>end</strong> (<em>int</em><em>, </em><em>optional</em>) – End of search region (position <code class="docutils literal notranslate"><span class="pre">end</span></code> is excluded). <em>Default:
-Chromosome length</em></p></li>
+max chrom length</em></p></li>
 <li><p><strong>rgn</strong> (<em>str</em><em>, </em><em>optional</em>) – If given chrom, start and end parameters are
 ignored.  A string specifying search region, e.g.
 <code class="docutils literal notranslate"><span class="pre">chr15:365,008-365,958</span></code>.</p></li>
@@ -1151,7 +1158,7 @@ as was used for instantiation of <code class="docutils literal notranslate"><spa
 
 <dl class="py method">
 <dt id="genomvar.varset.VariantSet.iter_vrt_by_chrom">
-<code class="sig-name descname">iter_vrt_by_chrom</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">check_order</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.VariantSet.iter_vrt_by_chrom" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">iter_vrt_by_chrom</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwds</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.VariantSet.iter_vrt_by_chrom" title="Permalink to this definition">¶</a></dt>
 <dd><p>Iterates variants grouped by chromosome.</p>
 </dd></dl>
 
@@ -1234,23 +1241,38 @@ Can be instantiated from a VCF file (see
 variants (see <a class="reference internal" href="#genomvar.varset.VariantSet.from_variants" title="genomvar.varset.VariantSet.from_variants"><code class="xref py py-meth docutils literal notranslate"><span class="pre">VariantSet.from_variants()</span></code></a>).</p>
 <dl class="py attribute">
 <dt id="genomvar.varset.MutableVariantSet.reference">
-<code class="sig-name descname">reference</code><em class="property">: Reference</em><a class="headerlink" href="#genomvar.varset.MutableVariantSet.reference" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">reference</code><a class="headerlink" href="#genomvar.varset.MutableVariantSet.reference" title="Permalink to this definition">¶</a></dt>
 <dd><p>Genome reference.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Reference</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt id="genomvar.varset.MutableVariantSet.chroms">
-<code class="sig-name descname">chroms</code><em class="property">: ChromSet</em><a class="headerlink" href="#genomvar.varset.MutableVariantSet.chroms" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">chroms</code><a class="headerlink" href="#genomvar.varset.MutableVariantSet.chroms" title="Permalink to this definition">¶</a></dt>
 <dd><p>list-like representation of chromosome in the set.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>ChromSet</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt id="genomvar.varset.MutableVariantSet.ctg_len">
-<code class="sig-name descname">ctg_len</code><em class="property">: dict</em><a class="headerlink" href="#genomvar.varset.MutableVariantSet.ctg_len" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">ctg_len</code><a class="headerlink" href="#genomvar.varset.MutableVariantSet.ctg_len" title="Permalink to this definition">¶</a></dt>
 <dd><p>dict mapping Chromosome name to corresponding lengths.</p>
 <p>This keeps track of the rightmost position of variants in the set
 if reference was not provided. If reference was given <code class="docutils literal notranslate"><span class="pre">ctg_len</span></code>
 is taken from length of chromosomes in reference.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -1288,12 +1310,6 @@ be provided.  <em>Default: False</em></p></li>
 <dd class="field-odd"><p><a class="reference internal" href="#genomvar.varset.VariantSet" title="genomvar.varset.VariantSet">VariantSet</a></p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="genomvar.varset.MutableVariantSet.delete_vrt">
-<code class="sig-name descname">delete_vrt</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vrt</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.MutableVariantSet.delete_vrt" title="Permalink to this definition">¶</a></dt>
-<dd><p>Deletes a variant from variant set.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1492,7 +1508,7 @@ traverses all variants.</p>
 are traversed and <code class="docutils literal notranslate"><span class="pre">start</span></code> and <code class="docutils literal notranslate"><span class="pre">end</span></code> parameters ignored.</p></li>
 <li><p><strong>start</strong> (<em>int</em><em>, </em><em>optional</em>) – Start of search region (0-based). <em>Default: 0</em></p></li>
 <li><p><strong>end</strong> (<em>int</em><em>, </em><em>optional</em>) – End of search region (position <code class="docutils literal notranslate"><span class="pre">end</span></code> is excluded). <em>Default:
-Chromosome length</em></p></li>
+max chrom length</em></p></li>
 <li><p><strong>rgn</strong> (<em>str</em><em>, </em><em>optional</em>) – If given chrom, start and end parameters are
 ignored.  A string specifying search region, e.g.
 <code class="docutils literal notranslate"><span class="pre">chr15:365,008-365,958</span></code>.</p></li>
@@ -1532,7 +1548,7 @@ as was used for instantiation of <code class="docutils literal notranslate"><spa
 
 <dl class="py method">
 <dt id="genomvar.varset.MutableVariantSet.iter_vrt_by_chrom">
-<code class="sig-name descname">iter_vrt_by_chrom</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">check_order</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.MutableVariantSet.iter_vrt_by_chrom" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">iter_vrt_by_chrom</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwds</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.MutableVariantSet.iter_vrt_by_chrom" title="Permalink to this definition">¶</a></dt>
 <dd><p>Iterates variants grouped by chromosome.</p>
 </dd></dl>
 
@@ -1660,8 +1676,13 @@ in first set; 1 if in second; 2 if in both.</p>
 on initialization.</p>
 <dl class="py attribute">
 <dt id="genomvar.varset.VariantFileSet.file">
-<code class="sig-name descname">file</code><em class="property">: str</em><a class="headerlink" href="#genomvar.varset.VariantFileSet.file" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">file</code><a class="headerlink" href="#genomvar.varset.VariantFileSet.file" title="Permalink to this definition">¶</a></dt>
 <dd><p>Variant file storing variants.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -1755,7 +1776,7 @@ traverses all variants.</p>
 are traversed and <code class="docutils literal notranslate"><span class="pre">start</span></code> and <code class="docutils literal notranslate"><span class="pre">end</span></code> parameters ignored.</p></li>
 <li><p><strong>start</strong> (<em>int</em><em>, </em><em>optional</em>) – Start of search region (0-based). <em>Default: 0</em></p></li>
 <li><p><strong>end</strong> (<em>int</em><em>, </em><em>optional</em>) – End of search region (position <code class="docutils literal notranslate"><span class="pre">end</span></code> is excluded). <em>Default:
-Chromosome length</em></p></li>
+max chrom length</em></p></li>
 <li><p><strong>rgn</strong> (<em>str</em><em>, </em><em>optional</em>) – If given chrom, start and end parameters are
 ignored.  A string specifying search region, e.g.
 <code class="docutils literal notranslate"><span class="pre">chr15:365,008-365,958</span></code>.</p></li>
@@ -1913,12 +1934,6 @@ MNPs. <em>Default: True</em></p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt id="genomvar.varset.IndexedVariantFileSet.delete_vrt">
-<code class="sig-name descname">delete_vrt</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vrt</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.IndexedVariantFileSet.delete_vrt" title="Permalink to this definition">¶</a></dt>
-<dd><p>Deletes a variant from variant set.</p>
-</dd></dl>
-
-<dl class="py method">
 <dt id="genomvar.varset.IndexedVariantFileSet.diff_vrt">
 <code class="sig-name descname">diff_vrt</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span></em>, <em class="sig-param"><span class="n">match_partial</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">match_ambig</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.IndexedVariantFileSet.diff_vrt" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate variants different between <code class="docutils literal notranslate"><span class="pre">self</span></code> and <code class="docutils literal notranslate"><span class="pre">other</span></code>.</p>
@@ -1956,7 +1971,7 @@ traverses all variants.</p>
 are traversed and <code class="docutils literal notranslate"><span class="pre">start</span></code> and <code class="docutils literal notranslate"><span class="pre">end</span></code> parameters ignored.</p></li>
 <li><p><strong>start</strong> (<em>int</em><em>, </em><em>optional</em>) – Start of search region (0-based). <em>Default: 0</em></p></li>
 <li><p><strong>end</strong> (<em>int</em><em>, </em><em>optional</em>) – End of search region (position <code class="docutils literal notranslate"><span class="pre">end</span></code> is excluded). <em>Default:
-Chromosome length</em></p></li>
+max chrom length</em></p></li>
 <li><p><strong>rgn</strong> (<em>str</em><em>, </em><em>optional</em>) – If given chrom, start and end parameters are
 ignored.  A string specifying search region, e.g.
 <code class="docutils literal notranslate"><span class="pre">chr15:365,008-365,958</span></code>.</p></li>
@@ -2103,7 +2118,6 @@ to write variants.</p>
 </div>
 
 
-            <div class="clearer"></div>
           </div>
         </div>
       </div>
@@ -2154,13 +2168,12 @@ to write variants.</p>
         <li class="right" >
           <a href="Command_line_utility.html" title="Comparing two VCF files from command line"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">genomvar  documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">Package contents</a></li> 
+        <li class="nav-item nav-item-0"><a href="index.html">genomvar  documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2020, AcademGene LLC.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.1.0.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.0.
     </div>
   </body>
 </html>

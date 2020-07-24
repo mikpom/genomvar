@@ -178,10 +178,10 @@ def nof_snp_vrt(mnps):
 
     dt = np.zeros(shape=(len(mnps),rng[1]-rng[0]),dtype='S1')
 
+    
     for ind,vrt in enumerate(mnps):
         dt[ind,vrt.start-rng[0]:vrt.end-rng[0]] \
             = list(vrt.alt)
-
     cnt = 0
     for i in range(dt.shape[1]):
         unq = np.unique(dt[:,i])

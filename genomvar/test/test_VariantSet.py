@@ -181,24 +181,6 @@ class TestVariantSetCase(TestCase):
                                  parse_info=True,parse_samples=True)
         self.assertEqual(len(list(s1.find_vrt('chr15rgn'))),4)
 
-    def test_cmp(self):
-        vcf1 = pkg_file('genomvar.test','data/test_vcf.vcf')
-        vcf2 = pkg_file('genomvar.test','data/test_vcf2.vcf')
-        s1 = VariantSet.from_vcf(vcf1,parse_info=True,parse_samples=True)
-        s2 = VariantSet.from_vcf(vcf2)
-        diff = s1.diff(s2)
-        self.assertEqual(diff.nof_unit_vrt(),14)
-        # Now same diff but without loading in memory
-        N = 0
-        for vrt in s1.diff_vrt(s2).iter_vrt():
-            N += vrt.nof_unit_vrt()
-        self.assertEqual(N,14)
-        
-        comm = s1.comm(s2)
-        self.assertEqual(len(list(comm.iter_vrt())),4)
-        v1,v2 = list(comm.iter_vrt())[:2]
-        self.assertEqual(v1.attrib['info']['NSV'],1)
-        self.assertEqual(v1.attrib['samples']['SAMP1']['GT'],(0,1))
 
     def test_match(self):
         # REF      TGG   TT    
@@ -253,6 +235,20 @@ class TestIndexedVariantFileCase(TestCase):
                 
         self.assertTrue(checked)
 
+    def test_find_vrt(self):
+        ivfs = IndexedVariantFileSet(
+            pkg_file('genomvar.test','data/test_vcf2.vcf.gz'))
+        vs = VariantSet.from_vcf(
+            pkg_file('genomvar.test','data/test_vcf2.vcf.gz'))
+
+        self.assertEqual(
+            sum([v.nof_unit_vrt() for v in ivfs.find_vrt('chr15rgn')]),
+            sum([v.nof_unit_vrt() for v in vs.find_vrt('chr15rgn')]))
+
+        self.assertEqual(
+            sum([v.nof_unit_vrt() for v in ivfs.iter_vrt()]),
+            sum([v.nof_unit_vrt() for v in vs.iter_vrt()]))
+        
     def test_many_samples(self):
         vcf  = pkg_file('genomvar.test','data/test_vcf_1kg.vcf.gz')
         vset = IndexedVariantFileSet(vcf)
@@ -632,19 +628,6 @@ class TestSetComparisonCase(TestCase):
         self.assertEqual(v.attrib['filters'],['PASS'])
         self.assertEqual(v.attrib['info']['AF'],1.0)
 
-    def test_diff_with_variant_deletion(self):
-        s1 = MutableVariantSet(reference=CHR15RGN)
-        vb = self.vfac.from_edit('chr15rgn',10044,'CAC','C')
-        s1.add_vrt(vb,GT=(0,1))
-        s2 = MutableVariantSet(reference=CHR15RGN)
-        vb = self.vfac.from_edit('chr15rgn',10044,'CAC','C')
-        vid = s2.add_vrt(vb,GT=(0,1))
-        s2.delete_vrt(vid)
-
-        diff = s1.diff(s2)
-        mset = list(diff.iter_vrt())
-        self.assertEqual(len(mset),1)
-
     def test_strip_order_dependent_Ambig(self):
         #    10043
         #    TCACAG
@@ -870,8 +853,9 @@ class TestSetComparisonCase(TestCase):
                             _vs1.comm(_vs2)
                         continue
                 
-                comm = list(method(_vs1).iter_vrt())
-                known = list(vs1.iter_vrt())
+                comm = sorted(method(_vs1).iter_vrt(),key=lambda v: v.key)
+                known = sorted(vs1.iter_vrt(),key=lambda v: v.key)
+                self.assertEqual(len(comm),len(known))
                 self.assertEqual(len(comm),len(known))
                 for ind,vrt in enumerate(comm):
                     self.assertTrue(vrt.edit_equal(known[ind]))
@@ -1002,6 +986,40 @@ class TestSetComparisonCase(TestCase):
         self.assertEqual(s3.diff(s2).nof_unit_vrt(),0)
         self.assertEqual(s2.diff(s3).nof_unit_vrt(),0)
 
+    def test_VariantSet_cmp(self):
+        vcf1 = pkg_file('genomvar.test','data/test_vcf.vcf')
+        vcf2 = pkg_file('genomvar.test','data/test_vcf2.vcf')
+        s1 = VariantSet.from_vcf(vcf1,parse_info=True,parse_samples=True)
+        s2 = VariantSet.from_vcf(vcf2)
+        diff = s1.diff(s2)
+        self.assertEqual(diff.nof_unit_vrt(),14)
+        # Now same diff but without loading in memory
+        N = 0
+        for vrt in s1.diff_vrt(s2).iter_vrt():
+            N += vrt.nof_unit_vrt()
+        self.assertEqual(N,14)
+        
+        comm = s1.comm(s2)
+        self.assertEqual(len(list(comm.iter_vrt())),4)
+        v1,v2 = sorted(comm.iter_vrt(),
+                       key=lambda v: v.key)[:2]
+        self.assertEqual(v1.attrib['info']['NSV'],1)
+        self.assertEqual(v1.attrib['samples']['SAMP1']['GT'],(0,1))
+
+        self.assertEqual(s2.comm(s1).nof_unit_vrt(), comm.nof_unit_vrt())
+
+    def test_VariantSet_cmp2(self):
+        vcf1 = pkg_file('genomvar.test','data/test_vcf5.vcf')
+        vcf2 = pkg_file('genomvar.test','data/test_vcf6.vcf.gz')
+        s1 = VariantSet.from_vcf(vcf1)
+        s2 = VariantSet.from_vcf(vcf2)
+        diff = s1.diff(s2)
+        self.assertEqual(diff.nof_unit_vrt(),0)
+        
+        comm = s1.comm(s2)
+        self.assertEqual(comm.nof_unit_vrt(),s1.nof_unit_vrt())
+        self.assertEqual(s2.comm(s1).nof_unit_vrt(), comm.nof_unit_vrt())
+        
 class TestIO(TestCase):
     def test_from_vcf(self):
         vset = MutableVariantSet.from_vcf(test_vcf1,
@@ -1165,12 +1183,15 @@ class TestIO(TestCase):
                          ['chr15rgn',9946,'CTT','C'])
         
     def test_from_to_vcf(self):
-        variants1 = list(VCFReader(test_vcf1).iter_vrt())
+        variants1 = sorted(VCFReader(test_vcf1).iter_vrt(),
+                           key=lambda v: v.key)
         vs = VariantSet.from_vcf(test_vcf1)
         tf = tempfile.NamedTemporaryFile(suffix='.vcf')
         with open(tf.name,'wt') as fh:
             vs.to_vcf(fh)
-        variants2 = list(VCFReader(tf.name).iter_vrt())
+        variants2 = sorted(VCFReader(tf.name).iter_vrt(),
+                           key=lambda v: v.key)
+        self.assertEqual(len(variants1),len(variants2))
         cnt = 0
         for v1,v2 in zip(variants1,variants2):
             self.assertTrue(v1.edit_equal(v2))

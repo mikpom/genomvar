@@ -1,7 +1,6 @@
 """
 Module ``varset`` defines variant set classes which are containers of variants
-supporting set-like operations, searching variants, export to NumPy and some
-other goodies.
+supporting set-like operations, searching variants, export to NumPy...
 
 There are several classes depending on whether all the variants are loaded
 into memory or not and whether the object is mutable:
@@ -24,9 +23,7 @@ import itertools
 from functools import lru_cache
 import collections
 import numpy as np
-from numpy.lib import recfunctions as rfn
-from bx.intervals.intersection import Interval as bxiv
-from bx.intervals.intersection import IntervalTree
+from rbi_tree.tree import ITree
 from genomvar import variant, variantops as ops, MAX_END
 from genomvar.variant import VariantBase,AmbigIndel,\
     GenomVariant,Haplotype,VariantFactory
@@ -82,10 +79,8 @@ class VariantSetBase(object):
     def _find_iv(self,chrom,start=0,end=MAX_END):
         if chrom not in self._data:
             return iter([])
-        for iv in self._data[chrom].find(start,end):
-            if iv.value in self._obs:
-                continue
-            yield iv
+        for ivl_id in self._data[chrom].find(start,end):
+            yield ivl_id
 
     def find_vrt(self,chrom=None,start=0,end=MAX_END,rgn=None,
                  expand=False,check_order=False):
@@ -104,7 +99,7 @@ class VariantSetBase(object):
             Start of search region (0-based). *Default: 0*
         end: int, optional
             End of search region (position ``end`` is excluded). *Default: 
-            Chromosome length*
+            max chrom length*
         rgn: str, optional
             If given chrom, start and end parameters are
             ignored.  A string specifying search region, e.g.
@@ -131,10 +126,14 @@ class VariantSetBase(object):
             for b in self.iter_vrt(expand=expand):
                 yield b
 
-    def iter_vrt_by_chrom(self,check_order=False):
+    def _find_chrom_vrt(self,chrom,expand=False):
+        for vrt in self._find_vrt(chrom,expand=expand):
+            yield vrt
+
+    def iter_vrt_by_chrom(self,**kwds):
         """Iterates variants grouped by chromosome."""
         for chrom in self.chroms:
-            yield (chrom,self.find_vrt(chrom=chrom))
+            yield (chrom,self._find_chrom_vrt(chrom))
 
     def iter_vrt(self,expand=False):
         """
@@ -150,8 +149,7 @@ class VariantSetBase(object):
         :class:`genomvar.variant.GenomVariant`
         """
         for chrom in sorted(self.chroms):
-            for vrt in self._find_vrt(chrom,start=0,end=MAX_END,
-                                       expand=expand):
+            for vrt in self._find_chrom_vrt(chrom,expand=expand):
                 yield vrt
 
     def ovlp(self,vrt0,match_ambig=False):
@@ -398,12 +396,14 @@ class VariantSet(VariantSetBase):
         self._sampdata = sampdata
         self._vcf_notation = vcf_notation
         fields = ('ind','haplotype','chrom','start','end')
+        rows = {}
         for ind,hap,chrom,start,end in zip(
                     *[self._variants[f] for f in fields]):
             if hap!=singleton:
                 continue
-            self._data.setdefault(chrom,IntervalTree())\
-                     .add_interval(bxiv(start,end,ind))
+            t = self._data.setdefault(chrom,ITree())
+            ivl_id = t.insert(start,end)
+            rows.setdefault(chrom,[]).append((ivl_id,ind))
             if not reference:
                 self.ctg_len[chrom] = max(self.ctg_len.get(chrom,0),end)
                 self.chroms.add(chrom)
@@ -417,6 +417,16 @@ class VariantSet(VariantSetBase):
                     if not chrom in self.chroms:
                         msg = 'Chromosome {} not in reference'.format(chrom)
                         raise ValueError(msg)
+        self.rows = {}
+        for chrom in rows:
+            self.rows[chrom] = np.zeros(len(rows[chrom]), dtype=np.int_)
+            ind, vals = list(zip(*rows[chrom]))
+            self.rows[chrom][list(ind)] = vals
+
+    def _genom_vrt_from_row(self,row):
+        base = self._vrt_from_row(row)
+        attrib = self._get_attrib(row[0])
+        return variant.GenomVariant(base=base,attrib=attrib)
 
     def _vrt_from_row(self,row):
         ind,hap,chrom,start,end,ref,alt,cls,start2,end2 = row
@@ -431,6 +441,20 @@ class VariantSet(VariantSetBase):
                 return variant.Haplotype(chrom,vrt)
             else:
                 raise exc
+
+    def _get_attrib(self,rnum):
+        if not self._info is None:
+            attrib = {'info':self._info[rnum]}
+        else:
+            attrib = {}
+        if not self._vcf_notation is None:
+            attrib['vcf_notation'] = dict(zip(dtype1.names,
+                            self._vcf_notation[rnum].tolist()))
+        if not self._sampdata is None:
+            attrib.update({'samples':{s:self._sampdata[s][rnum]\
+                                      for s in self._sampdata}})
+        return attrib
+        
                 
     @lru_cache(maxsize=1000)
     def _get_vrt(self,rnum):
@@ -442,16 +466,7 @@ class VariantSet(VariantSetBase):
     def _get_genom_vrt(self,rnum):
         """Like _get_vrt but also adds attributes."""
         base = self._get_vrt(rnum)
-        if not self._info is None:
-            attrib = {'info':self._info[rnum]}
-        else:
-            attrib = {}
-        if not self._vcf_notation is None:
-            attrib['vcf_notation'] = dict(zip(dtype1.names,
-                            self._vcf_notation[rnum].tolist()))
-        if not self._sampdata is None:
-            attrib.update({'samples':{s:self._sampdata[s][rnum]\
-                                      for s in self._sampdata}})
+        attrib = self._get_attrib(rnum)
         return GenomVariant(base=base,attrib=attrib)
 
     @staticmethod
@@ -497,26 +512,40 @@ class VariantSet(VariantSetBase):
             ind += 1
         return
 
-    def _find_vrt(self,chrom,start,end,expand=False):
-        """Uses IntervalTree to find variants and yields them. 
+    def _find_vrt(self,chrom,start=0,end=MAX_END,expand=False):
+        """Uses ITree to find variants and yields them.
         Implementation is variant set class-specific."""
-        haplotypes = set()
-        start = start if start else 0
-        end = end if end else MAX_END
         try:
             intervals = self._data[chrom].find(start,end)
         except KeyError:
             return
-        for iv in intervals:
-            # FIXME
-            row = self._variants[iv.value].tolist()
-            if row[1]!=singleton:
-                continue
-            vrt = self._get_genom_vrt(iv.value)
+        for ivl_id in intervals:
+            rown = self.rows[chrom][ivl_id]
+            vrt = self._get_genom_vrt(rown)
             yield vrt
             if vrt.is_instance(variant.Haplotype) and expand:
                 for vrt in vrt.find_vrt(start,end):
                     yield vrt
+
+    def _find_chrom_vrt(self,chrom,expand=False):
+        try:
+            ivl = self._data[chrom].iter_ivl()
+        except KeyError:
+            return iter([])
+        inds = np.take(self.rows[chrom], [i[2] for i in ivl])
+        vrt = self._variants[inds]
+        for row in zip(*[vrt[f] for f in self._variants.dtype.fields]):
+            if row[1]!=singleton:
+                continue
+            if row[-3]==variant.Haplotype:
+                hap = self._get_genom_vrt(row[0])
+                yield hap
+                if expand:
+                    for vrt in hap.variants:
+                        yield vrt
+            else:
+                vrt = self._genom_vrt_from_row(row)
+                yield vrt
                 
     def copy(self):
         """Returns a copy of variant set"""
@@ -560,7 +589,7 @@ class VariantSet(VariantSetBase):
         vs : VariantSet
             Variant set with unique variants.
         dropped : list of variants, optional
-            if ``return_dropped`` is True it will hold dropped variants.
+            if ``return_dropped`` is True dropped variants are also returned.
         """
         ret = {}
         mask = (self._variants['haplotype']==singleton)\
@@ -807,47 +836,45 @@ class VariantSet(VariantSetBase):
                 self._sampdata[s] = np.take(self._sampdata[s],ind)
         chroms,ind = np.unique(self._variants['chrom'],return_index=True)
         self._chroms = ChromSet(self._variants['chrom'][np.sort(ind)])
-                    
+
+    @staticmethod
+    def _iterate_aligned(vs1,vs2):
+        def _iterate(ar1,ar2):
+            vars1 = zip(*[ar1[f] for f in vs1._variants.dtype.fields])
+            vars2 = zip(*[ar2[f] for f in vs2._variants.dtype.fields])
+            while True:
+                try:
+                    yield next(vars1),next(vars2)
+                except StopIteration:
+                    return
+        ind1 = []
+        ids2take = {}
+        fields = ('ind','haplotype','chrom','start','end')
+        nomatch = []
+        for ind,hap,chrom,start,end in zip(*[vs1._variants[k] \
+                                             for k in fields]):
+            if hap!=singleton:
+                continue
+            if chrom not in vs2.chroms:
+                nomatch.append(ind)
+                continue
+            ovlp = vs2._data[chrom].find(start,end)
+            if not ovlp:
+                nomatch.append(ind)
+            else:
+                ind1.extend([ind]*len(ovlp))
+                ids2take.setdefault(chrom,[]).extend(ovlp)
+
+        ind2 = np.concatenate(
+            [np.take(vs2.rows[c],ids2take[c]) for c in ids2take])
+        
+        return nomatch,_iterate(np.take(vs1._variants,ind1),
+                                np.take(vs2._variants,ind2))
+
     def _cmp(self,other,action,match_ambig=False,match_partial=True):
         """Returns a new variation set depending on operation
         specified.
         """
-        def iterate_aligned(vs1,vs2):
-            ind1 = []
-            ind2 = []
-            fields = ('ind','haplotype','chrom','start','end')
-            for ind,hap,chrom,start,end in zip(*[vs1._variants[k] \
-                                                 for k in fields]):
-                if hap!=singleton:
-                    continue
-                if chrom not in vs2.chroms:
-                    ind1.append(ind)
-                    ind2.append(None)
-                    continue
-                ovlp = vs2._data[chrom].find(start,end)
-                if not ovlp:
-                    ind1.append(ind)
-                    ind2.append(None)
-                else:
-                    for iv in ovlp:
-                        ind1.append(ind)
-                        ind2.append(iv.value)
-            _ar1 = np.take(vs1._variants,ind1)
-            _ar2 = np.take(vs2._variants,
-                           list(filter(lambda v: not v is None,ind2)))
-            vars1 = zip(*[_ar1[f] for f in vs1._variants.dtype.fields])
-            vars2 = zip(*[_ar2[f] for f in vs2._variants.dtype.fields])
-            none = (None,)*len(vs2._variants.dtype.fields)
-            for ind1,ind2 in zip(ind1,ind2):
-                try:
-                    if ind2 is None:
-                        yield next(vars1),none
-                    else:
-                        yield next(vars1),next(vars2)
-                except StopIteration:
-                    return
-            # iterate_aligned ends here
-
         def _quickly_match(v1,v2):
             """Return True if match, False if not and None if unclear
             without object instantiation"""
@@ -892,20 +919,18 @@ class VariantSet(VariantSetBase):
             # _quicky_match ends here
 
         if not isinstance(other,VariantSet):
-            msg = '{} should instance of VariantSet'.format(other)
+            msg = '{} should be instance of VariantSet'.format(other)
             raise TypeError(msg)
 
-        aligned = iterate_aligned(self,other)
-        ind2take = []
+        nomatch,aligned = self._iterate_aligned(self,other)
+        if action=='diff':
+            ind2take = nomatch
+        else:
+            ind2take = []
         vrt2add = []
         for ind1,subit in itertools.groupby(aligned,key=lambda p: p[0][0]):
             vars1,locus = list(zip(*subit))
-            var1 = vars1[0] # 
-            if locus[0][0] is None: # array of Nones, i.e. no match
-                if action=='diff':
-                    ind2take.append(var1[0])
-                continue
-
+            var1 = vars1[0]
             if len(locus)==1:
                 maybe_equal = _quickly_match(var1,locus[0])
             else:
@@ -1074,11 +1099,7 @@ class MutableVariantSet(VariantSetBase):
     def copy(self):
         """Returns a copy of variant set"""
         cpy = self.__new__(self.__class__)
-        data = {}
-        for chrom,itree in self._data.items():
-            data[chrom] = IntervalTree()
-            for iv in itree.find(0,self.ctg_len[chrom]):
-                data[chrom].add_interval(bxiv(iv.start,iv.end,iv.value))
+        data = {c:t.copy() for c,t in self._data.items()}
         cpy.__init__(self._variants.copy(),data,self.reference)
         return cpy
 
@@ -1130,12 +1151,12 @@ class MutableVariantSet(VariantSetBase):
 
         return vset
 
-    def _add_iv(self,chrom,start,end,id):
+    def _add_iv(self,chrom,start,end):
         """Insert new interval with ID into ``_data``"""
-        iv = bxiv(start,end,value=id)
-        self._data.setdefault(chrom,IntervalTree()).add_interval(iv)
+        t = self._data.setdefault(chrom,ITree())
+        ivl_id = t.insert(start,end)
         self.ctg_len[chrom] = max(end,self.ctg_len.get(chrom,0))
-        return iv
+        return ivl_id
 
     def _process_gt(self,GT,ovlp,allow_adjust_genotype=False):
         """Function takes a genotype and a list of overlapping
@@ -1179,21 +1200,15 @@ class MutableVariantSet(VariantSetBase):
             pass
         return GT
 
+
     def _find_vrt(self,chrom,start=0,end=MAX_END,expand=False):
         """Auxillary function invoked by ``find_vrt``"""
-        for iv in self._find_iv(chrom,start,end):
-            vrt = self._variants[iv.value]
+        for ivl_id in self._find_iv(chrom,start,end):
+            vrt = self._variants[chrom][ivl_id]
             yield vrt
             if vrt.is_instance(variant.Haplotype) and expand:
                 for _vrt in vrt.find_vrt(start,end):
                     yield _vrt
-
-    def delete_vrt(self,vrt):
-        """
-        Deletes a variant from variant set.
-        """
-        if isinstance(vrt,GenomVariant):
-            self._obs[vrt.key] = True
 
     def add_hap_variants(self,variants,GT,attrib=None,
                          allow_adjust_genotype=False):
@@ -1230,11 +1245,11 @@ class MutableVariantSet(VariantSetBase):
             mnps = filter(lambda v: v.is_instance(variant.MNP),it1)
             insertions = filter(lambda v: v.is_instance(variant.Ins),it2)
             deletions = filter(lambda v: v.is_instance(variant.Del),it3)
-            for grp in no_ovlp(mnps):
-                if len(grp)==1:
-                    N += grp[0].nof_unit_vrt()
-                else:
-                    N += ops.nof_snp_vrt(grp)
+            # for grp in no_ovlp(mnps):
+            #     if len(grp)==1:
+            #         N += grp[0].nof_unit_vrt()
+            #     else:
+            #         N += ops.nof_snp_vrt(grp)
 
             for _,it in itertools.groupby(insertions,lambda v: (v.start,v.alt)):
                 N += 1
@@ -1285,9 +1300,9 @@ class MutableVariantSet(VariantSetBase):
                            else vrt.base,GT=GT2,attrib=attrib)
 
         # Add variant to interval tree and variant dict
-        self._add_iv(ret.chrom,ret.start,ret.end,ret.key)
+        ivl_id = self._add_iv(ret.chrom,ret.start,ret.end)
         self._chroms.add(ret.chrom)
-        self._variants[ret.key] = ret
+        self._variants.setdefault(vrt.chrom,{})[ivl_id] = ret
         
         return ret
 
@@ -1699,3 +1714,4 @@ class IndexedVariantFileSet(VariantFileSet,MutableVariantSet):
                 chrom,start,end,parse_info=self.parse_info,
                 parse_samples=self.parse_samples):
             yield vrt
+

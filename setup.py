@@ -1,11 +1,15 @@
 from setuptools import setup
+import re
 
 def readme():
-    with open('README.rst') as f:
-        return f.read()
+    with open('docs/src/Introduction.rst') as f:
+        desc = f.read()
+        desc = re.sub(':class:`~?(.+)`',r'\1',desc)
+        desc = re.sub(':meth:`~?(.+)`',r'\1',desc)
+        return desc
 
 setup(name='genomvar',
-      version='0.1.13',
+      version='0.2.00',
       description='Sequence variant analysis in Python',
       long_description=readme(),
       classifiers=[
@@ -23,7 +27,7 @@ setup(name='genomvar',
           'genomvar':['tmpl/*']
       },
       install_requires=[
-          'bx-python',
+          'rbi-tree',
           'jinja2',
           'pysam'],
       test_suite='unittest',

@@ -57,8 +57,7 @@ etc.).
 from collections import OrderedDict
 import itertools
 import re
-from bx.intervals.intersection import Interval as bxiv
-from bx.intervals.intersection import IntervalTree
+from rbi_tree.tree import ITree
 from genomvar.utils import _strip_ref_alt
 from genomvar import Reference,MAX_END
 
@@ -428,11 +427,9 @@ class Haplotype(VariantBase):
         end = max([v.end for v in variants])
 
         super().__init__(chrom,start,ref='-',alt='-',end=end)
-        self._variants = OrderedDict([(v.key,v) for v in variants]) \
-                 if variants else OrderedDict()
-        self.data = IntervalTree()
-        for vrt in self._variants.values():
-            self.data.add_interval(bxiv(vrt.start,vrt.end,vrt.key))
+        self.data = ITree()
+        ivl_id = [self.data.insert(v.start,v.end) for v in variants]
+        self._variants = OrderedDict(list(zip(ivl_id,variants)))
 
     def __str__(self):
         return '<Haplotype {:s}:{:d}-{:d} of {} variants>'\
@@ -461,7 +458,7 @@ class Haplotype(VariantBase):
         vrt : variants
         """
         for iv in self.data.find(start,end):
-            yield self._variants[iv.value]
+            yield self._variants[iv]
 
     @classmethod
     def from_variants(cls,variants):
