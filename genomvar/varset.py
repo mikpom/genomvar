@@ -851,8 +851,8 @@ class VariantSet(VariantSetBase):
         ids2take = {}
         fields = ('ind','haplotype','chrom','start','end')
         nomatch = []
-        for ind,hap,chrom,start,end in zip(*[vs1._variants[k] \
-                                             for k in fields]):
+        for ind,hap,chrom,start,end in zip(
+                *[vs1._variants[k] for k in fields]):
             if hap!=singleton:
                 continue
             if chrom not in vs2.chroms:
@@ -865,11 +865,14 @@ class VariantSet(VariantSetBase):
                 ind1.extend([ind]*len(ovlp))
                 ids2take.setdefault(chrom,[]).extend(ovlp)
 
-        ind2 = np.concatenate(
-            [np.take(vs2.rows[c],ids2take[c]) for c in ids2take])
-        
-        return nomatch,_iterate(np.take(vs1._variants,ind1),
-                                np.take(vs2._variants,ind2))
+        if ids2take:
+            ind2 = np.concatenate(
+                [np.take(vs2.rows[c],ids2take[c]) for c in ids2take])
+            it = _iterate(np.take(vs1._variants,ind1),
+                          np.take(vs2._variants,ind2))
+        else:
+            it = iter([])
+        return nomatch,it
 
     def _cmp(self,other,action,match_ambig=False,match_partial=True):
         """Returns a new variation set depending on operation

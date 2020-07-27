@@ -1019,6 +1019,13 @@ class TestSetComparisonCase(TestCase):
         comm = s1.comm(s2)
         self.assertEqual(comm.nof_unit_vrt(),s1.nof_unit_vrt())
         self.assertEqual(s2.comm(s1).nof_unit_vrt(), comm.nof_unit_vrt())
+
+    def test_VariantSet_no_common(self):
+        vcf1 = pkg_file('genomvar.test','data/test_vcf.vcf')
+        vcf2 = pkg_file('genomvar.test','data/test_vcf4.vcf.gz')
+        s1 = VariantSet.from_vcf(vcf1)
+        s2 = VariantSet.from_vcf(vcf2)
+        self.assertEqual(s1.comm(s2).nof_unit_vrt(), 0)
         
 class TestIO(TestCase):
     def test_from_vcf(self):

@@ -2,14 +2,14 @@ from setuptools import setup
 import re
 
 def readme():
-    with open('docs/src/Introduction.rst') as f:
+    with open('README.rst') as f:
         desc = f.read()
         desc = re.sub(':class:`~?(.+)`',r'\1',desc)
         desc = re.sub(':meth:`~?(.+)`',r'\1',desc)
         return desc
 
 setup(name='genomvar',
-      version='0.2.00',
+      version='0.2.01',
       description='Sequence variant analysis in Python',
       long_description=readme(),
       classifiers=[
