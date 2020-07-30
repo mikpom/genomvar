@@ -631,12 +631,14 @@ class VariantSet(VariantSetBase):
 
         vrt = self._variants[ind]
         vrt['ind'] = np.arange(vrt.shape[0])
-        ret = VariantSet(
-            vrt,
-            self._vcf_notation[ind] if not self._vcf_notation \
-                     is None else None,
-            self._info[ind] if not self._info is None else None,
-            self._sampdata[ind] if not self._sampdata is None else None)
+
+        # Exекф феекшигеуы
+        vcf_not = self._vcf_notation[ind] if not self._vcf_notation \
+                     is None else None
+        info = self._info[ind] if not self._info is None else None
+        sampdata = {s:self._sampdata[s][ind] for s in self._sampdata} \
+            if not self._sampdata is None else None
+        ret = VariantSet(vrt,vcf_not,info,sampdata)
         if return_dropped:
             dropped_ind = self._variants['ind']\
                 [~np.isin(self._variants['ind'],ind)]
@@ -1146,12 +1148,15 @@ class MutableVariantSet(VariantSetBase):
         if reference is None and normindel:
                 raise ValueError('Can\'t norm indels without reference')
 
-        for vrt in reader.iter_vrt(parse_samples=sample if sample else False,
-                                   parse_info=parse_info):
-            vset.add_vrt(vrt, GT=vrt.attrib['samples'][sample]['GT'] \
-                         if sample else (1,0),
-                         allow_adjust_genotype=True,attrib=vrt.attrib)
-
+        try:
+            for vrt in reader.iter_vrt(
+                    parse_samples=sample if sample else False,
+                    parse_info=parse_info):
+                vset.add_vrt(vrt, GT=vrt.attrib['samples'][sample]['GT'] \
+                             if sample else (1,0),
+                             allow_adjust_genotype=True,attrib=vrt.attrib)
+        finally:
+            reader.close()
         return vset
 
     def _add_iv(self,chrom,start,end):
@@ -1451,9 +1456,9 @@ class CmpSet(object):
 
         Returns
         -------
-        ret : (int, str)
-           if ``int`` is 0 left should be advanced if 1 right,
-           if 2 then both. ``str`` is the chromosome.
+        (which, chrom) : (int, str)
+           if ``which`` is 0 left should be advanced, if 1 then right,
+           if 2 then both. ``chrom`` is the chromosome.
         """
         def _split_at(it,pred):
             buf = []
@@ -1547,47 +1552,53 @@ class CmpSet(object):
         lchrom_it = self.left.iter_vrt_by_chrom(check_order=True)
         rchrom_it = self.right.iter_vrt_by_chrom(check_order=True)
         _vs = {0:[self.left], 1:[self.right], 2:[self.left,self.right]}
-        if self.action=='diff':
-            for which,chrom in self._ordered_chroms():
-                if which==0:
-                    lchrom,it = next(lchrom_it)
-                    for b in it:
-                        yield b
-                elif which==1:
-                    next(rchrom_it)
-                elif which==2:
-                    lchrom,lit = next(lchrom_it)
-                    rchrom,rit = next(rchrom_it)
-                    for b in self._iter_chrom_vrt(lit,rit,callback=callback):
-                        yield b
-        elif self.action=='comm':
-            for which,_ in self._ordered_chroms():
-                if which==0:
-                    next(lchrom_it)
-                elif which==1:
-                    next(rchrom_it)
-                elif which==2:
-                    lchrom,lit = next(lchrom_it)
-                    rchrom,rit = next(rchrom_it)
-                    for b in self._iter_chrom_vrt(lit,rit,callback=callback):
-                        yield b
-        elif self.action=='all':
-            for which,_ in self._ordered_chroms():
-                if which==0:
-                    lchrom,it = next(lchrom_it)
-                    for b in it:
-                        yield (0,b)
-                elif which==1:
-                    rchrom,it = next(rchrom_it)
-                    if self.action=='all':
+        try:
+            if self.action=='diff':
+                for which,chrom in self._ordered_chroms():
+                    if which==0:
+                        lchrom,it = next(lchrom_it)
                         for b in it:
-                            yield (1,b)
-                elif which==2:
-                    lchrom,lit = next(lchrom_it)
-                    rchrom,rit = next(rchrom_it)
-                    for b in self._iter_chrom_vrt(lit,rit,callback=callback):
-                        yield b
-            
+                            yield b
+                    elif which==1:
+                        next(rchrom_it)
+                    elif which==2:
+                        lchrom,lit = next(lchrom_it)
+                        rchrom,rit = next(rchrom_it)
+                        for b in self._iter_chrom_vrt(
+                                lit,rit,callback=callback):
+                            yield b
+            elif self.action=='comm':
+                for which,_ in self._ordered_chroms():
+                    if which==0:
+                        next(lchrom_it)
+                    elif which==1:
+                        next(rchrom_it)
+                    elif which==2:
+                        lchrom,lit = next(lchrom_it)
+                        rchrom,rit = next(rchrom_it)
+                        for b in self._iter_chrom_vrt(
+                                lit,rit,callback=callback):
+                            yield b
+            elif self.action=='all':
+                for which,_ in self._ordered_chroms():
+                    if which==0:
+                        lchrom,it = next(lchrom_it)
+                        for b in it:
+                            yield (0,b)
+                    elif which==1:
+                        rchrom,it = next(rchrom_it)
+                        if self.action=='all':
+                            for b in it:
+                                yield (1,b)
+                    elif which==2:
+                        lchrom,lit = next(lchrom_it)
+                        rchrom,rit = next(rchrom_it)
+                        for b in self._iter_chrom_vrt(
+                                lit,rit,callback=callback):
+                            yield b
+        finally:
+            lchrom_it.close()
+            rchrom_it.close()
                 
     def _iter_chrom_vrt(self,lit,rit,callback=None):
         """Subroutine of :meth:`CmpSet.iter_vrt` acting on sorted variants from
@@ -1657,9 +1668,11 @@ class VariantFileSet(VariantSetBase):
 
     def iter_vrt_by_chrom(self,check_order=False):
         """Iterates variants grouped by chromosome."""
-        return self._reader.iter_vrt_by_chrom(parse_info=self.parse_info,
-                                              parse_samples=self.parse_samples,
-                                              check_order=check_order)
+        return self._reader.iter_vrt_by_chrom(
+                parse_info=self.parse_info,
+                parse_samples=self.parse_samples,
+                check_order=check_order)
+
     def iter_vrt(self,expand=False):
         """
         Iterate over all variants in underlying VCF.
@@ -1673,8 +1686,9 @@ class VariantFileSet(VariantSetBase):
         -------
         variant : :class:`genomvar.variant.GenomVariant`
         """
-        return self._reader.iter_vrt(parse_info=self.parse_info,
-                                     parse_samples=self.parse_samples)
+        return self._reader.iter_vrt(
+            parse_info=self.parse_info,
+            parse_samples=self.parse_samples)
 
     def nof_unit_vrt(self):
         # """

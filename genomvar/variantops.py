@@ -262,7 +262,11 @@ def matchv(target,locus,match_partial=True,match_ambig=False):
                 # this could be done using matchv2 but dealing
                 # with it explicitely for performance
                 if target.is_instance(variant.AmbigIndel) and match_ambig:
-                    return list(filter(lambda v: target.ambig_equal(v),locus))
+                    indels = filter(
+                        lambda v: v.is_instance(variant.Indel),locus)
+                    return list(filter(
+                        lambda v: target.ambig_equal(v),indels))
+                    
                 else:
                     return list(filter(lambda v: target.edit_equal(v),locus))
             else:

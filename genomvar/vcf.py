@@ -34,7 +34,8 @@ def ensure_sorted(it):
     """Uses a heap to ensure variants are yielded 
     in start-sorted order"""
     try:
-        start,rstart,cnt,vrt = next(it)
+        v = next(it)
+        start,rstart,cnt,vrt = v
     except StopIteration:
         return
 
@@ -65,17 +66,35 @@ def _make_converter_func(tp,num):
                 return tp(v[n+1])
             except IndexError:
                 return None
+            except ValueError as exc:
+                if v[n+1]=='.':
+                    return None
+                else:
+                    raise exc
     elif num=='A':
         def f(v,n):
             try:
                 return tp(v[n])
             except IndexError:
                 return None
+            except ValueError as exc:
+                if v[n]=='.':
+                    return None
+                else:
+                    raise exc
     elif num==1:
         if issubclass(tp,np.bool_):
             f = lambda v,n: True
         else:
-            f = lambda v,n: tp(v)
+            def f(v,n):
+                try:
+                    return tp(v)
+                except ValueError as exc:
+                    if v=='.':
+                        return None
+                    else:
+                        raise exc
+                    
     elif num==0:
         if issubclass(tp,np.bool_):
             f = lambda v,n: True
@@ -124,7 +143,15 @@ def parse_gt(gt,ind):
         return gt_cache[(gt,ind)]
     except KeyError:
         vals = re.split('[/|]',gt)
-        GT = tuple([1 if int(vals[i])==ind+1 else 0 for i in range(len(vals))])
+        GT = []
+        for val in vals:
+            if val == '.':
+                GT.append(None)
+            elif int(val)==ind+1:
+                GT.append(1)
+            else:
+                GT.append(0)
+        GT = tuple(GT)
         gt_cache[(gt,ind)] = GT
         return GT
 
@@ -161,7 +188,7 @@ env = Environment(
     loader=FileSystemLoader(tmpl_dir),
 )
 header_simple = env.get_template('vcf_head_simple.tmpl')
-header_info = env.get_template('vcf_head_info.tmpl')
+header = env.get_template('vcf_head.tmpl')
 row_tmpl = env.get_template('vcf_row.tmpl')
 
     
@@ -238,13 +265,14 @@ class DataParser(object):
                 for key,val in zip(row_format,_samples[sn].split(':')):
                     if not self.dtype['format'][key]['number'] in [0,1]:
                         val = val.split(',')
-                    try:
-                        v = self.converters['format'][key](val,an)
-                    except ValueError as exc:
-                        if val=='' or val=='.':
-                            v = None
-                        else:
-                            raise exc
+                    # try:
+                    #     v = self.converters['format'][key](val,an)
+                    # except ValueError as exc:
+                    #     if val=='' or val=='.':
+                    #         v = None
+                    #     else:
+                    #         raise exc
+                    v = self.converters['format'][key](val,an)
                     _sampdata[self.order['format'][key]] = v
                 sampdata[an][sn] = _sampdata
         return sampdata
@@ -263,60 +291,71 @@ class DataParser(object):
 class VCFReader(object):
     """Class to read VCF files."""
     def __init__(self,vcf,index=False,reference=None):
-
-        self.fl = vcf
-        if self.fl.endswith('.gz') or self.fl.endswith('.bgz'):
-            self.compressed = True
-        else:
-            self.compressed = False
-        self.idx_file = None
-        if isinstance(index,bool):
-            if index:
-                idx = self.fl+'.tbi'
-                if os.path.isfile(idx):
-                    self.idx_file = idx
-                else:
-                    raise OSError('Index not found')
-        elif isinstance(index,str):
-            if os.path.isfile(index):
-                self.idx_file = index
+        if isinstance(vcf,str):
+            self.fl = vcf
+            if self.fl.endswith('.gz') or self.fl.endswith('.bgz'):
+                self.compressed = True
             else:
-                raise OSError('{} not found'.format(index))
+                self.compressed = False
+            self.idx_file = None
+            if isinstance(index,bool):
+                if index:
+                    idx = self.fl+'.tbi'
+                    if os.path.isfile(idx):
+                        self.idx_file = idx
+                    else:
+                        raise OSError('Index not found')
+            elif isinstance(index,str):
+                if os.path.isfile(index):
+                    self.idx_file = index
+                else:
+                    raise OSError('{} not found'.format(index))
 
-        if self.idx_file:
-            self.tabix = pysam.TabixFile(filename=self.fl,
-                                         index=self.idx_file)
-        else:
-            self.tabix = None
+            if self.idx_file:
+                self.tabix = pysam.TabixFile(filename=self.fl,
+                                             index=self.idx_file)
+            else:
+                self.tabix = None
 
-        if self.compressed:
-            openfn = gzip.open
-        else:
-            openfn = open
-
+            if self.compressed:
+                self.openfn = gzip.open
+            else:
+                self.openfn = open
+            self.buf = self.openfn(self.fl,'rt')
+            self.opened_file = True
+        else: # buffer-like object
+            self.buf = vcf
+            self.opened_file = False
+        self._vrt_start = False
         self.reference = reference
         # Init default variant factory
         self._factory = VariantFactory(reference,normindel=False)
         self.vrt_fac = {'nonorm':self._factory}
+        self._dtype = {'info':OrderedDict(),'format':OrderedDict()}
+        for cnt,line in enumerate(self.buf):
+            if line.startswith('##INFO'):
+                nm,dat = self._parse_dtype(line)
+                self._dtype['info'][nm] = dat
+            elif line.startswith('##FORMAT'):
+                nm,dat = self._parse_dtype(line)
+                self._dtype['format'][nm] = dat
+            elif line.startswith('#CHROM'):
+                # this should be the last header line
+                self.header_len = cnt + 1
 
-        with openfn(self.fl,'rt') as fh:
-            for cnt,line in enumerate(fh):
-                if line.startswith('#CHROM'):
-                    # this should be the last header line
-                    self.header_len = cnt + 1
-                    
-                    vals = line.strip().split('\t')
-                    if len(vals)>9:
-                        self._samples = vals[9:]
-                    else:
-                        self._samples = []
-                    break
+                vals = line.strip().split('\t')
+                if len(vals)>9:
+                    self._samples = vals[9:]
+                else:
+                    self._samples = []
+                self._vrt_start = True
+                break
 
+        if self.opened_file:
+            self.buf.close()
         self.sample_ind = OrderedDict()
         for ind,sample in enumerate(self._samples):
             self.sample_ind[sample] = ind
-
-        self._dtype = self._parse_header_dtypes()
 
     def get_factory(self,normindel=False):
         """Returns a factory based on normindel parameter."""
@@ -326,52 +365,45 @@ class VCFReader(object):
             vf = VariantFactory(self.reference,normindel=normindel)
             self.vrt_fac['norm' if normindel else 'nonorm'] = vf
             return vf
-        
-    def _parse_header_dtypes(self):
+
+    @staticmethod
+    def _parse_dtype(line):
         """Parses VCF header and returns correct datatypes."""
         info_rx = '##INFO=\<ID=(\S+),Number=([\w.]+),'\
             +'Type=(\w+),Description="(.*)".*\>'
         format_rx = '##FORMAT=\<ID=(\S+),Number=([\w.]+),'\
             +'Type=(\w+),Description="(.*)".*\>'
-        dtype = {'info':OrderedDict(),'format':OrderedDict()}
 
-        if self.compressed:
-            openfn = gzip.open
+        if line.startswith('##INFO'):
+            rx = info_rx
+            hh = 'info'
+        elif line.startswith('##FORMAT'):
+            rx = format_rx
+            hh = 'format'
         else:
-            openfn = open
-        with openfn(self.fl,'rt') as fh:
-            for line in takewhile(lambda l: l.startswith('#'),fh):
-                if line.startswith('##INFO'):
-                    rx = info_rx
-                    hh = 'info'
-                elif line.startswith('##FORMAT'):
-                    rx = format_rx
-                    hh = 'format'
-                else:
-                    continue
-                match = re.match(rx,line)
-                NAME,NUMBER,TYPE,DESCRIPTION = match.groups()
-                try:
-                    num = int(NUMBER)
-                except ValueError:
-                    num = NUMBER
-                if isinstance(num,int):
-                    if num==0:
-                        size = 1
-                        tp = np.bool_
-                    else:
-                        size = num
-                        tp = string2dtype[TYPE]
-                elif num in ('A','R'):
-                    size = 1
-                    tp = string2dtype[TYPE]
-                elif num in ('.','G'):
-                    size = 1
-                    tp = np.object_
-                else:
-                    raise ValueError('Unknown NUMBER:'+num)
-                dtype[hh][NAME] = {'type':tp,'size':size,'number':num}
-        return dtype
+            raise ValueError
+        match = re.match(rx,line)
+        NAME,NUMBER,TYPE,DESCRIPTION = match.groups()
+        try:
+            num = int(NUMBER)
+        except ValueError:
+            num = NUMBER
+        if isinstance(num,int):
+            if num==0:
+                size = 1
+                tp = np.bool_
+            else:
+                size = num
+                tp = string2dtype[TYPE]
+        elif num in ('A','R'):
+            size = 1
+            tp = string2dtype[TYPE]
+        elif num in ('.','G'):
+            size = 1
+            tp = np.object_
+        else:
+            raise ValueError('Unknown NUMBER:'+num)
+        return NAME,{'type':tp,'size':size,'number':num}
 
     def _sample_indices(self,samples):
         ind = {}
@@ -396,38 +428,23 @@ class VCFReader(object):
         else:
             raise ValueError('rgn or chrom,start,end should be given')
 
-    def iter_rows(self):
+    def iter_rows(self,check_order=False):
         """Yields rows of variant file"""
-        if self.compressed:
-            openfn = gzip.open
-        else:
-            openfn = open
-        with openfn(self.fl,'rt') as fh:
-            cnt = 0
-            for line in dropwhile(lambda l: l.startswith('#'),fh):
-                # TODO maybe avoid stripping
-                row = VCFRow(*line.strip().split('\t',maxsplit=9),
-                             rnum=cnt)
-                yield row
-                cnt += 1
+        
+        buf = self.get_buf()
+        buf.seek(0)
+        return RowIterator(self,buf,check_order)
         
     def iter_rows_by_chrom(self,check_order=False):
         """Yields rows grouped by chromosome"""
-        if self.compressed:
-            openfn = gzip.open
-        else:
-            openfn = open
-        with openfn(self.fl,'rt') as fh:
-            noheader = dropwhile(lambda r: r.startswith('#'),fh)
-            _rows = map(lambda t: VCFRow(*t[1].strip().split('\t',maxsplit=9),
-                                           rnum=t[0]),
-                       enumerate(noheader))
-            if check_order:
-                rows = check_VCF_order(_rows)
-            else:
-                rows = _rows
-            for chrom,it in groupby(rows,key=lambda r: r.CHROM):
-                yield chrom,it
+        buf = self.get_buf()
+        buf.seek(0)
+        return RowByChromIterator(self,buf,check_order)
+        # rows = self.iter_rows()
+        # if check_order:
+        #     rows = check_VCF_order(rows)
+        # for chrom,it in groupby(rows,key=lambda r: r.CHROM):
+        #     yield chrom,it
 
     def _parse_vrt(self,row,factory,parse_info=False,parse_samples=False,
                 parse_null=False):
@@ -509,8 +526,9 @@ class VCFReader(object):
                    'vcf':{f:[] for f in dtype1.names}
         }
         vnum = 0
-        
-        for row_chunk in grouper(self.iter_rows(),chunk_sz):
+
+        rows = self.iter_rows()
+        for row_chunk in grouper(rows,chunk_sz):
             haps = []
             tups = {'vrt':[],'info':[],'vcf':[],
                     'sampdata':{s:[] for s in self._samples}}
@@ -557,7 +575,7 @@ class VCFReader(object):
                                 tups['sampdata'][samp]\
                                     .extend([_sampdata[sn]]*added)
                     vnum += added
-            
+
             zipped = {k:list(zip_longest(*tups[k],fillvalue=0)) \
                                  for k in ('vrt','info','vcf')}
             zipped['sampdata'] = {}
@@ -672,21 +690,17 @@ class VCFReader(object):
                     ret['sampdata'][samp][field][:] = fields[field]
         return ret
 
+
     def iter_vrt(self,check_order=False,parse_info=False,
                  normindel=False,parse_samples=False):
         """Yields variant objects"""
-        factory = self.get_factory(normindel=normindel)
-        rows = self.iter_rows()
-        if check_order:
-            rows = check_VCF_order(rows)
         if parse_samples==True:
             samps = 'all'
         else:
             samps = self._normalize_samples(parse_samples)
-        variants = self._variants_from_rows(
-            rows,factory,parse_info,samps)
-        for vrt in ensure_sorted(variants):
-            yield vrt
+        return VrtIterator(self.iter_rows(check_order),
+                           self.get_factory(normindel=normindel),
+                           parse_info,samps)
 
     def iter_vrt_by_chrom(self,parse_info=False,
                           parse_samples=False,normindel=False,
@@ -710,18 +724,19 @@ class VCFReader(object):
         (chrom,it) : tuple of str and iterator
             ``it`` yields :class:`variant.Genomvariant` objects
         """
-        factory = self.get_factory(normindel)
-        def _iter_vrt(rowit):
-            for row in rowit:
-                for base in self._parse_vrt(row,factory,
-                                            parse_info=parse_info,
-                                            parse_samples=parse_samples):
-                    yield base
-        samps = self._normalize_samples(parse_samples)
-        for chrom,it in self.iter_rows_by_chrom(check_order=check_order):
-            variants = self._variants_from_rows(
-                it,factory,parse_info,samps)
-            yield chrom,ensure_sorted(variants)
+        if parse_samples==True:
+            samps = 'all'
+        else:
+            samps = self._normalize_samples(parse_samples)
+        return VrtByChromIterator(self.iter_rows(check_order),
+                                  self.get_factory(normindel=normindel),
+                                  parse_info,samps)
+        # factory = self.get_factory(normindel)
+        # samps = self._normalize_samples(parse_samples)
+        # for chrom,it in self.iter_rows_by_chrom(check_order=check_order):
+        #     variants = self._variants_from_rows(
+        #         it,factory,parse_info,samps)
+        #     yield chrom,ensure_sorted(variants)
 
     def _normalize_samples(self,parse_samples):
         if isinstance(parse_samples,str):
@@ -752,6 +767,7 @@ class VCFReader(object):
             for vrt in self._parse_vrt(row,factory,parse_info,
                                        parse_samples):
                 yield (vrt.start,row.POS-1,cnt,vrt)
+                
                 cnt += 1
 
     def find_vrt(self,chrom=None,start=0,end=MAX_END,
@@ -800,12 +816,8 @@ class VCFReader(object):
         else:
             if unindexed:
                 self._chroms = ChromSet()
-                if self.compressed:
-                    openfn = gzip.open
-                else:
-                    openfn = open
                 is_comment = lambda l: l.startswith('#')
-                with openfn(self.fl,'rt') as fh:
+                with self.openfn(self.fl,'rt') as fh:
                     lines = dropwhile(is_comment,fh)
                     for line in lines:
                         self._chroms.add(line.split('\t',maxsplit=1)[0])
@@ -813,8 +825,18 @@ class VCFReader(object):
             else:
                 msg = 'Need index to get chroms'
                 raise NotImplementedError(msg)
-        
 
+    def get_buf(self):
+        if self.opened_file:
+            r = self.openfn(self.fl,'rt')
+            return r
+        else:
+            return self.buf
+        
+    def close(self):
+        if self.opened_file:
+            self.buf.close()
+    
     @property
     def chroms(self):
         if hasattr(self,'_chroms'):
@@ -905,3 +927,100 @@ def _vcf_row(vrt,template,reference=None):
                           ref=ref,alt=alt,score=100,filt='.',
                           info=';'.join(info))
     return row
+
+class RowIterator:
+    def iterate(self):
+        cnt = 0
+        for line in dropwhile(lambda l: l.startswith('#'),self.fh):
+            # TODO maybe avoid stripping
+            row = VCFRow(*line.strip().split('\t',maxsplit=9),
+                         rnum=cnt)
+            yield row
+            cnt += 1
+        self.close()
+
+    def __init__(self,reader,fh,check_order):
+        self.fh = fh
+        self.check_order = check_order
+        self.reader = reader
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        try:
+            return next(self.iterator)
+        except AttributeError:
+            if self.check_order:
+                self.iterator = check_VCF_order(self.iterate())
+            else:
+                self.iterator = self.iterate()
+            return next(self.iterator)
+
+    def close(self):
+        self.fh.close()
+
+class RowByChromIterator(RowIterator):
+    def iterate(self):
+        rows = super().iterate()
+        if self.check_order:
+            rows = check_VCF_order(rows)
+        for chrom,it in groupby(rows,key=lambda r: r.CHROM):
+            yield chrom,it
+        
+    def __init__(self,*args,**kwds):
+        super().__init__(*args,**kwds)
+        
+    def __next__(self):
+        try:
+            return next(self.iterator)
+        except AttributeError:
+            self.iterator = self.iterate()
+            return next(self.iterator)
+
+class VrtIterator():
+    def iterate(self):
+        variants = self.reader._variants_from_rows(
+                self.rows,self.factory,self.parse_info,self.samps)
+        for vrt in variants:
+            yield vrt
+
+        self.close()
+        
+    def __init__(self,row_iterator,factory,parse_info,samps):
+        self.fh = row_iterator.fh
+        self.rows = row_iterator
+        self.reader = row_iterator.reader
+        self.factory = factory
+        self.parse_info = parse_info
+        self.samps = samps
+        
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        try:
+            return next(self.iterator)
+        except AttributeError:
+            self.iterator = ensure_sorted(self.iterate())
+            return next(self.iterator)
+
+    def close(self):
+        self.fh.close()
+    
+class VrtByChromIterator(VrtIterator):
+    def iterate(self):
+        vrt = super().iterate()
+        for chrom,it in groupby(vrt,key=lambda r: r[-1].chrom):
+            yield chrom,ensure_sorted(it)
+
+    def __init__(self,*args,**kwds):
+        super().__init__(*args,**kwds)
+
+    def __next__(self):
+        try:
+            return next(self.iterator)
+        except AttributeError:
+            self.iterator = self.iterate()
+            return next(self.iterator)
+        

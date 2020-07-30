@@ -1,19 +1,20 @@
 import unittest
 import numpy as np
-from genomvar.vcf import VCFReader
+import io
+from genomvar.vcf import VCFReader, header as vcf_header
 from pkg_resources import resource_filename as pkg_file
 
 class TestVCFReaderCase(unittest.TestCase):
-    def test_infer_dtypes(self):
-        reader = VCFReader(pkg_file('genomvar.test','data/test_vcf.vcf'))
+    def test_init(self):
+        reader = VCFReader(pkg_file('genomvar.test','data/example1.vcf'))
         self.assertEqual(reader.header_len,15)
-        dtype = reader._parse_header_dtypes()
+        dtype = reader._dtype
         self.assertEqual(len(dtype['format']),1)
         self.assertTrue(issubclass(dtype['format']['GT']['type'],np.object_),
                         msg='Got type'+str(dtype['format']['GT']['type']))
     
     def test_iter_chrom_rows(self):
-        reader = VCFReader(pkg_file('genomvar.test','data/test_vcf2.vcf'))
+        reader = VCFReader(pkg_file('genomvar.test','data/example2.vcf.gz'))
         chroms = set()
         rows = {}
         for chrom,it in reader.iter_rows_by_chrom():
@@ -30,15 +31,17 @@ class TestVCFReaderCase(unittest.TestCase):
             chroms.add(chrom)
         self.assertEqual(chroms,{'chr15rgn','chr11rgn'})
 
-    def test_get_chroms(self):
+    def test_example3(self):
         reader = VCFReader(pkg_file(
-            'genomvar.test','data/test_vcf6.vcf.gz'))
+            'genomvar.test','data/example3.vcf'))
         self.assertEqual(list(reader.get_chroms(unindexed=True)),
-                         ['chr1','chr10','chr2'])
+                         ['chr1','chr2','chr10'])
+        vrt = list(reader.iter_vrt(parse_info=True,parse_samples=True))
+        self.assertGreater(len(vrt),0)
 
     def test_check_getting_vrt_is_sorted(self):
         reader = VCFReader(pkg_file(
-            'genomvar.test','data/test_vcf12_gnomad.vcf.gz'),index=True)
+            'genomvar.test','data/example_gnomad_2.vcf.gz'),index=True)
         starts = [v.start for v in reader.iter_vrt()]
         self.assertEqual(starts,sorted(starts))
 
@@ -47,7 +50,7 @@ class TestVCFReaderCase(unittest.TestCase):
         self.assertEqual(starts2,sorted(starts2))
         
     def test_iter_vrt_example1(self):
-        reader = VCFReader(pkg_file('genomvar.test','data/test_vcf.vcf'))
+        reader = VCFReader(pkg_file('genomvar.test','data/example1.vcf'))
         vrts = list(reader.iter_vrt(parse_info=True,parse_samples=True))
         vrt1,vrt2 = vrts[:2]
 
@@ -68,21 +71,8 @@ class TestVCFReaderCase(unittest.TestCase):
         self.assertEqual(vrt1.attrib['samples']['SAMP1']['GT'],(0,1,0))
         self.assertEqual(vrt2.attrib['samples']['SAMP1']['GT'],(0,0,1))
 
-    def test_iter_vrt_example2(self):
-        reader = VCFReader(pkg_file('genomvar.test','data/test_vcf7.vcf'))
-        for vrt in reader.iter_vrt(parse_info=True,parse_samples=True):
-            self.assertTrue(bool(vrt.attrib['samples']['TUMOR']))
-
-        recs = reader.get_records(parse_info=True,parse_samples=True)
-        inforow2 = recs['info'][1]
-        self.assertTrue(np.isnan(inforow2['MQ0']))
-
-        samprow2 = recs['sampdata']['NORMAL'][1]
-        self.assertTrue(np.isnan(samprow2['FDP']))
-        self.assertTrue(np.isnan(samprow2['AU'][1]))
-
     def test_iter_vrt_gzipped(self):
-        reader = VCFReader(pkg_file('genomvar.test','data/test_vcf2.vcf.gz'),
+        reader = VCFReader(pkg_file('genomvar.test','data/example2.vcf.gz'),
                            index=True)
         self.assertEqual(list(reader.chroms),['chr11rgn','chr15rgn'])
         for vrt in reader.iter_vrt():
@@ -91,3 +81,22 @@ class TestVCFReaderCase(unittest.TestCase):
         self.assertEqual(len(list(reader.find_vrt(chrom='chr15rgn'))),4)
         self.assertEqual(len(list(
             reader.find_vrt('chr11rgn',7464,7465))),3)
+
+    def test_from_vcf_missing_values(self):
+        buf = io.StringIO()
+        header = vcf_header.render(
+            samp='\t'.join(['S1','S2']),
+            ctg_len={},
+            format=[{'name':'AD','number':'R',
+                     'type':'Integer','description':'""'},
+                    {'name':'DP','number':'1',
+                     'type':'Integer','description':'""'}])
+        buf.write(header)
+        buf.write('chr15\t17017413\t.\tA\tG\t38\t.\t.\tGT\t./.\t0/1\n')
+        buf.write('chr15\t17017413\t.\tA\tG\t38\t.\t.\tGT:AD\t./.\t0/1:10,.\n')
+        buf.write('chr15\t17017413\t.\tA\tG\t38\t.\t.\tGT:DP\t./.\t1/1:.\n')
+        buf.seek(0)
+        vs = VCFReader(buf)
+        
+        v = list(vs.iter_vrt(parse_samples=True))[0]
+        self.assertEqual(v.attrib['samples']['S1']['GT'], (None,None))

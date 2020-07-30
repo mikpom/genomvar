@@ -1,6 +1,6 @@
 import itertools
 import warnings
-from genomvar.vcf import VCFReader,header_simple,header_info,\
+from genomvar.vcf import VCFReader,header_simple,header as vcf_header,\
     row_tmpl,dtype2string,_vcf_row,_isindexed
 from genomvar.varset import VariantFileSet,IndexedVariantFileSet
 from genomvar import variant
@@ -27,7 +27,7 @@ def _cmp_vcf(f1,f2,out,match_partial=False,chunk=1000):
             {'name':'ln2','number':'.','type':'Integer','description':
                '"If whichVCF is both indicates line number'\
                 +'in the second file"'}]
-    header = header_info.render(ctg_len={},info=info)
+    header = vcf_header.render(ctg_len={},info=info)
     out.write(header)
 
     if _isindexed(f1):

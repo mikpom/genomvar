@@ -5,5 +5,6 @@
 {% if samp %}##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
 {% else %}{% endif -%}
 {% block INFO %}{% endblock -%}
+{% block FORMAT %}{% endblock -%}
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO{% if samp %}	FORMAT	{{samp}}{% else %}{% endif %}
 

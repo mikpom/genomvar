@@ -36,10 +36,11 @@ class test_MNPs(TestCase):
 
 class test_utils(TestCase):
     def test_zip_variants(self):
-        fl = pkg_file('genomvar.test','data/test_vcf5.vcf')
-        it1 = VCFReader(fl).iter_vrt()
-        it2 = VCFReader(fl).iter_vrt()
-        matches = list(zip_variants(it1,it2))
+        fl = pkg_file('genomvar.test','data/example3.vcf')
+        with open(fl,'rt') as fh1:
+            with open(fl) as fh2:
+                matches = list(zip_variants(VCFReader(fh1).iter_vrt(),
+                                            VCFReader(fh2).iter_vrt()))
         d1,v1,ovlp1 = matches[0]
         self.assertEqual(d1,0)
         self.assertEqual(v1.alt,'')

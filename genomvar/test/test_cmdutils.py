@@ -9,8 +9,8 @@ import tempfile
 from genomvar import UnsortedVariantFileError
 
 class TestStreamCmp(TestCase):
-    f1 = pkg_file('genomvar.test','data/test_vcf.vcf')
-    f2 = pkg_file('genomvar.test','data/test_vcf2.vcf')
+    f1 = pkg_file('genomvar.test','data/example1.vcf.gz')
+    f2 = pkg_file('genomvar.test','data/example2.vcf.gz')
     def test_cmp_vcf_files(self):
         def _get_info(info):
             tokenized = info.split(';')
@@ -43,7 +43,7 @@ class TestStreamCmp(TestCase):
     def test_unsorted_VCF_input(self):
         header = []
         lines = []
-        with open(pkg_file('genomvar.test','data/test_vcf.vcf'),'rt') as fh:
+        with open(pkg_file('genomvar.test','data/example1.vcf'),'rt') as fh:
             for line in fh:
                 if line.startswith('#'):
                     header.append(line)
@@ -56,5 +56,5 @@ class TestStreamCmp(TestCase):
         out = io.StringIO()
         with warnings.catch_warnings(record=True):
             with self.assertRaises(UnsortedVariantFileError):
-                _cmp_vcf(pkg_file('genomvar.test','data/test_vcf.vcf'),
+                _cmp_vcf(pkg_file('genomvar.test','data/example1.vcf'),
                          tf.name,out=out)

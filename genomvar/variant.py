@@ -300,7 +300,9 @@ class AmbigIndel(Indel):
             return False
 
     def ambig_equal(self,other):
-        return self.edit_equal(other) or self.shift_equal(other)
+        """Returns true if two variants are equal up to indel ambiguity."""
+        return self.edit_equal(other) or \
+            (other.is_instance(AmbigIndel) and self.shift_equal(other))
 
     def tolist(self):
         return [self.chrom,self.start,self.end,

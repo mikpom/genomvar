@@ -368,6 +368,12 @@ class hierarchy.</p>
 indel could be applied in any position of some region resulting in the same
 alternative sequence.</p>
 <dl class="py method">
+<dt id="genomvar.variant.AmbigIndel.ambig_equal">
+<code class="sig-name descname">ambig_equal</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.AmbigIndel.ambig_equal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns true if two variants are equal up to indel ambiguity.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt id="genomvar.variant.AmbigIndel.edit_equal">
 <code class="sig-name descname">edit_equal</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.AmbigIndel.edit_equal" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns True if <code class="docutils literal notranslate"><span class="pre">self</span></code> represents the same alteration as the <code class="docutils literal notranslate"><span class="pre">other</span></code></p>
@@ -428,6 +434,12 @@ is inserted before nucleotide located 1-2.
 Positions 0-4 indicate that start and end can be extended to
 these values resulting in the same alteration.</p>
 <dl class="py method">
+<dt id="genomvar.variant.AmbigIns.ambig_equal">
+<code class="sig-name descname">ambig_equal</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.AmbigIns.ambig_equal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns true if two variants are equal up to indel ambiguity.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt id="genomvar.variant.AmbigIns.edit_equal">
 <code class="sig-name descname">edit_equal</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.AmbigIns.edit_equal" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns True if <code class="docutils literal notranslate"><span class="pre">self</span></code> represents the same alteration as the <code class="docutils literal notranslate"><span class="pre">other</span></code></p>
@@ -482,6 +494,12 @@ resulting in the same aternative sequence.</p>
 (including 9th resulting in range 2-10).  1-11 denote that start and
 end can be extended to these values resulting in the same
 alteration.</p>
+<dl class="py method">
+<dt id="genomvar.variant.AmbigDel.ambig_equal">
+<code class="sig-name descname">ambig_equal</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.AmbigDel.ambig_equal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns true if two variants are equal up to indel ambiguity.</p>
+</dd></dl>
+
 <dl class="py method">
 <dt id="genomvar.variant.AmbigDel.edit_equal">
 <code class="sig-name descname">edit_equal</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.AmbigDel.edit_equal" title="Permalink to this definition">¶</a></dt>
