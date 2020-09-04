@@ -219,6 +219,10 @@ class Indel(VariantBase):
     def nof_unit_vrt(self):
         return 1
 
+    def ambig_equal(self,other):
+        """Returns true if two variants are equal up to indel ambiguity."""
+        return self.edit_equal(other) or self.shift_equal(other)
+
 
 class Ins(Indel):
     """
@@ -250,6 +254,14 @@ class Ins(Indel):
     def get_key(self):
         return ('Ins',self.chrom,self.start,self.alt)
     
+    def shift_equal(self,other):
+        if not other.is_instance(Ins):
+            return False
+        elif other.is_instance(AmbigIns):
+            return other.shift_equal(self)
+        else: # regular ins
+            return self.edit_equal(other)
+
 class Del(Indel):
     """
     Deletion of nucleotides. For instantiation ``chrom``,
@@ -276,6 +288,13 @@ class Del(Indel):
     def get_key(self):
         return ('Del',self.chrom,self.start,self.end)
     
+    def shift_equal(self,other):
+        if not other.is_instance(Del):
+            return False
+        elif other.is_instance(AmbigDel):
+            return other.shift_equal(self)
+        else: # regular ins
+            return self.edit_equal(other)
 
 class AmbigIndel(Indel):
     """Class representing indel which position is ambigous.  Ambiguity means the
@@ -290,19 +309,24 @@ class AmbigIndel(Indel):
                     self.ref if self.ref else '-',
                     self.alt if self.alt else '-')
 
-    def shift_equal(self,other):
-        a = (other.act_start-self.act_start) % len(self.seq)
-        self_shift = self.seq[a:]+self.seq[:a]
-        if self_shift==other.seq and self.chrom==other.chrom \
-                 and self.vtp==other.vtp:
-            return True
-        else:
-            return False
+    # def shift_equal(self,other):
+    #     if other.is_instance(AmbigIndel):
+    #         a = (other.act_start-self.act_start) % len(self.seq)
+    #         other_seq = other.seq
+    #     elif not other.is_instance(Indel):
+    #         return False
+    #     else:
+    #         a = (other.start-self.act_start) % len(self.seq)
+    #         other_seq = other.alt if other.is_instance(Ins) else other.
+    #         self_shift = self.seq[a:]+self.seq[:a]
+    #         if self_shift==other.seq and self.chrom==other.chrom \
+    #                  and self.vtp==other.vtp:
+    #             return True
+    #         else:
+    #             return False
+    #     else:
+            
 
-    def ambig_equal(self,other):
-        """Returns true if two variants are equal up to indel ambiguity."""
-        return self.edit_equal(other) or \
-            (other.is_instance(AmbigIndel) and self.shift_equal(other))
 
     def tolist(self):
         return [self.chrom,self.start,self.end,
@@ -360,6 +384,21 @@ class AmbigIns(AmbigIndel,Ins):
     def get_key(self):
         return ('Ins',self.chrom,self.act_start,self.alt)
 
+    def shift_equal(self,other):
+        if not other.is_instance(Ins):
+            return False
+        elif other.is_instance(AmbigIns):
+            a = (other.act_start-self.act_start) % len(self.seq)
+            other_seq = other.seq
+        else:
+            a = (other.start-self.act_start) % len(self.seq)
+            other_seq = other.alt
+        self_shift = self.seq[a:] + self.seq[:a]
+        if self_shift==other_seq and self.chrom==other.chrom:
+            return True
+        else:
+            return False
+
 class AmbigDel(AmbigIndel,Del):
     """
     Class representing del which position is ambigous.  Ambiguity means
@@ -397,6 +436,24 @@ class AmbigDel(AmbigIndel,Del):
     @property
     def seq(self):
         return self.ref
+
+    def shift_equal(self,other):
+        if not other.is_instance(Del):
+            return False
+        elif other.is_instance(AmbigDel):
+            other_span = other.act_end - other.act_start
+            if other.start==self.start and other.end==self.end \
+                       and other_span==self.act_end-self.act_start:
+                return True
+            else:
+                return False
+        else: # regular del
+            other_span = other.end - other.start
+            if other.start>=self.start and other.end<=self.end \
+                        and other_span==self.act_end-self.act_start:
+                return True
+            else:
+                return False
 
 class Mixed(VariantBase):
     """Combination of Indel and MNP. Usage of this class is discouraged

@@ -261,7 +261,7 @@ def matchv(target,locus,match_partial=True,match_ambig=False):
             if not any((v.is_instance(variant.Haplotype) for v in locus)):
                 # this could be done using matchv2 but dealing
                 # with it explicitely for performance
-                if target.is_instance(variant.AmbigIndel) and match_ambig:
+                if match_ambig:
                     indels = filter(
                         lambda v: v.is_instance(variant.Indel),locus)
                     return list(filter(

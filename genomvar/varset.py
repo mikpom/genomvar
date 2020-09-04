@@ -236,7 +236,7 @@ class VariantSetBase(object):
         """
         Find variants mathing vrt.
         
-        This method aims to answer common question whether variant ``vrt``
+        The method checks whether variant ``vrt``
         is present in the set.
 
         Parameters
@@ -255,6 +255,7 @@ class VariantSetBase(object):
         -------
         list or dict with matching variants
             dict is returned only of ``vrt`` is a Haplotype
+
         """
         ovlp = list(self._find_vrt(vrt.chrom,vrt.start,vrt.end))
         return ops.matchv(vrt,ovlp,match_ambig=match_ambig,
@@ -420,8 +421,8 @@ class VariantSet(VariantSetBase):
         self.rows = {}
         for chrom in rows:
             self.rows[chrom] = np.zeros(len(rows[chrom]), dtype=np.int_)
-            ind, vals = list(zip(*rows[chrom]))
-            self.rows[chrom][list(ind)] = vals
+            ind, rown = list(zip(*rows[chrom]))
+            self.rows[chrom][list(ind)] = rown
 
     def _genom_vrt_from_row(self,row):
         base = self._vrt_from_row(row)
@@ -576,7 +577,7 @@ class VariantSet(VariantSetBase):
         """
         Remove non-unique variants.
         
-        Returns a variant set where none pair of variants
+        Returns a variant set where no pair of variants
         is edit-equal. Haplotypes are left as is.
 
         Parameters
@@ -850,11 +851,12 @@ class VariantSet(VariantSetBase):
                 except StopIteration:
                     return
         ind1 = []
-        ids2take = {}
+        ids2take = collections.OrderedDict()
         fields = ('ind','haplotype','chrom','start','end')
         nomatch = []
+        vrt = vs1._variants[np.argsort(vs1._variants['chrom'])]
         for ind,hap,chrom,start,end in zip(
-                *[vs1._variants[k] for k in fields]):
+                *[vrt[k] for k in fields]):
             if hap!=singleton:
                 continue
             if chrom not in vs2.chroms:
@@ -870,14 +872,15 @@ class VariantSet(VariantSetBase):
         if ids2take:
             ind2 = np.concatenate(
                 [np.take(vs2.rows[c],ids2take[c]) for c in ids2take])
-            it = _iterate(np.take(vs1._variants,ind1),
-                          np.take(vs2._variants,ind2))
+            ar1 = np.take(vs1._variants,ind1)
+            ar2 = np.take(vs2._variants,ind2)
+            it = _iterate(ar1, ar2)
         else:
             it = iter([])
         return nomatch,it
 
     def _cmp(self,other,action,match_ambig=False,match_partial=True):
-        """Returns a new variation set depending on operation
+        """Returns a new variant set depending on operation
         specified.
         """
         def _quickly_match(v1,v2):

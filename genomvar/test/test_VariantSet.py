@@ -93,6 +93,7 @@ class TestVariantSetCase(TestCase):
         self.assertEqual(v1.attrib['vcf_notation']['start'],1206)
         self.assertEqual(v1.attrib['vcf_notation']['id'],'5')
         self.assertEqual(v1.attrib['vcf_notation']['filt'],'PASS')
+        self.assertEqual(v1.attrib['vcf_notation']['row'],4)
         vrt = list(vset.find_vrt('chr15rgn',154,156))
         self.assertEqual(len(vrt),1)
         v1 = vrt[0]
@@ -153,6 +154,30 @@ class TestVariantSetCase(TestCase):
         self.assertEqual(len(vs1.match(vrt_CG,match_partial=False)),0)
         self.assertEqual(len(vs1.match(vrt_CC)),0)
         self.assertEqual(len(vs1.match(vrt_CC,match_partial=False)),0)
+
+    def test_match2(self):
+        #       1
+        # R     TCACAG
+        # del1  T--CAG
+        # del2  TCA--G
+        del1 = variant.Del('chrom',1,3)
+        adel1 = variant.AmbigDel('chrom',(1,1),(5,3),'CA','')
+        del2 = variant.Del('chrom',2,4)
+        adel2 = variant.AmbigDel('chrom',(1,2),(5,4),'AC','')
+        
+
+        vs = VariantSet.from_variants([del1])
+        self.assertEqual(len(vs.match(adel1)),1)
+        self.assertEqual(len(vs.match(adel2)),0)
+        self.assertEqual(len(vs.match(adel2,match_ambig=True)),1)
+
+        vs2 = VariantSet.from_variants([adel1])
+        self.assertEqual(len(vs2.match(adel1)),1)
+        self.assertEqual(len(vs2.match(del1)),1)
+        self.assertEqual(len(vs2.match(adel2)),0)
+        self.assertEqual(len(vs2.match(adel2,match_ambig=True)),1)
+        self.assertEqual(len(vs2.match(del2,match_ambig=True)),1)
+        self.assertEqual(len(vs2.match(del2,match_ambig=False)),0)
 
     def test_drop_duplicates(self):
         buf = io.StringIO()
@@ -241,7 +266,7 @@ class TestIndexedVariantFileCase(TestCase):
             match = vs1.match(vrt)
             self.assertEqual(len(match),1)
 
-    def  test_error_on_format(self):
+    def test_error_on_format(self):
         with self.assertRaises(OSError):
             vset = IndexedVariantFileSet(
                 pkg_file('genomvar.test','data/example1.vcf'),

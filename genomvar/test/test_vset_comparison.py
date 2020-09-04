@@ -13,6 +13,21 @@ factory = variant.VariantFactory()
 CHR15RGN = pkg_file('genomvar.test','data/chr15rgn.fna')
 
 class TestVariantSetComparison(TestCase):
+    def test_many_chroms_shuffled(self):
+        vs1 = VariantSet.from_vcf(
+            pkg_file('genomvar.test','data/example3.vcf'))
+        vrt = list(vs1.iter_vrt())
+        vrt2 = [vrt[i] for i in (0,7,1,6,2,5,3,4)]
+        vs2 = VariantSet.from_variants(vrt2)
+
+        self.assertEqual(vs1.comm(vs2).nof_unit_vrt(),
+                         vs1.nof_unit_vrt())
+        self.assertEqual(vs1.diff(vs2).nof_unit_vrt(), 0)
+
+        self.assertEqual(vs2.comm(vs1).nof_unit_vrt(),
+                         vs2.nof_unit_vrt())
+        self.assertEqual(vs2.diff(vs1).nof_unit_vrt(), 0)
+        
     def test_diff_del(self):
         vrt = variant.Del(chrom="chr1",start=6751613,end=6751627)
         vs1 = VariantSet.from_variants([vrt])

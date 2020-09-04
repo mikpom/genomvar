@@ -27,8 +27,7 @@ dtype0 = np.dtype([('ind',np.int_),('haplotype',np.int_),('chrom','O'),
                    ('vartype','O'),('start2',np.int_),('end2',np.int_)])
 # data type of VCF fields array of VariantSet class
 dtype1 = np.dtype([('start',np.int_),('ref',np.object_),('alt',np.object_),
-                   ('id',np.object_),('filt',np.object_)])
-
+                   ('id',np.object_),('filt',np.object_),('row',np.int_)])
 
 def ensure_sorted(it):
     """Uses a heap to ensure variants are yielded 
@@ -560,7 +559,7 @@ class VCFReader(object):
 
                     # Adding VCF notation related fields
                     tups['vcf'].append([row.POS-1,row.REF,row.ALT,
-                                        row.ID,row.FILTER]*added)
+                                        row.ID,row.FILTER,row.rnum]*added)
                     if parse_info:
                         if added==1:
                             tups['info'].append(_info)

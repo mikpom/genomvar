@@ -12,10 +12,20 @@ svf = variant.VariantFactory()
 
 class TestVariantsCase(unittest.TestCase):
     def test_indel_equality(self):
-        del1 = variant.AmbigDel('chr1',(1,1),(5,3),'CA','')
-        del2 = variant.AmbigDel('chr1',(1,2),(5,4),'AC','')
-        self.assertTrue(del1.ambig_equal(del2))
-        self.assertFalse(del1.edit_equal(del2))
+        #       1
+        # R     TCACAG
+        # del1  T--CAG
+        # del2  TCA--G
+        adel1 = variant.AmbigDel('chrom',(1,1),(5,3),'CA','')
+        adel2 = variant.AmbigDel('chrom',(1,2),(5,4),'AC','')
+        self.assertTrue(adel1.ambig_equal(adel2))
+        self.assertFalse(adel1.edit_equal(adel2))
+
+        del1 = variant.Del('chrom',1,3)
+        self.assertTrue(del1.edit_equal(adel1))
+        self.assertTrue(del1.ambig_equal(adel1))
+        self.assertTrue(adel1.edit_equal(del1))
+        self.assertTrue(adel1.ambig_equal(del1))
 
     def test_instantiation_from_edit(self):
         # **Simple insertion**
