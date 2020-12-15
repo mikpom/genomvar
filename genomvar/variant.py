@@ -59,7 +59,8 @@ import itertools
 import re
 from rbi_tree.tree import ITree
 from genomvar.utils import _strip_ref_alt
-from genomvar import Reference,MAX_END
+from genomvar import Reference,MAX_END,NoVCFNotationError
+from genomvar.vcf_utils import row_tmpl as vcf_row_template
 
 hgvs_regex = {'SNP':'([0-9]+)([AGTC])>([AGTC])',
               'Del':'([0-9]+)(?:_([0-9]+))?del',
@@ -147,7 +148,68 @@ class VariantBase(object):
     def key(self,value):
         delattr(self,'_key')
 
+    def _format_row(self,chrom,pos,ref,alt):
+        info = []
+        if hasattr(self, 'attrib') and 'info' in self.attrib:
+            info.extend(['{}={}'.format(k,v) for k,v in \
+                         self.attrib['info'].items()])
+        row = vcf_row_template.render(
+            chrom=self.chrom,pos=pos,
+            ref=ref,alt=alt,qual='.',filt='.',id='.',
+            info='.')
+        return row
 
+    def _get_ref_notation(self,start,end, vcf_notation=None):
+        # try:
+        #     vcf_notation = self.attrib['vcf_notation']
+        # except AttributeError:
+        #     raise NoVCFNotationError
+        # except KeyError:
+        #     if not 'vcf_notation' in self.attrib:
+        #         raise NoVCFNotationError
+        start_ = start-vcf_notation['start']
+        end_ = end-vcf_notation['start']
+        if start_>=0 and end_<=len(vcf_notation['ref']):
+            ref = vcf_notation['ref'][start_:end_]
+        else:
+            raise NoVCFNotationError('Out of bounds of vcf notation ref')
+        return ref
+
+    def _get_vcf_ref(self,start,end,vcf_notation=None,reference=None):
+        if not vcf_notation is None:
+            try:
+                return self._get_ref_notation(
+                    start,end, vcf_notation=vcf_notation)
+            except NoVCFNotationError:
+                if reference is None:
+                    raise ValueError('No reference')
+        return reference.get(self.chrom, start, end)
+
+    def to_vcf_row(self, reference=None):
+        """Formats a variant to a VCF row. 
+
+        For indels reference is need to build correct REF field.
+
+        Parameters
+        ----------
+        reference : Reference
+            Reference sequence
+        Returns
+        -------
+        row : str
+            VCF row representation of variant
+
+        Notes
+        -----
+        >>> factory = variant.VariantFactory()
+        >>> v1 = factory.from_edit('chr15rgn',2093,'TGG','CCC')
+        >>> print(v1.to_vcf_row())
+        chr15rgn        2094    .   TGG     CCC     .     . .
+        """
+        pos, ref, alt = self.get_vcf_notation(
+            reference=reference)
+        return self._format_row(chrom=self.chrom, pos=pos,
+                         ref=ref, alt=alt)
 class MNP(VariantBase):
     """
     Multiple-nucleotide polymorphism.  Substitute N nucleotides of the
@@ -183,6 +245,13 @@ class MNP(VariantBase):
     def get_key(self):
         return ('MNP',self.chrom,self.start,self.end,self.alt)
 
+    def get_vcf_notation(self,vcf_notation=None,reference=None):
+        ref = self.ref if self.ref else self._get_vcf_ref(
+            self.start,self.end,vcf_notation=vcf_notation,reference=reference)
+        alt = self.alt
+        pos = self.start + 1 # to 1-based
+        return pos, ref, alt
+        
 class SNP(MNP):
     """
     Single-nucleotide polymorphism.
@@ -262,6 +331,13 @@ class Ins(Indel):
         else: # regular ins
             return self.edit_equal(other)
 
+    def get_vcf_notation(self,vcf_notation=None,reference=None):
+        ref = self._get_vcf_ref(
+            self.start-1,self.start,vcf_notation=vcf_notation,
+            reference=reference)
+        alt = ref + self.alt
+        return self.start, ref, alt
+
 class Del(Indel):
     """
     Deletion of nucleotides. For instantiation ``chrom``,
@@ -295,6 +371,13 @@ class Del(Indel):
             return other.shift_equal(self)
         else: # regular ins
             return self.edit_equal(other)
+
+    def get_vcf_notation(self,vcf_notation=None,reference=None):
+        ref = self._get_vcf_ref(
+            self.start-1, self.end,vcf_notation=vcf_notation,
+            reference=reference)
+        alt = ref[0]
+        return self.start, ref, alt
 
 class AmbigIndel(Indel):
     """Class representing indel which position is ambigous.  Ambiguity means the
@@ -399,6 +482,15 @@ class AmbigIns(AmbigIndel,Ins):
         else:
             return False
 
+    def get_vcf_notation(self,vcf_notation=None,reference=None):
+        ref = self._get_vcf_ref(
+            self.start-1, self.start,
+            vcf_notation=vcf_notation,reference=reference)
+        a = (self.act_start-self.start) % len(self.seq)
+        shifted = self.seq[-a:]+self.seq[:-a]
+        alt = ref + shifted
+        return self.start, ref, alt
+
 class AmbigDel(AmbigIndel,Del):
     """
     Class representing del which position is ambigous.  Ambiguity means
@@ -454,6 +546,14 @@ class AmbigDel(AmbigIndel,Del):
                 return True
             else:
                 return False
+
+    def get_vcf_notation(self,vcf_notation=None,reference=None):
+        ref = self._get_vcf_ref(
+            self.start-1, self.start+(self.act_end-self.act_start),
+            vcf_notation=vcf_notation,
+            reference=reference)
+        alt = ref[0]
+        return self.start, ref, alt
 
 class Mixed(VariantBase):
     """Combination of Indel and MNP. Usage of this class is discouraged
@@ -598,12 +698,12 @@ class GenomVariant(object):
         return object.__getattribute__(self.base,name)
 
     def __str__(self):
-        return '{} GT:{}>'.\
-            format(self.base.__str__()[:-1],
+        return '<GenomVariant: {}'.\
+            format(self.base.__str__()[1:],
                    getattr(self,'GT',None))
 
     def __repr__(self):
-        return 'GenomVariant({}, GT={})'.format(repr(self.base),str(self.GT))
+        return 'GenomVariant({})'.format(repr(self.base),str(self.GT))
 
     def edit_equal(self,other):
         """
@@ -622,6 +722,89 @@ class GenomVariant(object):
         
         return self.base.edit_equal(other)
 
+    def _get_ref_notation(self,start,end):
+        try:
+            vcf_notation = self.attrib['vcf_notation']
+        except AttributeError:
+            raise NoVCFNotationError
+        except KeyError:
+            if not 'vcf_notation' in self.attrib:
+                raise NoVCFNotationError
+        start_ = start-vcf_notation['start']
+        end_ = end-vcf_notation['start']
+        if start_>=0 and end_<=len(vcf_notation['ref']):
+            ref = vcf_notation['ref'][start_:end_]
+        else:
+            raise NoVCFNotationError('Out of bounds of vcf notation ref')
+        return ref
+
+    def to_vcf_row(self, reference=None):
+        """Formats a variant to a VCF row. 
+
+        For indels reference is need to build correct REF field.
+        if ``attrib`` contains ``id``, ``qual``, ``filter`` keys 
+        then their values are used to populate corresponding fields 
+        in a VCF row. 
+        
+        FORMAT and SAMPLES are not yet supported.
+
+        Parameters
+        ----------
+        reference : Reference
+            Reference sequence
+        Returns
+        -------
+        row : str
+            VCF row representation of variant
+
+        Notes
+        -----
+        >>> factory = variant.VariantFactory()
+        >>> v1 = factory.from_edit('chr15rgn',2093,'TGG','CCC')
+        >>> gv = GenomVariant(v1, attrib={'id':'vrtid',
+        ...                               'filter':'LOWQUAL',
+        ...                               'qual':100})
+        >>> print(gv.to_vcf_row())
+        chr15rgn        2094    vrtid   TGG     CCC     100     LOWQUAL .
+        """
+        pos, ref, alt = self.base.get_vcf_notation(
+            vcf_notation=self.attrib.get('vcf_notation'),
+            reference=reference)
+        return self._format_row(chrom=self.chrom, pos=pos,
+                         ref=ref, alt=alt)
+
+    def _get_vcf_ref(self,start,end,reference=None):
+        try:
+            ref = self._get_ref_notation(start,end)
+        except NoVCFNotationError:
+            if reference is None:
+                raise ValueError('No reference')
+            else:
+                return reference.get(self.chrom, start, end)
+
+    def _format_row(self,chrom,pos,ref,alt):
+        _to_string = lambda v: '.' if v is None else str(v)
+        def _get_filter(v):
+            if v is None:
+                return '.'
+            elif isinstance(v, list):
+                return ';'.join(v)
+            else:
+                return str(v)
+        info = []
+        if 'info' in self.attrib:
+            info.extend(['{}={}'.format(k,v) for k,v in \
+                         self.attrib['info'].items()])
+        dt = self.attrib
+        row = vcf_row_template.render(
+            chrom=self.chrom,pos=pos,
+            id=_to_string(dt.get('id','.')),
+            ref=ref,alt=alt,
+            qual=_to_string(dt.get('qual','.')),
+            filt=_get_filter(dt.get('filter')),
+            info=';'.join(info) if info else '.')
+        return row
+    
 class VariantFactory(object):
     """
     Factory class used to create Variant objects.  Can be instantiated

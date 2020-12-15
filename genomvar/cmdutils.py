@@ -1,7 +1,8 @@
 import itertools
 import warnings
-from genomvar.vcf import VCFReader,header_simple,header as vcf_header,\
-    row_tmpl,dtype2string,_vcf_row,_isindexed
+from genomvar.vcf import VCFReader,\
+    dtype2string,_isindexed
+from genomvar.vcf_utils import row_tmpl, header as vcf_header
 from genomvar.varset import VariantFileSet,IndexedVariantFileSet
 from genomvar import variant
 
@@ -61,7 +62,7 @@ def _cmp_vcf(f1,f2,out,match_partial=False,chunk=1000):
                               'ln2':','.join(map(str,lineno2)) if which==2\
                                   else '.'}
         try:
-            row = _vcf_row(vrt,template=row_tmpl)
+            row = vrt.to_vcf_row()
         except ValueError as exc:
             if vrt.is_instance(variant.Haplotype) \
                     or vrt.is_instance(variant.Asterisk):

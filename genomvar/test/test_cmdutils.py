@@ -13,6 +13,8 @@ class TestStreamCmp(TestCase):
     f2 = pkg_file('genomvar.test','data/example2.vcf.gz')
     def test_cmp_vcf_files(self):
         def _get_info(info):
+            if info=='.':
+                return {}
             tokenized = info.split(';')
             kval = map(lambda i: i.split('=',maxsplit=1),tokenized)
             return {k:v for (k,v) in kval}

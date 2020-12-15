@@ -29,8 +29,8 @@ from genomvar.variant import VariantBase,AmbigIndel,\
     GenomVariant,Haplotype,VariantFactory
 from genomvar.utils import rgn_from,zip_variants,\
     chunkit,no_ovlp
-from genomvar.vcf import VCFReader,header_simple,row_tmpl,_vcf_row,\
-    dtype0,dtype1
+from genomvar.vcf import VCFReader,dtype0,dtype1
+from genomvar.vcf_utils import header_simple,row_tmpl
 from genomvar import OverlappingHaplotypeVars,\
     Reference,DifferentlySortedChromsError,\
     DuplicateVariants,singleton,ChromSet
@@ -318,7 +318,7 @@ class VariantSetBase(object):
         return CmpSet(self,other,action,match_partial=match_partial,
                       match_ambig=match_ambig)
     
-    def to_vcf(self,out):
+    def to_vcf(self,out,reference=None):
         """Writes a minimal VCF with variants from the set. 
 
         INFO and SAMPLE data from source data is not preserved.
@@ -330,6 +330,13 @@ class VariantSetBase(object):
            If string then it's path to file, otherwise a handle 
            to write variants.
 
+        reference : Reference or str, optional
+           If string then it's path to reference FASTA or it is
+           object of :class:`genomvar.Reference`.
+           
+           This is not necessary if self was instantiated with a reference.
+           If however given, this argument takes precedence.
+
         Returns
         -------
         None
@@ -340,14 +347,23 @@ class VariantSetBase(object):
         else:
             fh = out
             opened = False
-        
+
+        if reference:
+            if isinstance(reference,Reference):
+                reference=reference
+            elif isinstance(reference,str):
+                reference = Reference(reference,cache_dst=100000)
+            else:
+                raise TypeError('reference not understood')
+        else:
+            reference = self.reference
+
         header = header_simple.render(
-            ctg_len=self.ctg_len if self.reference else {})
+            ctg_len=self.ctg_len if reference else {})
         fh.write(header)
         for vrt in self.find_vrt(expand=True):
             try:
-                row = _vcf_row(vrt,template=row_tmpl,
-                               reference=self.reference)
+                row = vrt.to_vcf_row(reference=reference)
             except ValueError as exc:
                 if vrt.is_instance(variant.Haplotype) \
                         or vrt.is_instance(variant.Asterisk):
@@ -444,13 +460,17 @@ class VariantSet(VariantSetBase):
                 raise exc
 
     def _get_attrib(self,rnum):
+        EXPOSED_ATTRIB = ['id', 'qual', 'filter']
         if not self._info is None:
             attrib = {'info':self._info[rnum]}
         else:
             attrib = {}
         if not self._vcf_notation is None:
-            attrib['vcf_notation'] = dict(zip(dtype1.names,
-                            self._vcf_notation[rnum].tolist()))
+            d = dict(zip(dtype1.names,
+                         self._vcf_notation[rnum].tolist()))
+            d2 = {k:d.pop(k) for k in EXPOSED_ATTRIB}
+            attrib['vcf_notation'] = d
+            attrib.update(d2)
         if not self._sampdata is None:
             attrib.update({'samples':{s:self._sampdata[s][rnum]\
                                       for s in self._sampdata}})

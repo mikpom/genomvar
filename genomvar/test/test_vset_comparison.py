@@ -121,7 +121,7 @@ class TestSetComparisonCase(TestCase):
         _vrt = list(diff.find_vrt('chr15rgn',1200,1210))
         self.assertEqual(len(_vrt),1)
         v = _vrt[0]
-        self.assertEqual(v.attrib['filters'],['PASS'])
+        self.assertEqual(v.attrib['filter'],['PASS'])
         self.assertEqual(v.attrib['info']['AF'],1.0)
 
     def test_strip_order_dependent_Ambig(self):

@@ -1,7 +1,8 @@
 import unittest
 import numpy as np
 import io
-from genomvar.vcf import VCFReader, header as vcf_header
+from genomvar.vcf import VCFReader
+from genomvar.vcf_utils import header as vcf_header
 from pkg_resources import resource_filename as pkg_file
 
 class TestVCFReaderCase(unittest.TestCase):

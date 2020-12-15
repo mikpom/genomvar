@@ -12,7 +12,7 @@ from genomvar.variant import VariantBase,AmbigIndel,Haplotype,VariantFactory
 from genomvar import varset,Reference
 from genomvar import OverlappingHaplotypeVars,\
     UnsortedVariantFileError,VCFSampleMismatch
-from genomvar.vcf import VCFRow,VCFReader,header_simple
+from genomvar.vcf import VCFRow,VCFReader
 from genomvar import variant
 
 # The following is a scheme for example used here a lot (example1.vcf)
@@ -91,9 +91,10 @@ class TestVariantSetCase(TestCase):
         self.assertTrue(v1.is_instance(variant.SNP))
         self.assertEqual(v1.attrib['vcf_notation']['ref'],'G')
         self.assertEqual(v1.attrib['vcf_notation']['start'],1206)
-        self.assertEqual(v1.attrib['vcf_notation']['id'],'5')
-        self.assertEqual(v1.attrib['vcf_notation']['filt'],'PASS')
         self.assertEqual(v1.attrib['vcf_notation']['row'],4)
+        self.assertEqual(v1.attrib['id'],'5')
+        self.assertEqual(v1.attrib['filter'],'PASS')
+        self.assertEqual(v1.attrib['qual'],100)
         vrt = list(vset.find_vrt('chr15rgn',154,156))
         self.assertEqual(len(vrt),1)
         v1 = vrt[0]
@@ -683,6 +684,19 @@ class TestIO(TestCase):
         row4 = rows[4]
         self.assertEqual([row4.CHROM,row4.POS,row4.REF,row4.ALT],
                          ['chr15rgn',9946,'CTT','C'])
+
+    def test_to_vcf_no_ref(self):
+        vs1 = VariantSet.from_variants(
+            [variant.Del("chr15rgn",23,24),
+             variant.SNP("chr15rgn",1206,"C")]
+        )
+
+        buf = io.StringIO()
+        vs1.to_vcf(buf, reference=CHR15RGN)
+        buf.seek(0)
+
+        vs2 = VariantSet.from_vcf(buf)
+        self.assertEqual(vs1.comm(vs2).nof_unit_vrt(), 2)
 
     def test_from_to_vcf(self):
         variants1 = sorted(VCFReader(

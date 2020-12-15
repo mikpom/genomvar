@@ -1,8 +1,11 @@
 import unittest
+import copy
 from pkg_resources import resource_filename as pkg_file
 from genomvar import Reference
 from genomvar.varset import VariantBase
 from genomvar import variant
+from genomvar.vcf import VCFReader, VCF_fields, VCFRow
+from genomvar.variant import GenomVariant
 
 CHR15RGN = pkg_file('genomvar.test','data/chr15rgn.fna')
 # Factory normalizing indels
@@ -124,4 +127,60 @@ class TestVariantsCase(unittest.TestCase):
         h2 = variant.Haplotype.from_variants([v1,v3])
         self.assertTrue(h1.edit_equal(h1_))
         self.assertFalse(h1.edit_equal(h2))
+
+    def test_to_vcf_row_instantiated_variant(self):
+        factory = variant.VariantFactory()
+        v1 = factory.from_edit('chr15rgn',2093,'TGG','CCC')
+        row = v1.to_vcf_row()
+        self.assertEqual(row, 'chr15rgn\t2094\t.\tTGG\tCCC\t.\t.\t.')
+
+        gv = GenomVariant(v1, attrib={'id':'vrtid', 'filter':'LOWQUAL',
+                                      'qual':100})
+        row = gv.to_vcf_row()
+        self.assertEqual(
+            row,'chr15rgn\t2094\tvrtid\tTGG\tCCC\t100\tLOWQUAL\t.')
         
+    def test_change_of_attributes(self):
+        reader = VCFReader(
+            pkg_file('genomvar.test','data/example1.vcf'))
+        vrt = list(reader.iter_vrt())[0]
+        self.assertEqual(vrt.to_vcf_row(),
+                         'chr15rgn\t23\t1\tAG\tA\t100\tPASS\t.')
+        vrt2 = copy.deepcopy(vrt)
+        vrt2.attrib['id'] = '.'
+        vrt2.attrib['qual'] = '.'
+        vrt2.attrib['filter'] = '.'
+        self.assertEqual(vrt2.to_vcf_row(),
+                         'chr15rgn\t23\t.\tAG\tA\t.\t.\t.')
+
+        vrt3 = copy.deepcopy(vrt)
+        vrt3.attrib['id'] = None
+        vrt3.attrib['qual'] = None
+        vrt3.attrib['filter'] = None
+        self.assertEqual(vrt3.to_vcf_row(),
+                         'chr15rgn\t23\t.\tAG\tA\t.\t.\t.')
+        reader.close()
+        reader.close()
+
+    def test_to_vcf_row_from_file(self):
+        def _split_multiallelic(rows):
+            for row in rows:
+                for alt in row.ALT.split(','):
+                    kwds = {f:getattr(row,f) for f in VCF_fields}
+                    kwds['ALT'] = alt
+                    kwds['INFO'] = '.'
+                    kwds['FORMAT'] = None
+                    kwds['SAMPLES'] = None
+                    yield str(VCFRow(**kwds))
+
+        reader = VCFReader(pkg_file('genomvar.test','data/example1.vcf'))
+        variants = list(reader.iter_vrt(
+            parse_info=False,parse_samples=False))
+        rows = [v.to_vcf_row() for v in variants]
+        
+        for r1, r2 in zip(
+                _split_multiallelic(reader.iter_rows()), rows):
+            if 'AG\tAGG' in r1: # stripping 
+                continue
+            self.assertEqual(r1,r2)
+        reader.close()

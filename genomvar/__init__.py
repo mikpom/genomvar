@@ -10,14 +10,11 @@ class OverlappingHaplotypeVars(Exception):
     def __init__(self,message,ovlp=None):
         self.message = message
         self.ovlp = ovlp
-class VCFSampleMismatch(Exception):
-    pass
-class UnsortedVariantFileError(Exception):
-    pass
-class DifferentlySortedChromsError(Exception):
-    pass
-class DuplicateVariants(Exception):
-    pass
+class VCFSampleMismatch(Exception):pass
+class UnsortedVariantFileError(Exception): pass
+class DifferentlySortedChromsError(Exception): pass
+class DuplicateVariants(Exception): pass
+class NoVCFNotationError(Exception): pass
 
 class ChromSet(collections.abc.Set):
     '''Chromosome set remembers the order of chromosome addition.'''

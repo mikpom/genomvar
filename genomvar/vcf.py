@@ -6,7 +6,6 @@ from itertools import dropwhile,groupby,repeat,takewhile,zip_longest,islice
 from collections import namedtuple,OrderedDict,deque
 import re
 import gzip
-from jinja2 import Environment,FileSystemLoader
 import numpy as np
 from genomvar import Reference,singleton,\
     variant,ChromSet,VCFSampleMismatch,\
@@ -27,7 +26,8 @@ dtype0 = np.dtype([('ind',np.int_),('haplotype',np.int_),('chrom','O'),
                    ('vartype','O'),('start2',np.int_),('end2',np.int_)])
 # data type of VCF fields array of VariantSet class
 dtype1 = np.dtype([('start',np.int_),('ref',np.object_),('alt',np.object_),
-                   ('id',np.object_),('filt',np.object_),('row',np.int_)])
+                   ('id',np.object_),('qual',np.float_),('filter',np.object_),
+                   ('row',np.int_)])
 
 def ensure_sorted(it):
     """Uses a heap to ensure variants are yielded 
@@ -154,6 +154,8 @@ def parse_gt(gt,ind):
         gt_cache[(gt,ind)] = GT
         return GT
 
+VCF_fields = ["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER",  "INFO",
+              "FORMAT",  "SAMPLES"]
 class VCFRow(object):
     """Class to store a single row from VCF. Sample data if present is not 
     splitted per sample and kept as a single string."""
@@ -171,26 +173,18 @@ class VCFRow(object):
         self.SAMPLES = SAMPLES
         self.rnum = rnum
 
-    __slots__ = 'CHROM','POS','ID','REF','ALT','QUAL','FILTER','INFO',\
-        'FORMAT','SAMPLES','rnum'
+    __slots__ = [*VCF_fields, 'rnum']
 
     def __repr__(self):
         return '<VCFRow {}:{} {}->{}>'\
             .format(self.CHROM,self.POS,self.REF,self.ALT)
     def __str__(self):
-        return '\t'.join([self.CHROM,str(self.POS),self.ID,self.REF,
-                          self.ALT,self.QUAL,self.FILTER,self.INFO,
-                          str(self.FORMAT),str(self.SAMPLES)])
+        fields = [self.CHROM,str(self.POS),self.ID,self.REF,
+                       self.ALT,self.QUAL,self.FILTER,self.INFO]
+        if not self.FORMAT is None:
+            fields += [str(self.FORMAT),str(self.SAMPLES)]
+        return '\t'.join(fields)
 
-tmpl_dir = os.path.join(os.path.dirname(__file__),'tmpl')
-env = Environment(
-    loader=FileSystemLoader(tmpl_dir),
-)
-header_simple = env.get_template('vcf_head_simple.tmpl')
-header = env.get_template('vcf_head.tmpl')
-row_tmpl = env.get_template('vcf_row.tmpl')
-
-    
 class DataParser(object):
     """Object for parsing INFO and SAMPLES data."""
     def __init__(self,dtype,sample_ind):
@@ -474,8 +468,8 @@ class VCFReader(object):
                 sampd = {}
             # FIXME avoid dictionaries
             attrib = {'info':infod,'samples':sampd,
-                      'allele_num':ind,'filters':row.FILTER.split(';'),
-                      'id':row.ID}
+                      'allele_num':ind,'filter':row.FILTER.split(';'),
+                      'id':row.ID, 'qual':row.QUAL}
             attrib['vcf_notation'] = {'start' : row.POS-1,'ref' : row.REF,
                                       'row' : row.rnum}
             _vrt = GenomVariant(base,attrib=attrib)
@@ -500,7 +494,7 @@ class VCFReader(object):
                                 row.POS-1+len(row.REF))
             _vrt = GenomVariant(base,attrib={'info':info2,
                                              'samples':samples2,
-                                             'filters':row.FILTER.split(';'),
+                                             'filter':row.FILTER.split(';'),
                                              'id':row.ID,'allele_num':'null'})
             vrt.append(_vrt)
                 
@@ -558,8 +552,9 @@ class VCFReader(object):
                         haps.append(singleton)
 
                     # Adding VCF notation related fields
-                    tups['vcf'].append([row.POS-1,row.REF,row.ALT,
-                                        row.ID,row.FILTER,row.rnum]*added)
+                    tups['vcf'].append([row.POS-1,row.REF,row.ALT,row.ID,
+                                        row.QUAL if row.QUAL!='.' else None,
+                                        row.FILTER,row.rnum]*added)
                     if parse_info:
                         if added==1:
                             tups['info'].append(_info)
@@ -868,64 +863,64 @@ class VCFReader(object):
     def dataparser(self):
         delattr(self,'_dataparser')
         
-def _vcf_row(vrt,template,reference=None):
-    """Renders a VCF row from genomic variant"""
-    def _get_ref_seq(start,end):
-        try:
-            return reference.get(vrt.chrom,start,end)
-        except AttributeError as exc:
-            if reference is None:
-                raise ValueError('Reference required')
-            else:
-                raise exc
-    def _get_vcf_ref(start,end):
-        try:
-            vcf_notation = vrt.attrib['vcf_notation']
-            start_ = start-vcf_notation['start']
-            end_ = end-vcf_notation['start']
-            if start_>=0 and end_<=len(vcf_notation['ref']):
-                ref = vcf_notation['ref'][start_:end_]
-            else:
-                ref = _get_ref_seq(start_,end_)
-        except KeyError as exc:
-            if not 'vcf_notation' in vrt.attrib:
-                ref = _get_ref_seq(start,end)
-            else:
-                raise exc
-        return ref
+# def _vcf_row(vrt,template,reference=None):
+#     """Renders a VCF row from genomic variant"""
+#     def _get_ref_seq(start,end):
+#         try:
+#             return reference.get(vrt.chrom,start,end)
+#         except AttributeError as exc:
+#             if reference is None:
+#                 raise ValueError('Reference required')
+#             else:
+#                 raise exc
+#     def _get_vcf_ref(start,end):
+#         try:
+#             vcf_notation = vrt.attrib['vcf_notation']
+#             start_ = start-vcf_notation['start']
+#             end_ = end-vcf_notation['start']
+#             if start_>=0 and end_<=len(vcf_notation['ref']):
+#                 ref = vcf_notation['ref'][start_:end_]
+#             else:
+#                 ref = _get_ref_seq(start_,end_)
+#         except KeyError as exc:
+#             if not 'vcf_notation' in vrt.attrib:
+#                 ref = _get_ref_seq(start,end)
+#             else:
+#                 raise exc
+#         return ref
 
-    if vrt.is_instance(variant.MNP):
-        ref = vrt.ref if vrt.ref else _get_vcf_ref(vrt.start,vrt.end)
-        alt = vrt.alt
-        pos = vrt.start + 1 # to 1-based
-    elif vrt.is_instance(variant.Del):
-        start = vrt.start - 1 # because need one more for VCF
-        end = vrt.end if not vrt.is_instance(variant.AmbigDel) else \
-            vrt.start + (vrt.act_end-vrt.act_start)
-        ref = _get_vcf_ref(start,end)
-        alt = ref[0]
-        pos = start + 1 # to 1-based
-    elif vrt.is_instance(variant.Ins):
-        start = vrt.start - 1
-        ref = _get_vcf_ref(start,start+1)
-        if vrt.is_instance(variant.AmbigIns):
-            a = (vrt.act_start-vrt.start) % len(vrt.seq)
-            shifted = vrt.seq[-a:]+vrt.seq[:-a]
-            alt = ref + shifted
-        else:
-            alt = ref + vrt.alt
-        pos = start + 1 # to 1-based
-    else:
-        raise ValueError("Don't know how to format"+str(vrt))
-    vartype = type(vrt.base).__name__
-    info = ['mt='+vartype]
-    if 'info' in vrt.attrib:
-        info.extend(['{}={}'.format(k,v) for k,v in \
-                     vrt.attrib['info'].items()])
-    row = template.render(chrom=vrt.chrom,pos=pos,
-                          ref=ref,alt=alt,score=100,filt='.',
-                          info=';'.join(info))
-    return row
+#     if vrt.is_instance(variant.MNP):
+#         ref = vrt.ref if vrt.ref else _get_vcf_ref(vrt.start,vrt.end)
+#         alt = vrt.alt
+#         pos = vrt.start + 1 # to 1-based
+#     elif vrt.is_instance(variant.Del):
+#         start = vrt.start - 1 # because need one more for VCF
+#         end = vrt.end if not vrt.is_instance(variant.AmbigDel) else \
+#             vrt.start + (vrt.act_end-vrt.act_start)
+#         ref = _get_vcf_ref(start,end)
+#         alt = ref[0]
+#         pos = start + 1 # to 1-based
+#     elif vrt.is_instance(variant.Ins):
+#         start = vrt.start - 1
+#         ref = _get_vcf_ref(start,start+1)
+#         if vrt.is_instance(variant.AmbigIns):
+#             a = (vrt.act_start-vrt.start) % len(vrt.seq)
+#             shifted = vrt.seq[-a:]+vrt.seq[:-a]
+#             alt = ref + shifted
+#         else:
+#             alt = ref + vrt.alt
+#         pos = start + 1 # to 1-based
+#     else:
+#         raise ValueError("Don't know how to format"+str(vrt))
+#     vartype = type(vrt.base).__name__
+#     info = ['mt='+vartype]
+#     if 'info' in vrt.attrib:
+#         info.extend(['{}={}'.format(k,v) for k,v in \
+#                      vrt.attrib['info'].items()])
+#     row = template.render(chrom=vrt.chrom,pos=pos,
+#                           ref=ref,alt=alt,score=100,filt='.',
+#                           info=';'.join(info))
+#     return row
 
 class RowIterator:
     def iterate(self):
