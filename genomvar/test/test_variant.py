@@ -140,6 +140,17 @@ class TestVariantsCase(unittest.TestCase):
         self.assertEqual(
             row,'chr15rgn\t2094\tvrtid\tTGG\tCCC\t100\tLOWQUAL\t.')
         
+        vrt = factory.from_edit('chr20', 1253922,'TGT','G')
+        row = vrt.to_vcf_row()
+        self.assertEqual(row, 'chr20\t1253923\t.\tTGT\tG\t.\t.\t.')
+
+        # vf = VariantFactory(reference=ref,
+        #                     normindel=True)
+        vrt = factory.from_edit('chr1',13957,'TCCCCCA','TCCCCA')
+        with self.assertRaises(ValueError) as cm:
+            row = vrt.to_vcf_row()
+        self.assertIn('Reference is required',cm.exception.args[0])
+
     def test_change_of_attributes(self):
         reader = VCFReader(
             pkg_file('genomvar.test','data/example1.vcf'))

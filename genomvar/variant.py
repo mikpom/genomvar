@@ -183,7 +183,11 @@ class VariantBase(object):
             except NoVCFNotationError:
                 if reference is None:
                     raise ValueError('No reference')
-        return reference.get(self.chrom, start, end)
+
+        if not reference is None:
+            return reference.get(self.chrom, start, end)
+        else:
+            raise ValueError('Reference is required')
 
     def to_vcf_row(self, reference=None):
         """Formats a variant to a VCF row. 
@@ -573,6 +577,13 @@ class Mixed(VariantBase):
     def get_key(self):
         return ('Mixed',self.chrom,self.start,self.end,self.alt)
 
+    def get_vcf_notation(self,vcf_notation=None,reference=None):
+        ref = self.ref if self.ref else self._get_vcf_ref(
+            self.start,self.end,vcf_notation=vcf_notation,reference=reference)
+        alt = self.alt
+        pos = self.start + 1 # to 1-based
+        return pos, ref, alt
+
 class Haplotype(VariantBase):
     """
     An object representing genome variants on the
@@ -674,6 +685,9 @@ class Null(VariantBase):
 class Asterisk(VariantBase):
     def nof_unit_vrt(self):
         return 0
+
+    def get_vcf_notation(self,*args,**kwds):
+        raise NotImplementedError
 
 class GenomVariant(object):
     """

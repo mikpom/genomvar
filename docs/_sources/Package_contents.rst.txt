@@ -17,3 +17,12 @@ Module varset.py
    :members:
    :no-undoc-members:
    :inherited-members:
+
+Module vcf.py
+****************
+
+.. automodule:: genomvar.vcf
+   :members:
+   :no-undoc-members:
+   :inherited-members:
+      

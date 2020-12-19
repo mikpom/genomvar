@@ -86,7 +86,7 @@ in HGVS strings is <strong>1-based</strong> following the spec):</p>
 <span class="go">&lt;SNP chr1:14 C/A&gt;</span>
 </pre></div>
 </div>
-<p>Variant sets defined in <a class="reference internal" href="Variant_sets.html#module-genomvar.varset" title="genomvar.varset"><code class="xref py py-mod docutils literal notranslate"><span class="pre">genomvar.varset</span></code></a> use class <a class="reference internal" href="#genomvar.variant.GenomVariant" title="genomvar.variant.GenomVariant"><code class="xref py py-class docutils literal notranslate"><span class="pre">GenomVariant</span></code></a>.
+<p>Variant sets defined in <a class="reference internal" href="#module-genomvar.varset" title="genomvar.varset"><code class="xref py py-mod docutils literal notranslate"><span class="pre">genomvar.varset</span></code></a> use class <a class="reference internal" href="#genomvar.variant.GenomVariant" title="genomvar.variant.GenomVariant"><code class="xref py py-class docutils literal notranslate"><span class="pre">GenomVariant</span></code></a>.
 Objects of this class contain genomic alteration (attribute <code class="docutils literal notranslate"><span class="pre">base</span></code>)
 and optionally, genotype (attribute <code class="docutils literal notranslate"><span class="pre">GT</span></code>) and other attributes
 commonly found in VCF files (attribute <code class="docutils literal notranslate"><span class="pre">attrib</span></code>).  Attribute
@@ -2536,6 +2536,156 @@ If however given, this argument takes precedence.</p>
 </dd></dl>
 
 </div>
+<div class="section" id="module-genomvar.vcf">
+<span id="module-vcf-py"></span><h2>Module vcf.py<a class="headerlink" href="#module-genomvar.vcf" title="Permalink to this headline">¶</a></h2>
+<p>Module contains classes needed for VCF parsing.</p>
+<p>Main class is <code class="docutils literal notranslate"><span class="pre">VCFReader</span></code> which is instantiated from VCF file.
+VCF can be gzipped. Bgzipping and tabix-derived indexing is also
+supported for random coordinate-based access.</p>
+<p><code class="docutils literal notranslate"><span class="pre">VCFReader</span></code> class can iterate over rows which are tuple-like object
+containing VCF field strings as attributes without conversion (except
+POSition which is converted to int).</p>
+<p>Alternatively iteration of variants is supported. It yields
+<a class="reference internal" href="#genomvar.variant.GenomVariant" title="genomvar.variant.GenomVariant"><code class="xref py py-class docutils literal notranslate"><span class="pre">genomvar.variant.GenomVariant</span></code></a> objects.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">reader</span> <span class="o">=</span> <span class="n">VCFReader</span><span class="p">(</span><span class="s1">&#39;example.vcf.gz&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">vrt</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">reader</span><span class="o">.</span><span class="n">iter_vrt</span><span class="p">(</span><span class="n">parse_info</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">parse_samples</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">vrt</span><span class="p">)</span>
+<span class="go">&lt;GenomVariant: Del chr15rgn:23-24 G/-&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">vrt</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s1">&#39;info&#39;</span><span class="p">])</span>
+<span class="go">{&#39;NSV&#39;: 2, &#39;AF&#39;: 0.5, &#39;DP4&#39;: (11, 22, 33, 44), &#39;ECNT&#39;: 1,    &#39;pl&#39;: 3, &#39;mt&#39;: &#39;SUBSTITUTE&#39;, &#39;RECN&#39;: 18, &#39;STR&#39;: None}</span>
+</pre></div>
+</div>
+<p>If <code class="docutils literal notranslate"><span class="pre">parse_info</span></code> and <code class="docutils literal notranslate"><span class="pre">parse_samples</span></code> parameters are <code class="docutils literal notranslate"><span class="pre">True</span></code> Then
+INFO and SAMPLEs fields contained in VCF are parsed and split
+corresponding to an allele captured by variant object. For performance
+reasons these parameters are set to False and these fields are not
+parsed.</p>
+<dl class="py class">
+<dt id="genomvar.vcf.VCFRow">
+<em class="property">class </em><code class="sig-prename descclassname">genomvar.vcf.</code><code class="sig-name descname">VCFRow</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">CHROM</span></em>, <em class="sig-param"><span class="n">POS</span></em>, <em class="sig-param"><span class="n">ID</span></em>, <em class="sig-param"><span class="n">REF</span></em>, <em class="sig-param"><span class="n">ALT</span></em>, <em class="sig-param"><span class="n">QUAL</span></em>, <em class="sig-param"><span class="n">FILTER</span></em>, <em class="sig-param"><span class="n">INFO</span></em>, <em class="sig-param"><span class="n">FORMAT</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">SAMPLES</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">rnum</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.vcf.VCFRow" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class to store a single row from VCF. Sample data if present is not
+splitted per sample and kept as a single string.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="genomvar.vcf.VCFReader">
+<em class="property">class </em><code class="sig-prename descclassname">genomvar.vcf.</code><code class="sig-name descname">VCFReader</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vcf</span></em>, <em class="sig-param"><span class="n">index</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">reference</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.vcf.VCFReader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class to read VCF files.</p>
+<dl class="py method">
+<dt id="genomvar.vcf.VCFReader.get_factory">
+<code class="sig-name descname">get_factory</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">normindel</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.vcf.VCFReader.get_factory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a factory based on normindel parameter.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="genomvar.vcf.VCFReader.find_rows">
+<code class="sig-name descname">find_rows</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">chrom</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">start</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">end</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">rgn</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.vcf.VCFReader.find_rows" title="Permalink to this definition">¶</a></dt>
+<dd><p>Yields rows of variant file</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="genomvar.vcf.VCFReader.iter_rows">
+<code class="sig-name descname">iter_rows</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">check_order</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.vcf.VCFReader.iter_rows" title="Permalink to this definition">¶</a></dt>
+<dd><p>Yields rows of variant file</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="genomvar.vcf.VCFReader.iter_rows_by_chrom">
+<code class="sig-name descname">iter_rows_by_chrom</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">check_order</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.vcf.VCFReader.iter_rows_by_chrom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Yields rows grouped by chromosome</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="genomvar.vcf.VCFReader.get_records">
+<code class="sig-name descname">get_records</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parse_info</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">parse_samples</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">normindel</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.vcf.VCFReader.get_records" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns parsed variant data as a dict of NumPy arrays with structured
+dtype.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="genomvar.vcf.VCFReader.iter_vrt">
+<code class="sig-name descname">iter_vrt</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">check_order</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">parse_info</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">normindel</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">parse_samples</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.vcf.VCFReader.iter_vrt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Yields variant objects.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>parse_info</strong> (<em>bool</em>) – Whether INFO fields should be parsed.  <em>Default: False</em></p></li>
+<li><p><strong>parse_samples</strong> (<em>bool</em>) – Whether SAMPLEs dat should be parsed.  <em>Default: False</em></p></li>
+<li><p><strong>check_order</strong> (<em>bool</em>) – If True will raise exception on unsorted VCF rows. <em>Default: False</em></p></li>
+<li><p><strong>normindel</strong> (<em>bool</em>) – If True insertions and deletions will be left normalized.
+Requires a reference on <a class="reference internal" href="#genomvar.vcf.VCFReader" title="genomvar.vcf.VCFReader"><code class="xref py py-class docutils literal notranslate"><span class="pre">VCFReader</span></code></a> instantiation.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Yields</dt>
+<dd class="field-even"><p><strong>vrt</strong> (<a class="reference internal" href="#genomvar.variant.GenomVariant" title="genomvar.variant.GenomVariant"><code class="xref py py-class docutils literal notranslate"><span class="pre">genomvar.variant.GenomVariant</span></code></a>) – Variant object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="genomvar.vcf.VCFReader.iter_vrt_by_chrom">
+<code class="sig-name descname">iter_vrt_by_chrom</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parse_info</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">parse_samples</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">normindel</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">check_order</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.vcf.VCFReader.iter_vrt_by_chrom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates variants grouped by chromosome</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>parse_info</strong> (<em>bool</em>) – Incates whether INFO fields should be parsed.  <em>Default: False</em></p></li>
+<li><p><strong>parse_samples</strong> (<em>bool</em>) – Incates whether SAMPLE data should be parsed.  <em>Default: False</em></p></li>
+<li><p><strong>parse_samples</strong> – If True indels will be normalized. <code class="docutils literal notranslate"><span class="pre">VCFReader</span></code> should have been
+instantiated with reference. <em>Default: False</em></p></li>
+<li><p><strong>check_order</strong> (<em>bool</em>) – If True VCF will be checked for sorting. <em>Default: False</em></p></li>
+</ul>
+</dd>
+<dt class="field-even">Yields</dt>
+<dd class="field-even"><p><strong>(chrom,it)</strong> (<em>tuple of str and iterator</em>) – <code class="docutils literal notranslate"><span class="pre">it</span></code> yields <code class="xref py py-class docutils literal notranslate"><span class="pre">variant.Genomvariant</span></code> objects</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="genomvar.vcf.VCFReader.find_vrt">
+<code class="sig-name descname">find_vrt</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">chrom</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">start</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">end</span><span class="o">=</span><span class="default_value">2147483647</span></em>, <em class="sig-param"><span class="n">check_order</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">parse_info</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">normindel</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">parse_samples</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.vcf.VCFReader.find_vrt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Yields variant objects from a specified region</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="genomvar.vcf.VCFReader.get_chroms">
+<code class="sig-name descname">get_chroms</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">unindexed</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.vcf.VCFReader.get_chroms" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns <code class="docutils literal notranslate"><span class="pre">ChromSet</span></code> corresponding to VCF. If indexed
+then index is used for faster access. Alternatively if <code class="docutils literal notranslate"><span class="pre">unindexed</span></code>
+is True the whole file is parsed to get chromosome ordering.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="genomvar.vcf.DataParser">
+<em class="property">class </em><code class="sig-prename descclassname">genomvar.vcf.</code><code class="sig-name descname">DataParser</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dtype</span></em>, <em class="sig-param"><span class="n">sample_ind</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.vcf.DataParser" title="Permalink to this definition">¶</a></dt>
+<dd><p>Object for parsing INFO and SAMPLES data.</p>
+<dl class="py method">
+<dt id="genomvar.vcf.DataParser.tokenize_info">
+<code class="sig-name descname">tokenize_info</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">INFO</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.vcf.DataParser.tokenize_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function splits info on simple key value pairs</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="genomvar.vcf.DataParser.get_info">
+<code class="sig-name descname">get_info</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">INFO</span></em>, <em class="sig-param"><span class="n">alts</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">parse_null</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.vcf.DataParser.get_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given INFO string and number of alt alleles returns a list
+of lists with data corresponding to alleles, then fields.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="genomvar.vcf.DataParser.get_sampdata">
+<code class="sig-name descname">get_sampdata</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">row</span></em>, <em class="sig-param"><span class="n">alts</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.vcf.DataParser.get_sampdata" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given SAMPLE data string and number of alt alleles returns a list
+of lists of lists with data corresponding to alleles, then samples,
+then fields.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
 </div>
 
 
@@ -2549,6 +2699,7 @@ If however given, this argument takes precedence.</p>
 <li><a class="reference internal" href="#">Package contents</a><ul>
 <li><a class="reference internal" href="#module-genomvar.variant">Module variant.py</a></li>
 <li><a class="reference internal" href="#module-genomvar.varset">Module varset.py</a></li>
+<li><a class="reference internal" href="#module-genomvar.vcf">Module vcf.py</a></li>
 </ul>
 </li>
 </ul>

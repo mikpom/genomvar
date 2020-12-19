@@ -1,3 +1,32 @@
+"""Module contains classes needed for VCF parsing.
+
+Main class is ``VCFReader`` which is instantiated from VCF file. 
+VCF can be gzipped. Bgzipping and tabix-derived indexing is also 
+supported for random coordinate-based access.
+
+``VCFReader`` class can iterate over rows which are tuple-like object
+containing VCF field strings as attributes without conversion (except
+POSition which is converted to int).
+
+Alternatively iteration of variants is supported. It yields
+:class:`genomvar.variant.GenomVariant` objects.
+
+    >>> reader = VCFReader('example.vcf.gz')
+    >>> vrt = next(reader.iter_vrt(parse_info=True, parse_samples=True))
+    >>> print(vrt)
+    <GenomVariant: Del chr15rgn:23-24 G/->
+    >>> print(vrt.attrib['info'])
+    {'NSV': 2, 'AF': 0.5, 'DP4': (11, 22, 33, 44), 'ECNT': 1,\
+    'pl': 3, 'mt': 'SUBSTITUTE', 'RECN': 18, 'STR': None}
+
+If ``parse_info`` and ``parse_samples`` parameters are ``True`` Then
+INFO and SAMPLEs fields contained in VCF are parsed and split
+corresponding to an allele captured by variant object. For performance
+reasons these parameters are set to False and these fields are not
+parsed.
+
+"""
+
 import os
 import warnings
 import heapq
@@ -29,7 +58,7 @@ dtype1 = np.dtype([('start',np.int_),('ref',np.object_),('alt',np.object_),
                    ('id',np.object_),('qual',np.float_),('filter',np.object_),
                    ('row',np.int_)])
 
-def ensure_sorted(it):
+def _ensure_sorted(it):
     """Uses a heap to ensure variants are yielded 
     in start-sorted order"""
     try:
@@ -124,7 +153,7 @@ def _isindexed(file):
             warnings.warn('Index is outdated for {}'.format(file))
     return False
 
-def check_VCF_order(it):
+def _check_VCF_order(it):
     """Raises UnsortedVariantFileError if row iterator is not sorted."""
     prev_row = namedtuple('first','CHROM POS')(object(),0)
     for row in it:
@@ -135,7 +164,7 @@ def check_VCF_order(it):
             yield row
 
 gt_cache = {}
-def parse_gt(gt,ind):
+def _parse_gt(gt,ind):
     """Function return genotype tuple given genotype string and allele index.
     For performance results are cached based on arguments"""
     try:
@@ -185,101 +214,6 @@ class VCFRow(object):
             fields += [str(self.FORMAT),str(self.SAMPLES)]
         return '\t'.join(fields)
 
-class DataParser(object):
-    """Object for parsing INFO and SAMPLES data."""
-    def __init__(self,dtype,sample_ind):
-        self.dtype = dtype
-        self.converters = {'info':{},'format':{}}
-        self.none = {'info':[],'format':[]}
-        for hh in ['info','format']:
-            for field,props in self.dtype[hh].items():
-                tp = props['type']
-                sz = props['size']
-                num = props['number']
-                self.converters[hh][field] = _make_converter_func(tp,num)
-                self.none[hh].append(None if sz<=1 else [None]*sz)
-        self.converters['format']['GT'] = \
-            lambda v,a: parse_gt(v,a)
-        self.order = {
-            'info':{f:ind for ind,f in enumerate(self.dtype['info'])},
-            'format':{f:ind for ind,f in enumerate(self.dtype['format'])}
-        }
-        self.sample_ind = sample_ind
-
-    def tokenize_info(self,INFO):
-        """Function splits info on simple key value pairs"""
-        info = []
-        for field in INFO.split(';'):
-            if not field or field=='.':
-                continue
-            keyval = field.split('=',maxsplit=1)
-            if len(keyval)==1:
-                info.append((field, None))
-            else:
-                key,val=keyval
-                if self.dtype['info'][key]['number'] in [0,1]:
-                    info.append( (key, val) )
-                else:
-                    info.append( (key, val.split(',')) )
-        return info
-        
-    def get_info(self,INFO,alts=1,parse_null=False):
-        """Given INFO string and number of alt alleles returns a list
-        of lists with data corresponding to alleles, then fields."""
-        tokenized = self.tokenize_info(INFO)
-        info2 = []
-        for an in range(alts):
-            info1 = list(self.none['info'])
-            for ind,(key,val) in enumerate(tokenized):
-                try:
-                    v = self.converters['info'][key](val,an)
-                except ValueError as exc:
-                    if val=='' or val=='.':
-                        v = None
-                    else:
-                        raise exc
-                info1[self.order['info'][key]] = v
-            info2.append(info1)
-
-        return info2
-
-    def get_sampdata(self,row,alts=1):
-        """Given SAMPLE data string and number of alt alleles returns a list
-        of lists of lists with data corresponding to alleles, then samples,
-        then fields."""
-        sampdata = [[list(self.none['format']) \
-                       for j in range(len(self.sample_ind))] \
-                           for i in range(alts)]
-        row_format = row.FORMAT.split(':')
-        _samples = row.SAMPLES.split('\t')
-        for an in range(alts):
-            for sample,sn in self.sample_ind.items():
-                _sampdata = list(self.none['format'])
-                for key,val in zip(row_format,_samples[sn].split(':')):
-                    if not self.dtype['format'][key]['number'] in [0,1]:
-                        val = val.split(',')
-                    # try:
-                    #     v = self.converters['format'][key](val,an)
-                    # except ValueError as exc:
-                    #     if val=='' or val=='.':
-                    #         v = None
-                    #     else:
-                    #         raise exc
-                    v = self.converters['format'][key](val,an)
-                    _sampdata[self.order['format'][key]] = v
-                sampdata[an][sn] = _sampdata
-        return sampdata
-
-    def get_dtype(self,hh):
-        if not hh in ('format','info'):
-            raise ValueError
-        dtype = []
-        for field,props in self.dtype[hh].items():
-            if props['size']==1:
-                dtype.append( (field,props['type']) )
-            else:
-                dtype.append( (field,props['type'],props['size']) )
-        return dtype
     
 class VCFReader(object):
     """Class to read VCF files."""
@@ -435,7 +369,7 @@ class VCFReader(object):
         return RowByChromIterator(self,buf,check_order)
         # rows = self.iter_rows()
         # if check_order:
-        #     rows = check_VCF_order(rows)
+        #     rows = _check_VCF_order(rows)
         # for chrom,it in groupby(rows,key=lambda r: r.CHROM):
         #     yield chrom,it
 
@@ -687,7 +621,27 @@ class VCFReader(object):
 
     def iter_vrt(self,check_order=False,parse_info=False,
                  normindel=False,parse_samples=False):
-        """Yields variant objects"""
+        """
+        Yields variant objects.
+        
+        Parameters
+        ----------
+        parse_info : bool
+            Whether INFO fields should be parsed.  *Default: False*
+        parse_samples : bool
+            Whether SAMPLEs dat should be parsed.  *Default: False*
+        check_order : bool
+            If True will raise exception on unsorted VCF rows. *Default: False*
+        normindel : bool
+            If True insertions and deletions will be left normalized.
+            Requires a reference on :class:`VCFReader` instantiation.
+
+        Yields
+        -------
+        vrt : :class:`genomvar.variant.GenomVariant`
+           Variant object 
+        """
+
         if parse_samples==True:
             samps = 'all'
         else:
@@ -725,12 +679,6 @@ class VCFReader(object):
         return VrtByChromIterator(self.iter_rows(check_order),
                                   self.get_factory(normindel=normindel),
                                   parse_info,samps)
-        # factory = self.get_factory(normindel)
-        # samps = self._normalize_samples(parse_samples)
-        # for chrom,it in self.iter_rows_by_chrom(check_order=check_order):
-        #     variants = self._variants_from_rows(
-        #         it,factory,parse_info,samps)
-        #     yield chrom,ensure_sorted(variants)
 
     def _normalize_samples(self,parse_samples):
         if isinstance(parse_samples,str):
@@ -775,7 +723,7 @@ class VCFReader(object):
                                start=start-1 if start else None,
                                end=end)
         if check_order:
-            rows = check_VCF_order(_rows)
+            rows = _check_VCF_order(_rows)
         else:
             rows = _rows
         if parse_samples==True:
@@ -784,7 +732,7 @@ class VCFReader(object):
             samps = self._normalize_samples(parse_samples)
 
         _variants = self._variants_from_rows(rows,factory,parse_info,samps)
-        for vrt in ensure_sorted(_variants):
+        for vrt in _ensure_sorted(_variants):
             if vrt.start>=end or vrt.end<=start:
                 continue
             yield vrt
@@ -863,64 +811,101 @@ class VCFReader(object):
     def dataparser(self):
         delattr(self,'_dataparser')
         
-# def _vcf_row(vrt,template,reference=None):
-#     """Renders a VCF row from genomic variant"""
-#     def _get_ref_seq(start,end):
-#         try:
-#             return reference.get(vrt.chrom,start,end)
-#         except AttributeError as exc:
-#             if reference is None:
-#                 raise ValueError('Reference required')
-#             else:
-#                 raise exc
-#     def _get_vcf_ref(start,end):
-#         try:
-#             vcf_notation = vrt.attrib['vcf_notation']
-#             start_ = start-vcf_notation['start']
-#             end_ = end-vcf_notation['start']
-#             if start_>=0 and end_<=len(vcf_notation['ref']):
-#                 ref = vcf_notation['ref'][start_:end_]
-#             else:
-#                 ref = _get_ref_seq(start_,end_)
-#         except KeyError as exc:
-#             if not 'vcf_notation' in vrt.attrib:
-#                 ref = _get_ref_seq(start,end)
-#             else:
-#                 raise exc
-#         return ref
+class DataParser(object):
+    """Object for parsing INFO and SAMPLES data."""
+    def __init__(self,dtype,sample_ind):
+        self.dtype = dtype
+        self.converters = {'info':{},'format':{}}
+        self.none = {'info':[],'format':[]}
+        for hh in ['info','format']:
+            for field,props in self.dtype[hh].items():
+                tp = props['type']
+                sz = props['size']
+                num = props['number']
+                self.converters[hh][field] = _make_converter_func(tp,num)
+                self.none[hh].append(None if sz<=1 else [None]*sz)
+        self.converters['format']['GT'] = \
+            lambda v,a: _parse_gt(v,a)
+        self.order = {
+            'info':{f:ind for ind,f in enumerate(self.dtype['info'])},
+            'format':{f:ind for ind,f in enumerate(self.dtype['format'])}
+        }
+        self.sample_ind = sample_ind
 
-#     if vrt.is_instance(variant.MNP):
-#         ref = vrt.ref if vrt.ref else _get_vcf_ref(vrt.start,vrt.end)
-#         alt = vrt.alt
-#         pos = vrt.start + 1 # to 1-based
-#     elif vrt.is_instance(variant.Del):
-#         start = vrt.start - 1 # because need one more for VCF
-#         end = vrt.end if not vrt.is_instance(variant.AmbigDel) else \
-#             vrt.start + (vrt.act_end-vrt.act_start)
-#         ref = _get_vcf_ref(start,end)
-#         alt = ref[0]
-#         pos = start + 1 # to 1-based
-#     elif vrt.is_instance(variant.Ins):
-#         start = vrt.start - 1
-#         ref = _get_vcf_ref(start,start+1)
-#         if vrt.is_instance(variant.AmbigIns):
-#             a = (vrt.act_start-vrt.start) % len(vrt.seq)
-#             shifted = vrt.seq[-a:]+vrt.seq[:-a]
-#             alt = ref + shifted
-#         else:
-#             alt = ref + vrt.alt
-#         pos = start + 1 # to 1-based
-#     else:
-#         raise ValueError("Don't know how to format"+str(vrt))
-#     vartype = type(vrt.base).__name__
-#     info = ['mt='+vartype]
-#     if 'info' in vrt.attrib:
-#         info.extend(['{}={}'.format(k,v) for k,v in \
-#                      vrt.attrib['info'].items()])
-#     row = template.render(chrom=vrt.chrom,pos=pos,
-#                           ref=ref,alt=alt,score=100,filt='.',
-#                           info=';'.join(info))
-#     return row
+    def tokenize_info(self,INFO):
+        """Function splits info on simple key value pairs"""
+        info = []
+        for field in INFO.split(';'):
+            if not field or field=='.':
+                continue
+            keyval = field.split('=',maxsplit=1)
+            if len(keyval)==1:
+                info.append((field, None))
+            else:
+                key,val=keyval
+                if self.dtype['info'][key]['number'] in [0,1]:
+                    info.append( (key, val) )
+                else:
+                    info.append( (key, val.split(',')) )
+        return info
+        
+    def get_info(self,INFO,alts=1,parse_null=False):
+        """Given INFO string and number of alt alleles returns a list
+        of lists with data corresponding to alleles, then fields."""
+        tokenized = self.tokenize_info(INFO)
+        info2 = []
+        for an in range(alts):
+            info1 = list(self.none['info'])
+            for ind,(key,val) in enumerate(tokenized):
+                try:
+                    v = self.converters['info'][key](val,an)
+                except ValueError as exc:
+                    if val=='' or val=='.':
+                        v = None
+                    else:
+                        raise exc
+                info1[self.order['info'][key]] = v
+            info2.append(info1)
+
+        return info2
+
+    def get_sampdata(self,row,alts=1):
+        """Given SAMPLE data string and number of alt alleles returns a list
+        of lists of lists with data corresponding to alleles, then samples,
+        then fields."""
+        sampdata = [[list(self.none['format']) \
+                       for j in range(len(self.sample_ind))] \
+                           for i in range(alts)]
+        row_format = row.FORMAT.split(':')
+        _samples = row.SAMPLES.split('\t')
+        for an in range(alts):
+            for sample,sn in self.sample_ind.items():
+                _sampdata = list(self.none['format'])
+                for key,val in zip(row_format,_samples[sn].split(':')):
+                    if not self.dtype['format'][key]['number'] in [0,1]:
+                        val = val.split(',')
+                    # try:
+                    #     v = self.converters['format'][key](val,an)
+                    # except ValueError as exc:
+                    #     if val=='' or val=='.':
+                    #         v = None
+                    #     else:
+                    #         raise exc
+                    v = self.converters['format'][key](val,an)
+                    _sampdata[self.order['format'][key]] = v
+                sampdata[an][sn] = _sampdata
+        return sampdata
+
+    def get_dtype(self,hh):
+        if not hh in ('format','info'):
+            raise ValueError
+        dtype = []
+        for field,props in self.dtype[hh].items():
+            if props['size']==1:
+                dtype.append( (field,props['type']) )
+            else:
+                dtype.append( (field,props['type'],props['size']) )
+        return dtype
 
 class RowIterator:
     def iterate(self):
@@ -946,7 +931,7 @@ class RowIterator:
             return next(self.iterator)
         except AttributeError:
             if self.check_order:
-                self.iterator = check_VCF_order(self.iterate())
+                self.iterator = _check_VCF_order(self.iterate())
             else:
                 self.iterator = self.iterate()
             return next(self.iterator)
@@ -958,7 +943,7 @@ class RowByChromIterator(RowIterator):
     def iterate(self):
         rows = super().iterate()
         if self.check_order:
-            rows = check_VCF_order(rows)
+            rows = _check_VCF_order(rows)
         for chrom,it in groupby(rows,key=lambda r: r.CHROM):
             yield chrom,it
         
@@ -996,7 +981,7 @@ class VrtIterator():
         try:
             return next(self.iterator)
         except AttributeError:
-            self.iterator = ensure_sorted(self.iterate())
+            self.iterator = _ensure_sorted(self.iterate())
             return next(self.iterator)
 
     def close(self):
@@ -1006,7 +991,7 @@ class VrtByChromIterator(VrtIterator):
     def iterate(self):
         vrt = super().iterate()
         for chrom,it in groupby(vrt,key=lambda r: r[-1].chrom):
-            yield chrom,ensure_sorted(it)
+            yield chrom,_ensure_sorted(it)
 
     def __init__(self,*args,**kwds):
         super().__init__(*args,**kwds)
