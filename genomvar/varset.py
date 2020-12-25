@@ -29,7 +29,7 @@ from genomvar.variant import VariantBase,AmbigIndel,\
     GenomVariant,Haplotype,VariantFactory
 from genomvar.utils import rgn_from,zip_variants,\
     chunkit,no_ovlp
-from genomvar.vcf import VCFReader,dtype0,dtype1
+from genomvar.vcf import _get_reader,VCFReader,dtype0,dtype1
 from genomvar.vcf_utils import header_simple,row_tmpl
 from genomvar import OverlappingHaplotypeVars,\
     Reference,DifferentlySortedChromsError,\
@@ -701,7 +701,7 @@ class VariantSet(VariantSetBase):
         -------
         VariantSet
         """
-        reader = VCFReader(vcf,reference=reference)
+        reader = _get_reader(vcf,reference=reference)
         records = reader.get_records(parse_info=parse_info,
                                      parse_samples=parse_samples,
                                      normindel=normindel)
@@ -1164,7 +1164,7 @@ class MutableVariantSet(VariantSetBase):
         -------
         VariantSet
         """
-        reader = VCFReader(vcf)
+        reader = _get_reader(vcf)
         vset = cls.__new__(cls)
         vset.__init__(reference=reference,max_ploidy=max_ploidy)
 
@@ -1679,7 +1679,7 @@ class VariantFileSet(VariantSetBase):
 
     def __init__(self,file,reference=None,parse_info=False,
                  parse_samples=False):
-        self._reader=VCFReader(file)
+        self._reader=_get_reader(file)
         self.parse_info = parse_info
         self.parse_samples = parse_samples
         super().__init__(reference=reference)
@@ -1735,7 +1735,7 @@ class VariantFileSet(VariantSetBase):
     def get_chroms(self):
         return self._reader.get_chroms(unindexed=True)
 
-class IndexedVariantFileSet(VariantFileSet,MutableVariantSet):
+class IndexedVariantFileSet(VariantFileSet):
     """
     Variant set representing variants contained in underlying VCF file specified
     on initialization. By default it searches for Tabix index and uses it 
@@ -1755,3 +1755,7 @@ class IndexedVariantFileSet(VariantFileSet,MutableVariantSet):
                 parse_samples=self.parse_samples):
             yield vrt
 
+    @property
+    def chroms(self):
+        """Chromosome set"""
+        return self._chroms

@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 import io
-from genomvar.vcf import VCFReader
+from genomvar.vcf import VCFReader, BCFReader
 from genomvar.vcf_utils import header as vcf_header
 from pkg_resources import resource_filename as pkg_file
 
@@ -101,3 +101,21 @@ class TestVCFReaderCase(unittest.TestCase):
         
         v = list(vs.iter_vrt(parse_samples=True))[0]
         self.assertEqual(v.attrib['samples']['S1']['GT'], (None,None))
+
+    def test_bcf_format(self):
+        reader = BCFReader(
+            pkg_file('genomvar.test', 'data/example3.bcf'))
+
+        variants = list(reader.iter_vrt(parse_info=True,parse_samples=True))
+        self.assertEqual(len(variants), 8)
+
+        v1 = variants[0]
+        self.assertEqual([v1.start, v1.ref,v1.alt],
+                         [23, 'G',   ''])
+        self.assertEqual([v1.attrib[a] for a in ('id', 'filter')],
+                         ['1',['PASS']])
+        self.assertEqual(v1.attrib['info']['AF'], 0.5)
+
+        v2 = variants[1]
+        self.assertEqual(v2.attrib['samples']['SAMP1']['AD'], 10)
+

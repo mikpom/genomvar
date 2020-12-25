@@ -1,10 +1,10 @@
 """Module contains classes needed for VCF parsing.
 
-Main class is ``VCFReader`` which is instantiated from VCF file. 
+Main class is :class:`VCFReader` which is instantiated from VCF file. 
 VCF can be gzipped. Bgzipping and tabix-derived indexing is also 
 supported for random coordinate-based access.
 
-``VCFReader`` class can iterate over rows which are tuple-like object
+:class:`VCFReader` class can iterate over rows which are tuple-like object
 containing VCF field strings as attributes without conversion (except
 POSition which is converted to int).
 
@@ -25,6 +25,8 @@ corresponding to an allele captured by variant object. For performance
 reasons these parameters are set to False and these fields are not
 parsed.
 
+.bcf format is supported, use :class:`BCFReader`.
+
 """
 
 import os
@@ -41,6 +43,7 @@ from genomvar import Reference,singleton,\
     UnsortedVariantFileError,MAX_END
 from genomvar.utils import rgn_from,grouper
 from genomvar.variant import GenomVariant,VariantFactory
+import genomvar
 
 # Map of VCF types to NumPy types
 string2dtype = {'Float':np.float64,'Integer':np.int64,
@@ -59,8 +62,7 @@ dtype1 = np.dtype([('start',np.int_),('ref',np.object_),('alt',np.object_),
                    ('row',np.int_)])
 
 def _ensure_sorted(it):
-    """Uses a heap to ensure variants are yielded 
-    in start-sorted order"""
+    """Ensures variants are yielded in start-sorted order"""
     try:
         v = next(it)
         start,rstart,cnt,vrt = v
@@ -86,12 +88,16 @@ def _ensure_sorted(it):
     for i in range(len(hp)):
         yield heapq.heappop(hp)[-1]
 
-def _make_converter_func(tp,num):
+def _make_converter_func(tp,num,convert=True):
     """Returns a converter function based on TYPE and NUMBER arguments."""
+    if convert==False:
+        conv = lambda v: v
+    else:
+        conv = tp
     if num=='R':
         def f(v,n):
             try:
-                return tp(v[n+1])
+                return conv(v[n+1])
             except IndexError:
                 return None
             except ValueError as exc:
@@ -102,7 +108,7 @@ def _make_converter_func(tp,num):
     elif num=='A':
         def f(v,n):
             try:
-                return tp(v[n])
+                return conv(v[n])
             except IndexError:
                 return None
             except ValueError as exc:
@@ -116,7 +122,7 @@ def _make_converter_func(tp,num):
         else:
             def f(v,n):
                 try:
-                    return tp(v)
+                    return conv(v)
                 except ValueError as exc:
                     if v=='.':
                         return None
@@ -133,14 +139,14 @@ def _make_converter_func(tp,num):
     else: # num 2,3 ...
         def f(v,n):
             try:
-                return tuple([tp(v[i]) for i in range(num)])
+                return tuple([conv(v[i]) for i in range(num)])
             except IndexError as exc:
                 r = []
                 for i in range(num):
                     if i>len(v)-1:
                         r.append(None)
                     else:
-                        r.append(tp(v[i]))
+                        r.append(conv(v[i]))
                 return tuple(r)
     return f
 
@@ -208,8 +214,7 @@ class VCFRow(object):
         return '<VCFRow {}:{} {}->{}>'\
             .format(self.CHROM,self.POS,self.REF,self.ALT)
     def __str__(self):
-        fields = [self.CHROM,str(self.POS),self.ID,self.REF,
-                       self.ALT,self.QUAL,self.FILTER,self.INFO]
+        fields = [str(getattr(self, a)) for a in VCF_fields[:8]]
         if not self.FORMAT is None:
             fields += [str(self.FORMAT),str(self.SAMPLES)]
         return '\t'.join(fields)
@@ -239,8 +244,8 @@ class VCFReader(object):
                     raise OSError('{} not found'.format(index))
 
             if self.idx_file:
-                self.tabix = pysam.TabixFile(filename=self.fl,
-                                             index=self.idx_file)
+                self.tabix = pysam.TabixFile(
+                    filename=self.fl, index=self.idx_file)
             else:
                 self.tabix = None
 
@@ -378,7 +383,7 @@ class VCFReader(object):
         """Given the row returns variant objects with alts splitted.
         INFO, SAMPLE data are correctly parsed if needed"""
         alts = row.ALT.split(',')
-        vrt = []
+        # TODO avoid list structure, generator instead
         if parse_info: # Read INFO if necessary
             info = self.dataparser.get_info(row.INFO,alts=len(alts))
         else:
@@ -407,7 +412,7 @@ class VCFReader(object):
             attrib['vcf_notation'] = {'start' : row.POS-1,'ref' : row.REF,
                                       'row' : row.rnum}
             _vrt = GenomVariant(base,attrib=attrib)
-            vrt.append(_vrt)
+            yield _vrt
 
         if parse_null: # experimental
             if split_info:
@@ -430,9 +435,7 @@ class VCFReader(object):
                                              'samples':samples2,
                                              'filter':row.FILTER.split(';'),
                                              'id':row.ID,'allele_num':'null'})
-            vrt.append(_vrt)
-                
-        return sorted(vrt,key=lambda i: i.start)
+            yield _vrt
 
     def get_records(self,parse_info=False,parse_samples=False,normindel=False):
         """
@@ -702,7 +705,6 @@ class VCFReader(object):
             raise ValueError('parse sample should be str,list-like or bool')
         return samples
 
-
     def _variants_from_rows(self,it,factory,parse_info,parse_samples):
         cnt = 0
         for row in it:
@@ -811,6 +813,73 @@ class VCFReader(object):
     def dataparser(self):
         delattr(self,'_dataparser')
         
+class BCFReader(VCFReader):
+    def __init__(self,bcf,index=False,reference=None):
+        # TODO leverage inheritance
+        self.fl = bcf
+        self.idx_file = None
+        if isinstance(index,bool):
+            if index:
+                idx = self.fl+'.csi'
+                if os.path.isfile(idx):
+                    self.idx_file = idx
+                else:
+                    raise OSError('Index not found')
+        elif isinstance(index,str):
+            if os.path.isfile(index):
+                self.idx_file = index
+            else:
+                raise OSError('{} not found'.format(index))
+
+        self.reference = reference
+        # Init default variant factory
+        self._factory = VariantFactory(reference,normindel=False)
+        self.vrt_fac = {'nonorm':self._factory}
+        self._dtype = {'info':OrderedDict(),'format':OrderedDict()}
+        buf = pysam.VariantFile(self.fl)
+        for cnt,line in enumerate(str(buf.header).splitlines()):
+            if line.startswith('##INFO'):
+                nm,dat = self._parse_dtype(line)
+                self._dtype['info'][nm] = dat
+            elif line.startswith('##FORMAT'):
+                nm,dat = self._parse_dtype(line)
+                self._dtype['format'][nm] = dat
+            elif line.startswith('#CHROM'):
+                # this should be the last header line
+                self.header_len = cnt + 1
+
+                vals = line.strip().split('\t')
+                if len(vals)>9:
+                    self._samples = vals[9:]
+                else:
+                    self._samples = []
+                self._vrt_start = True
+                break
+
+        self.sample_ind = OrderedDict()
+        for ind,sample in enumerate(self._samples):
+            self.sample_ind[sample] = ind
+
+    def iter_rows(self, check_order=None):
+        return BCFRowIterator(self, pysam.VariantFile(self.fl),
+                              check_order=check_order)
+
+    @property
+    def dataparser(self):
+        try:
+            return self._dataparser
+        except AttributeError:
+            self._dataparser = BCFDataParser(self._dtype,self.sample_ind)
+            return self._dataparser
+
+    @dataparser.setter
+    def dataparser(self,value):
+        raise NotImplementedError
+
+    @dataparser.deleter
+    def dataparser(self):
+        delattr(self,'_dataparser')
+
 class DataParser(object):
     """Object for parsing INFO and SAMPLES data."""
     def __init__(self,dtype,sample_ind):
@@ -869,6 +938,19 @@ class DataParser(object):
 
         return info2
 
+    def tokenize_sampdata(self,FORMAT,SAMPLES):
+        def _maybe_split(key,val):
+            if not self.dtype['format'][key]['number'] in [0,1]:
+                return val.split(',')
+            else:
+                return val
+
+        fmt = FORMAT.split(':')
+        _samples = SAMPLES.split('\t')
+        sampdata = [[(k,_maybe_split(k,v)) for k,v in zip(fmt,d.split(':'))]\
+                     for d in _samples]
+        return sampdata
+
     def get_sampdata(self,row,alts=1):
         """Given SAMPLE data string and number of alt alleles returns a list
         of lists of lists with data corresponding to alleles, then samples,
@@ -876,21 +958,12 @@ class DataParser(object):
         sampdata = [[list(self.none['format']) \
                        for j in range(len(self.sample_ind))] \
                            for i in range(alts)]
-        row_format = row.FORMAT.split(':')
-        _samples = row.SAMPLES.split('\t')
+        _samples = self.tokenize_sampdata(row.FORMAT, row.SAMPLES)
+        
         for an in range(alts):
             for sample,sn in self.sample_ind.items():
                 _sampdata = list(self.none['format'])
-                for key,val in zip(row_format,_samples[sn].split(':')):
-                    if not self.dtype['format'][key]['number'] in [0,1]:
-                        val = val.split(',')
-                    # try:
-                    #     v = self.converters['format'][key](val,an)
-                    # except ValueError as exc:
-                    #     if val=='' or val=='.':
-                    #         v = None
-                    #     else:
-                    #         raise exc
+                for key,val in _samples[sn]:
                     v = self.converters['format'][key](val,an)
                     _sampdata[self.order['format'][key]] = v
                 sampdata[an][sn] = _sampdata
@@ -907,6 +980,33 @@ class DataParser(object):
                 dtype.append( (field,props['type'],props['size']) )
         return dtype
 
+class BCFDataParser(DataParser):
+    def __init__(self,dtype,sample_ind):
+        self.dtype = dtype
+        self.converters = {'info':{},'format':{}}
+        self.none = {'info':[],'format':[]}
+        for hh in ['info','format']:
+            for field,props in self.dtype[hh].items():
+                tp = props['type']
+                sz = props['size']
+                num = props['number']
+                self.converters[hh][field] = _make_converter_func(tp,num,convert=False)
+                self.none[hh].append(None if sz<=1 else [None]*sz)
+        self.converters['format']['GT'] = \
+            lambda v,a: tuple([e==a for e in v])
+        self.order = {
+            'info':{f:ind for ind,f in enumerate(self.dtype['info'])},
+            'format':{f:ind for ind,f in enumerate(self.dtype['format'])}
+        }
+        self.sample_ind = sample_ind
+
+    def tokenize_info(self, INFO):
+        return INFO.items()
+
+    def tokenize_sampdata(self, FORMAT, SAMPLES):
+        return [v.items() for v in SAMPLES.values()]
+                    
+        
 class RowIterator:
     def iterate(self):
         cnt = 0
@@ -939,6 +1039,22 @@ class RowIterator:
     def close(self):
         self.fh.close()
 
+class BCFRowIterator(RowIterator):
+    def __init__(self, *args, **kwds):
+        super().__init__(*args, *kwds)
+
+    def iterate(self):
+        cnt = 0
+        for rec in self.fh:
+            row = VCFRow(
+                rec.contig,rec.pos,rec.id,
+                rec.ref, ','.join(rec.alts), rec.qual, ','.join(list(rec.filter)),
+                rec.info, rec.format, rec.samples,
+                rnum=cnt)
+            yield row
+            cnt += 1
+        self.close()
+
 class RowByChromIterator(RowIterator):
     def iterate(self):
         rows = super().iterate()
@@ -967,7 +1083,10 @@ class VrtIterator():
         self.close()
         
     def __init__(self,row_iterator,factory,parse_info,samps):
-        self.fh = row_iterator.fh
+        try:
+            self.fh = row_iterator.fh
+        except AttributeError:
+            self.fh = None
         self.rows = row_iterator
         self.reader = row_iterator.reader
         self.factory = factory
@@ -985,7 +1104,9 @@ class VrtIterator():
             return next(self.iterator)
 
     def close(self):
-        self.fh.close()
+        if self.fh is None:
+            return
+        self.fh.close() 
     
 class VrtByChromIterator(VrtIterator):
     def iterate(self):
@@ -993,8 +1114,8 @@ class VrtByChromIterator(VrtIterator):
         for chrom,it in groupby(vrt,key=lambda r: r[-1].chrom):
             yield chrom,_ensure_sorted(it)
 
-    def __init__(self,*args,**kwds):
-        super().__init__(*args,**kwds)
+    def __init__(self, *args, **kwds):
+        super().__init__(*args, **kwds)
 
     def __next__(self):
         try:
@@ -1003,3 +1124,8 @@ class VrtByChromIterator(VrtIterator):
             self.iterator = self.iterate()
             return next(self.iterator)
         
+def _get_reader(file, reference=None):
+    if isinstance(file, str) and file.endswith('.bcf'):
+        return BCFReader(file, reference)
+    else:
+        return VCFReader(file, reference)

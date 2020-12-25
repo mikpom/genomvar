@@ -12,8 +12,9 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('..'))
-
+from pathlib import Path
+src_dir = Path(os.path.abspath(os.curdir))
+sys.path.insert(0, str(src_dir.parent.parent))
 
 # -- Project information -----------------------------------------------------
 

@@ -552,6 +552,11 @@ class TestIO(TestCase):
             if _v.vtp!=variant.Null:
                 self.assertEqual(_v.attrib['id'],'1')
 
+    def test_from_bcf(self):
+        vset = VariantSet.from_vcf(
+            pkg_file('genomvar.test', 'data/example3.bcf'))
+        self.assertEqual(len(list(vset.iter_vrt())), 8)
+
     def test_from_variants_to_records(self):
         fac = variant.VariantFactory(reference=CHR15RGN,normindel=True)
         hap = Haplotype.from_variants([fac.from_edit('chr15rgn',1207,'G','C'),
