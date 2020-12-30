@@ -802,7 +802,7 @@ class VCFReader(object):
         try:
             return self._dataparser
         except AttributeError:
-            self._dataparser = DataParser(self._dtype,self.sample_ind)
+            self._dataparser = _DataParser(self._dtype,self.sample_ind)
             return self._dataparser
 
     @dataparser.setter
@@ -869,7 +869,7 @@ class BCFReader(VCFReader):
         try:
             return self._dataparser
         except AttributeError:
-            self._dataparser = BCFDataParser(self._dtype,self.sample_ind)
+            self._dataparser = _BCFDataParser(self._dtype,self.sample_ind)
             return self._dataparser
 
     @dataparser.setter
@@ -880,7 +880,7 @@ class BCFReader(VCFReader):
     def dataparser(self):
         delattr(self,'_dataparser')
 
-class DataParser(object):
+class _DataParser(object):
     """Object for parsing INFO and SAMPLES data."""
     def __init__(self,dtype,sample_ind):
         self.dtype = dtype
@@ -980,7 +980,7 @@ class DataParser(object):
                 dtype.append( (field,props['type'],props['size']) )
         return dtype
 
-class BCFDataParser(DataParser):
+class _BCFDataParser(_DataParser):
     def __init__(self,dtype,sample_ind):
         self.dtype = dtype
         self.converters = {'info':{},'format':{}}

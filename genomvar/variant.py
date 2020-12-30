@@ -155,7 +155,8 @@ class VariantBase(object):
                          self.attrib['info'].items()])
         row = vcf_row_template.render(
             chrom=self.chrom,pos=pos,
-            ref=ref,alt=alt,qual='.',filt='.',id='.',
+            ref=ref.upper(),alt=alt.upper(),
+            qual='.',filt='.',id='.',
             info='.')
         return row
 
@@ -813,7 +814,7 @@ class GenomVariant(object):
         row = vcf_row_template.render(
             chrom=self.chrom,pos=pos,
             id=_to_string(dt.get('id','.')),
-            ref=ref,alt=alt,
+            ref=ref.upper(),alt=alt.upper(),
             qual=_to_string(dt.get('qual','.')),
             filt=_get_filter(dt.get('filter')),
             info=';'.join(info) if info else '.')
