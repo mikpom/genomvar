@@ -60,7 +60,7 @@ import re
 from rbi_tree.tree import ITree
 from genomvar.utils import _strip_ref_alt
 from genomvar import Reference,MAX_END,NoVCFNotationError
-from genomvar.vcf_utils import row_tmpl as vcf_row_template
+from genomvar.vcf_utils import row_tmpl as vcf_row_template, VCFRow
 
 hgvs_regex = {'SNP':'([0-9]+)([AGTC])>([AGTC])',
               'Del':'([0-9]+)(?:_([0-9]+))?del',
@@ -148,17 +148,15 @@ class VariantBase(object):
     def key(self,value):
         delattr(self,'_key')
 
-    def _format_row(self,chrom,pos,ref,alt):
-        info = []
-        if hasattr(self, 'attrib') and 'info' in self.attrib:
-            info.extend(['{}={}'.format(k,v) for k,v in \
-                         self.attrib['info'].items()])
-        row = vcf_row_template.render(
-            chrom=self.chrom,pos=pos,
-            ref=ref.upper(),alt=alt.upper(),
-            qual='.',filt='.',id='.',
-            info='.')
-        return row
+    # def _format_row(self,pos,ref,alt,**kwds):
+    #     row = VCFRow(self.chrom,pos,kwds.get('id', '.'),
+    #                  ref.upper(),alt.upper(),
+    #                  kwds.get('qual', '.'),
+    #                  kwds.get('filter','.'),
+    #                  kwds.get('info', '.'),
+    #                  kwds.get('format'),
+    #                  kwds.get('samples'))
+    #     return row
 
     def _get_ref_notation(self,start,end, vcf_notation=None):
         # try:
@@ -190,8 +188,8 @@ class VariantBase(object):
         else:
             raise ValueError('Reference is required')
 
-    def to_vcf_row(self, reference=None):
-        """Formats a variant to a VCF row. 
+    def to_vcf_row(self,reference=None,**kwds):
+        """Formats a variant to a :class:`genomvar.vcf_utils.VCFRow` instance. 
 
         For indels reference is need to build correct REF field.
 
@@ -199,22 +197,45 @@ class VariantBase(object):
         ----------
         reference : Reference
             Reference sequence
+
+        kwds : VCF fields
+            optional. If given, these and only these parameters are 
+            used to populate corresponding VCF fields: ``id``, 
+            ``qual``, ``filter``, ``info``, ``format``, ``samples``. 
+            These parameters are taken as is and converted to string
+            before returning a VCFRow. 
+
+            Any other keyword arguments are ignored.
+
         Returns
         -------
-        row : str
-            VCF row representation of variant
+        row : VCFRow
+            :class:`genomvar.vcf_utils.VCFRow` object instance
 
         Notes
         -----
         >>> factory = variant.VariantFactory()
         >>> v1 = factory.from_edit('chr15rgn',2093,'TGG','CCC')
-        >>> print(v1.to_vcf_row())
+        >>> row = v1.to_vcf_row()
+        >>> row
+        <VCFRow chr15rgn:2094 TGG->CCC>
+        >>> print(row)
         chr15rgn        2094    .   TGG     CCC     .     . .
+
+        >>> print(v1.to_vcf_row(id=123,info='DP=10'))
+        chr15rgn        2094    123   TGG     CCC     .     . DP=10
         """
         pos, ref, alt = self.get_vcf_notation(
             reference=reference)
-        return self._format_row(chrom=self.chrom, pos=pos,
-                         ref=ref, alt=alt)
+        return VCFRow(self.chrom,pos,
+                      kwds.get('id'),
+                      ref.upper(),alt.upper(),
+                      kwds.get('qual'),
+                      kwds.get('filter'),
+                      kwds.get('info'),
+                      kwds.get('format'),
+                      kwds.get('samples'))
+
 class MNP(VariantBase):
     """
     Multiple-nucleotide polymorphism.  Substitute N nucleotides of the
@@ -753,41 +774,93 @@ class GenomVariant(object):
             raise NoVCFNotationError('Out of bounds of vcf notation ref')
         return ref
 
-    def to_vcf_row(self, reference=None):
+    def to_vcf_row(self, reference=None, **kwds):
         """Formats a variant to a VCF row. 
 
-        For indels reference is need to build correct REF field.
-        if ``attrib`` contains ``id``, ``qual``, ``filter`` keys 
-        then their values are used to populate corresponding fields 
-        in a VCF row. 
-        
-        FORMAT and SAMPLES are not yet supported.
+        For indels reference might be needed to build correct REF field.
+        Fields ``id``, ``qual``, ``filter``, ``info``, ``format``,
+        ``samples`` are populated from keyword parameters or (if not give)
+        from corresponding ``attrib`` keys (except ``format`` and ``samples``
+        which can be given only as parameters). 
 
         Parameters
         ----------
         reference : Reference
             Reference sequence
+
+        kwds : VCF fields
+            optional. If given, these and only these parameters are 
+            used to populate corresponding VCF fields: ``id``, 
+            ``qual``, ``filter``, ``info``, ``format``, ``samples``. 
+            These parameters are taken as is and converted to string
+            before returning a VCFRow. 
+
+            Any other keyword arguments are ignored.
+
         Returns
         -------
-        row : str
-            VCF row representation of variant
+        row : VCFRow
+            :class:`genomvar.vcf_utils.VCFRow` object instance
 
         Notes
         -----
         >>> factory = variant.VariantFactory()
         >>> v1 = factory.from_edit('chr15rgn',2093,'TGG','CCC')
-        >>> gv = GenomVariant(v1, attrib={'id':'vrtid',
-        ...                               'filter':'LOWQUAL',
-        ...                               'qual':100})
-        >>> print(gv.to_vcf_row())
-        chr15rgn        2094    vrtid   TGG     CCC     100     LOWQUAL .
+        >>> row = v1.to_vcf_row()
+        >>> row
+        <VCFRow chr15rgn:2094 TGG->CCC>
+        >>> print(row)
+        chr15rgn        2094    .   TGG     CCC     .     . .
+
+        >>> print(v1.to_vcf_row(id=123,info='DP=10'))
+        chr15rgn        2094    123   TGG     CCC     .     . DP=10
         """
+        def _get_filter(v):
+            if v is None:
+                return
+            elif isinstance(v, list):
+                return ';'.join(v)
+            else:
+                return str(v)
+
         pos, ref, alt = self.base.get_vcf_notation(
             vcf_notation=self.attrib.get('vcf_notation'),
             reference=reference)
-        return self._format_row(chrom=self.chrom, pos=pos,
-                         ref=ref, alt=alt)
+        dt = self.attrib
+        if 'info' in kwds:
+            info = kwds['info']
+        elif 'info' in dt:
+            _info = ['{}={}'.format(k,v) for k,v in \
+                             dt['info'].items()]
+            
+            info = ';'.join(_info) if _info else None
+        else:
+            info=None
+        return VCFRow(self.chrom,pos,
+                      kwds.get('id', dt.get('id')),
+                      ref.upper(),alt.upper(),
+                      kwds.get('qual', dt.get('qual')),
+                      _get_filter(kwds.get('filter',dt.get('filter'))),
+                      info,
+                      kwds.get('format'),
+                      kwds.get('samples'))
+        # return self._format_row(chrom=self.chrom, pos=pos,
+        #                  ref=ref, alt=alt)
 
+
+    # def _format_row(self,chrom,pos,ref,alt,id=None,qual=None,
+    #                 filter=None,info=None,format=None,samples=None):
+    #     _to_string = lambda v: '.' if v is None else str(v)
+    #     dt = self.attrib
+    #     row = vcf_row_template.render(
+    #         chrom=self.chrom,pos=pos,
+    #         id=_to_string(dt.get('id','.')),
+    #         ref=ref.upper(),alt=alt.upper(),
+    #         qual=_to_string(dt.get('qual','.')),
+    #         filt=_get_filter(dt.get('filter')),
+    #         info=';'.join(info) if info else '.')
+    #     return row
+    
     def _get_vcf_ref(self,start,end,reference=None):
         try:
             ref = self._get_ref_notation(start,end)
@@ -796,30 +869,6 @@ class GenomVariant(object):
                 raise ValueError('No reference')
             else:
                 return reference.get(self.chrom, start, end)
-
-    def _format_row(self,chrom,pos,ref,alt):
-        _to_string = lambda v: '.' if v is None else str(v)
-        def _get_filter(v):
-            if v is None:
-                return '.'
-            elif isinstance(v, list):
-                return ';'.join(v)
-            else:
-                return str(v)
-        info = []
-        if 'info' in self.attrib:
-            info.extend(['{}={}'.format(k,v) for k,v in \
-                         self.attrib['info'].items()])
-        dt = self.attrib
-        row = vcf_row_template.render(
-            chrom=self.chrom,pos=pos,
-            id=_to_string(dt.get('id','.')),
-            ref=ref.upper(),alt=alt.upper(),
-            qual=_to_string(dt.get('qual','.')),
-            filt=_get_filter(dt.get('filter')),
-            info=';'.join(info) if info else '.')
-        return row
-    
 class VariantFactory(object):
     """
     Factory class used to create Variant objects.  Can be instantiated

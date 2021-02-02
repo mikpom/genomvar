@@ -70,5 +70,5 @@ def _cmp_vcf(f1,f2,out,match_partial=False,chunk=1000):
             else:
                 raise exc
             
-        out.write(row+'\n')
+        out.write(str(row)+'\n')
     return nof_vrt

@@ -1,18 +1,18 @@
 
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Package contents &#8212; genomvar  documentation</title>
-    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     
     <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
-    <script src="_static/language_data.js"></script>
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -30,7 +30,8 @@
         <li class="right" >
           <a href="Command_line_utility.html" title="Comparing two VCF files from command line"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">genomvar  documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">genomvar  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Package contents</a></li> 
       </ul>
     </div>  
 
@@ -131,25 +132,41 @@ class hierarchy.</p>
 
 <dl class="py method">
 <dt id="genomvar.variant.VariantBase.to_vcf_row">
-<code class="sig-name descname">to_vcf_row</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">reference</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.VariantBase.to_vcf_row" title="Permalink to this definition">¶</a></dt>
-<dd><p>Formats a variant to a VCF row.</p>
+<code class="sig-name descname">to_vcf_row</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">reference</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwds</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.VariantBase.to_vcf_row" title="Permalink to this definition">¶</a></dt>
+<dd><p>Formats a variant to a <a class="reference internal" href="#genomvar.vcf_utils.VCFRow" title="genomvar.vcf_utils.VCFRow"><code class="xref py py-class docutils literal notranslate"><span class="pre">genomvar.vcf_utils.VCFRow</span></code></a> instance.</p>
 <p>For indels reference is need to build correct REF field.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>reference</strong> (<em>Reference</em>) – Reference sequence</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>reference</strong> (<em>Reference</em>) – Reference sequence</p></li>
+<li><p><strong>kwds</strong> (<em>VCF fields</em>) – <p>optional. If given, these and only these parameters are
+used to populate corresponding VCF fields: <code class="docutils literal notranslate"><span class="pre">id</span></code>,
+<code class="docutils literal notranslate"><span class="pre">qual</span></code>, <code class="docutils literal notranslate"><span class="pre">filter</span></code>, <code class="docutils literal notranslate"><span class="pre">info</span></code>, <code class="docutils literal notranslate"><span class="pre">format</span></code>, <code class="docutils literal notranslate"><span class="pre">samples</span></code>.
+These parameters are taken as is and converted to string
+before returning a VCFRow.</p>
+<p>Any other keyword arguments are ignored.</p>
+</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>row</strong> – VCF row representation of variant</p>
+<dd class="field-even"><p><strong>row</strong> – <a class="reference internal" href="#genomvar.vcf_utils.VCFRow" title="genomvar.vcf_utils.VCFRow"><code class="xref py py-class docutils literal notranslate"><span class="pre">genomvar.vcf_utils.VCFRow</span></code></a> object instance</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>str</p>
+<dd class="field-odd"><p><a class="reference internal" href="#genomvar.vcf_utils.VCFRow" title="genomvar.vcf_utils.VCFRow">VCFRow</a></p>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">factory</span> <span class="o">=</span> <span class="n">variant</span><span class="o">.</span><span class="n">VariantFactory</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">v1</span> <span class="o">=</span> <span class="n">factory</span><span class="o">.</span><span class="n">from_edit</span><span class="p">(</span><span class="s1">&#39;chr15rgn&#39;</span><span class="p">,</span><span class="mi">2093</span><span class="p">,</span><span class="s1">&#39;TGG&#39;</span><span class="p">,</span><span class="s1">&#39;CCC&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">v1</span><span class="o">.</span><span class="n">to_vcf_row</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">row</span> <span class="o">=</span> <span class="n">v1</span><span class="o">.</span><span class="n">to_vcf_row</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">row</span>
+<span class="go">&lt;VCFRow chr15rgn:2094 TGG-&gt;CCC&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
 <span class="go">chr15rgn        2094    .   TGG     CCC     .     . .</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">v1</span><span class="o">.</span><span class="n">to_vcf_row</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="mi">123</span><span class="p">,</span><span class="n">info</span><span class="o">=</span><span class="s1">&#39;DP=10&#39;</span><span class="p">))</span>
+<span class="go">chr15rgn        2094    123   TGG     CCC     .     . DP=10</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -198,25 +215,41 @@ class hierarchy.</p>
 
 <dl class="py method">
 <dt id="genomvar.variant.MNP.to_vcf_row">
-<code class="sig-name descname">to_vcf_row</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">reference</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.MNP.to_vcf_row" title="Permalink to this definition">¶</a></dt>
-<dd><p>Formats a variant to a VCF row.</p>
+<code class="sig-name descname">to_vcf_row</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">reference</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwds</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.MNP.to_vcf_row" title="Permalink to this definition">¶</a></dt>
+<dd><p>Formats a variant to a <a class="reference internal" href="#genomvar.vcf_utils.VCFRow" title="genomvar.vcf_utils.VCFRow"><code class="xref py py-class docutils literal notranslate"><span class="pre">genomvar.vcf_utils.VCFRow</span></code></a> instance.</p>
 <p>For indels reference is need to build correct REF field.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>reference</strong> (<em>Reference</em>) – Reference sequence</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>reference</strong> (<em>Reference</em>) – Reference sequence</p></li>
+<li><p><strong>kwds</strong> (<em>VCF fields</em>) – <p>optional. If given, these and only these parameters are
+used to populate corresponding VCF fields: <code class="docutils literal notranslate"><span class="pre">id</span></code>,
+<code class="docutils literal notranslate"><span class="pre">qual</span></code>, <code class="docutils literal notranslate"><span class="pre">filter</span></code>, <code class="docutils literal notranslate"><span class="pre">info</span></code>, <code class="docutils literal notranslate"><span class="pre">format</span></code>, <code class="docutils literal notranslate"><span class="pre">samples</span></code>.
+These parameters are taken as is and converted to string
+before returning a VCFRow.</p>
+<p>Any other keyword arguments are ignored.</p>
+</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>row</strong> – VCF row representation of variant</p>
+<dd class="field-even"><p><strong>row</strong> – <a class="reference internal" href="#genomvar.vcf_utils.VCFRow" title="genomvar.vcf_utils.VCFRow"><code class="xref py py-class docutils literal notranslate"><span class="pre">genomvar.vcf_utils.VCFRow</span></code></a> object instance</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>str</p>
+<dd class="field-odd"><p><a class="reference internal" href="#genomvar.vcf_utils.VCFRow" title="genomvar.vcf_utils.VCFRow">VCFRow</a></p>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">factory</span> <span class="o">=</span> <span class="n">variant</span><span class="o">.</span><span class="n">VariantFactory</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">v1</span> <span class="o">=</span> <span class="n">factory</span><span class="o">.</span><span class="n">from_edit</span><span class="p">(</span><span class="s1">&#39;chr15rgn&#39;</span><span class="p">,</span><span class="mi">2093</span><span class="p">,</span><span class="s1">&#39;TGG&#39;</span><span class="p">,</span><span class="s1">&#39;CCC&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">v1</span><span class="o">.</span><span class="n">to_vcf_row</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">row</span> <span class="o">=</span> <span class="n">v1</span><span class="o">.</span><span class="n">to_vcf_row</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">row</span>
+<span class="go">&lt;VCFRow chr15rgn:2094 TGG-&gt;CCC&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
 <span class="go">chr15rgn        2094    .   TGG     CCC     .     . .</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">v1</span><span class="o">.</span><span class="n">to_vcf_row</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="mi">123</span><span class="p">,</span><span class="n">info</span><span class="o">=</span><span class="s1">&#39;DP=10&#39;</span><span class="p">))</span>
+<span class="go">chr15rgn        2094    123   TGG     CCC     .     . DP=10</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -269,25 +302,41 @@ class hierarchy.</p>
 
 <dl class="py method">
 <dt id="genomvar.variant.SNP.to_vcf_row">
-<code class="sig-name descname">to_vcf_row</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">reference</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.SNP.to_vcf_row" title="Permalink to this definition">¶</a></dt>
-<dd><p>Formats a variant to a VCF row.</p>
+<code class="sig-name descname">to_vcf_row</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">reference</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwds</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.SNP.to_vcf_row" title="Permalink to this definition">¶</a></dt>
+<dd><p>Formats a variant to a <a class="reference internal" href="#genomvar.vcf_utils.VCFRow" title="genomvar.vcf_utils.VCFRow"><code class="xref py py-class docutils literal notranslate"><span class="pre">genomvar.vcf_utils.VCFRow</span></code></a> instance.</p>
 <p>For indels reference is need to build correct REF field.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>reference</strong> (<em>Reference</em>) – Reference sequence</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>reference</strong> (<em>Reference</em>) – Reference sequence</p></li>
+<li><p><strong>kwds</strong> (<em>VCF fields</em>) – <p>optional. If given, these and only these parameters are
+used to populate corresponding VCF fields: <code class="docutils literal notranslate"><span class="pre">id</span></code>,
+<code class="docutils literal notranslate"><span class="pre">qual</span></code>, <code class="docutils literal notranslate"><span class="pre">filter</span></code>, <code class="docutils literal notranslate"><span class="pre">info</span></code>, <code class="docutils literal notranslate"><span class="pre">format</span></code>, <code class="docutils literal notranslate"><span class="pre">samples</span></code>.
+These parameters are taken as is and converted to string
+before returning a VCFRow.</p>
+<p>Any other keyword arguments are ignored.</p>
+</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>row</strong> – VCF row representation of variant</p>
+<dd class="field-even"><p><strong>row</strong> – <a class="reference internal" href="#genomvar.vcf_utils.VCFRow" title="genomvar.vcf_utils.VCFRow"><code class="xref py py-class docutils literal notranslate"><span class="pre">genomvar.vcf_utils.VCFRow</span></code></a> object instance</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>str</p>
+<dd class="field-odd"><p><a class="reference internal" href="#genomvar.vcf_utils.VCFRow" title="genomvar.vcf_utils.VCFRow">VCFRow</a></p>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">factory</span> <span class="o">=</span> <span class="n">variant</span><span class="o">.</span><span class="n">VariantFactory</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">v1</span> <span class="o">=</span> <span class="n">factory</span><span class="o">.</span><span class="n">from_edit</span><span class="p">(</span><span class="s1">&#39;chr15rgn&#39;</span><span class="p">,</span><span class="mi">2093</span><span class="p">,</span><span class="s1">&#39;TGG&#39;</span><span class="p">,</span><span class="s1">&#39;CCC&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">v1</span><span class="o">.</span><span class="n">to_vcf_row</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">row</span> <span class="o">=</span> <span class="n">v1</span><span class="o">.</span><span class="n">to_vcf_row</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">row</span>
+<span class="go">&lt;VCFRow chr15rgn:2094 TGG-&gt;CCC&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
 <span class="go">chr15rgn        2094    .   TGG     CCC     .     . .</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">v1</span><span class="o">.</span><span class="n">to_vcf_row</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="mi">123</span><span class="p">,</span><span class="n">info</span><span class="o">=</span><span class="s1">&#39;DP=10&#39;</span><span class="p">))</span>
+<span class="go">chr15rgn        2094    123   TGG     CCC     .     . DP=10</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -339,25 +388,41 @@ class hierarchy.</p>
 
 <dl class="py method">
 <dt id="genomvar.variant.Indel.to_vcf_row">
-<code class="sig-name descname">to_vcf_row</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">reference</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.Indel.to_vcf_row" title="Permalink to this definition">¶</a></dt>
-<dd><p>Formats a variant to a VCF row.</p>
+<code class="sig-name descname">to_vcf_row</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">reference</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwds</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.Indel.to_vcf_row" title="Permalink to this definition">¶</a></dt>
+<dd><p>Formats a variant to a <a class="reference internal" href="#genomvar.vcf_utils.VCFRow" title="genomvar.vcf_utils.VCFRow"><code class="xref py py-class docutils literal notranslate"><span class="pre">genomvar.vcf_utils.VCFRow</span></code></a> instance.</p>
 <p>For indels reference is need to build correct REF field.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>reference</strong> (<em>Reference</em>) – Reference sequence</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>reference</strong> (<em>Reference</em>) – Reference sequence</p></li>
+<li><p><strong>kwds</strong> (<em>VCF fields</em>) – <p>optional. If given, these and only these parameters are
+used to populate corresponding VCF fields: <code class="docutils literal notranslate"><span class="pre">id</span></code>,
+<code class="docutils literal notranslate"><span class="pre">qual</span></code>, <code class="docutils literal notranslate"><span class="pre">filter</span></code>, <code class="docutils literal notranslate"><span class="pre">info</span></code>, <code class="docutils literal notranslate"><span class="pre">format</span></code>, <code class="docutils literal notranslate"><span class="pre">samples</span></code>.
+These parameters are taken as is and converted to string
+before returning a VCFRow.</p>
+<p>Any other keyword arguments are ignored.</p>
+</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>row</strong> – VCF row representation of variant</p>
+<dd class="field-even"><p><strong>row</strong> – <a class="reference internal" href="#genomvar.vcf_utils.VCFRow" title="genomvar.vcf_utils.VCFRow"><code class="xref py py-class docutils literal notranslate"><span class="pre">genomvar.vcf_utils.VCFRow</span></code></a> object instance</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>str</p>
+<dd class="field-odd"><p><a class="reference internal" href="#genomvar.vcf_utils.VCFRow" title="genomvar.vcf_utils.VCFRow">VCFRow</a></p>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">factory</span> <span class="o">=</span> <span class="n">variant</span><span class="o">.</span><span class="n">VariantFactory</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">v1</span> <span class="o">=</span> <span class="n">factory</span><span class="o">.</span><span class="n">from_edit</span><span class="p">(</span><span class="s1">&#39;chr15rgn&#39;</span><span class="p">,</span><span class="mi">2093</span><span class="p">,</span><span class="s1">&#39;TGG&#39;</span><span class="p">,</span><span class="s1">&#39;CCC&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">v1</span><span class="o">.</span><span class="n">to_vcf_row</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">row</span> <span class="o">=</span> <span class="n">v1</span><span class="o">.</span><span class="n">to_vcf_row</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">row</span>
+<span class="go">&lt;VCFRow chr15rgn:2094 TGG-&gt;CCC&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
 <span class="go">chr15rgn        2094    .   TGG     CCC     .     . .</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">v1</span><span class="o">.</span><span class="n">to_vcf_row</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="mi">123</span><span class="p">,</span><span class="n">info</span><span class="o">=</span><span class="s1">&#39;DP=10&#39;</span><span class="p">))</span>
+<span class="go">chr15rgn        2094    123   TGG     CCC     .     . DP=10</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -420,25 +485,41 @@ class hierarchy.</p>
 
 <dl class="py method">
 <dt id="genomvar.variant.Ins.to_vcf_row">
-<code class="sig-name descname">to_vcf_row</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">reference</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.Ins.to_vcf_row" title="Permalink to this definition">¶</a></dt>
-<dd><p>Formats a variant to a VCF row.</p>
+<code class="sig-name descname">to_vcf_row</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">reference</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwds</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.Ins.to_vcf_row" title="Permalink to this definition">¶</a></dt>
+<dd><p>Formats a variant to a <a class="reference internal" href="#genomvar.vcf_utils.VCFRow" title="genomvar.vcf_utils.VCFRow"><code class="xref py py-class docutils literal notranslate"><span class="pre">genomvar.vcf_utils.VCFRow</span></code></a> instance.</p>
 <p>For indels reference is need to build correct REF field.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>reference</strong> (<em>Reference</em>) – Reference sequence</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>reference</strong> (<em>Reference</em>) – Reference sequence</p></li>
+<li><p><strong>kwds</strong> (<em>VCF fields</em>) – <p>optional. If given, these and only these parameters are
+used to populate corresponding VCF fields: <code class="docutils literal notranslate"><span class="pre">id</span></code>,
+<code class="docutils literal notranslate"><span class="pre">qual</span></code>, <code class="docutils literal notranslate"><span class="pre">filter</span></code>, <code class="docutils literal notranslate"><span class="pre">info</span></code>, <code class="docutils literal notranslate"><span class="pre">format</span></code>, <code class="docutils literal notranslate"><span class="pre">samples</span></code>.
+These parameters are taken as is and converted to string
+before returning a VCFRow.</p>
+<p>Any other keyword arguments are ignored.</p>
+</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>row</strong> – VCF row representation of variant</p>
+<dd class="field-even"><p><strong>row</strong> – <a class="reference internal" href="#genomvar.vcf_utils.VCFRow" title="genomvar.vcf_utils.VCFRow"><code class="xref py py-class docutils literal notranslate"><span class="pre">genomvar.vcf_utils.VCFRow</span></code></a> object instance</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>str</p>
+<dd class="field-odd"><p><a class="reference internal" href="#genomvar.vcf_utils.VCFRow" title="genomvar.vcf_utils.VCFRow">VCFRow</a></p>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">factory</span> <span class="o">=</span> <span class="n">variant</span><span class="o">.</span><span class="n">VariantFactory</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">v1</span> <span class="o">=</span> <span class="n">factory</span><span class="o">.</span><span class="n">from_edit</span><span class="p">(</span><span class="s1">&#39;chr15rgn&#39;</span><span class="p">,</span><span class="mi">2093</span><span class="p">,</span><span class="s1">&#39;TGG&#39;</span><span class="p">,</span><span class="s1">&#39;CCC&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">v1</span><span class="o">.</span><span class="n">to_vcf_row</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">row</span> <span class="o">=</span> <span class="n">v1</span><span class="o">.</span><span class="n">to_vcf_row</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">row</span>
+<span class="go">&lt;VCFRow chr15rgn:2094 TGG-&gt;CCC&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
 <span class="go">chr15rgn        2094    .   TGG     CCC     .     . .</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">v1</span><span class="o">.</span><span class="n">to_vcf_row</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="mi">123</span><span class="p">,</span><span class="n">info</span><span class="o">=</span><span class="s1">&#39;DP=10&#39;</span><span class="p">))</span>
+<span class="go">chr15rgn        2094    123   TGG     CCC     .     . DP=10</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -498,25 +579,41 @@ class hierarchy.</p>
 
 <dl class="py method">
 <dt id="genomvar.variant.Del.to_vcf_row">
-<code class="sig-name descname">to_vcf_row</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">reference</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.Del.to_vcf_row" title="Permalink to this definition">¶</a></dt>
-<dd><p>Formats a variant to a VCF row.</p>
+<code class="sig-name descname">to_vcf_row</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">reference</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwds</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.Del.to_vcf_row" title="Permalink to this definition">¶</a></dt>
+<dd><p>Formats a variant to a <a class="reference internal" href="#genomvar.vcf_utils.VCFRow" title="genomvar.vcf_utils.VCFRow"><code class="xref py py-class docutils literal notranslate"><span class="pre">genomvar.vcf_utils.VCFRow</span></code></a> instance.</p>
 <p>For indels reference is need to build correct REF field.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>reference</strong> (<em>Reference</em>) – Reference sequence</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>reference</strong> (<em>Reference</em>) – Reference sequence</p></li>
+<li><p><strong>kwds</strong> (<em>VCF fields</em>) – <p>optional. If given, these and only these parameters are
+used to populate corresponding VCF fields: <code class="docutils literal notranslate"><span class="pre">id</span></code>,
+<code class="docutils literal notranslate"><span class="pre">qual</span></code>, <code class="docutils literal notranslate"><span class="pre">filter</span></code>, <code class="docutils literal notranslate"><span class="pre">info</span></code>, <code class="docutils literal notranslate"><span class="pre">format</span></code>, <code class="docutils literal notranslate"><span class="pre">samples</span></code>.
+These parameters are taken as is and converted to string
+before returning a VCFRow.</p>
+<p>Any other keyword arguments are ignored.</p>
+</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>row</strong> – VCF row representation of variant</p>
+<dd class="field-even"><p><strong>row</strong> – <a class="reference internal" href="#genomvar.vcf_utils.VCFRow" title="genomvar.vcf_utils.VCFRow"><code class="xref py py-class docutils literal notranslate"><span class="pre">genomvar.vcf_utils.VCFRow</span></code></a> object instance</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>str</p>
+<dd class="field-odd"><p><a class="reference internal" href="#genomvar.vcf_utils.VCFRow" title="genomvar.vcf_utils.VCFRow">VCFRow</a></p>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">factory</span> <span class="o">=</span> <span class="n">variant</span><span class="o">.</span><span class="n">VariantFactory</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">v1</span> <span class="o">=</span> <span class="n">factory</span><span class="o">.</span><span class="n">from_edit</span><span class="p">(</span><span class="s1">&#39;chr15rgn&#39;</span><span class="p">,</span><span class="mi">2093</span><span class="p">,</span><span class="s1">&#39;TGG&#39;</span><span class="p">,</span><span class="s1">&#39;CCC&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">v1</span><span class="o">.</span><span class="n">to_vcf_row</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">row</span> <span class="o">=</span> <span class="n">v1</span><span class="o">.</span><span class="n">to_vcf_row</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">row</span>
+<span class="go">&lt;VCFRow chr15rgn:2094 TGG-&gt;CCC&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
 <span class="go">chr15rgn        2094    .   TGG     CCC     .     . .</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">v1</span><span class="o">.</span><span class="n">to_vcf_row</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="mi">123</span><span class="p">,</span><span class="n">info</span><span class="o">=</span><span class="s1">&#39;DP=10&#39;</span><span class="p">))</span>
+<span class="go">chr15rgn        2094    123   TGG     CCC     .     . DP=10</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -570,25 +667,41 @@ class hierarchy.</p>
 
 <dl class="py method">
 <dt id="genomvar.variant.AmbigIndel.to_vcf_row">
-<code class="sig-name descname">to_vcf_row</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">reference</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.AmbigIndel.to_vcf_row" title="Permalink to this definition">¶</a></dt>
-<dd><p>Formats a variant to a VCF row.</p>
+<code class="sig-name descname">to_vcf_row</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">reference</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwds</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.AmbigIndel.to_vcf_row" title="Permalink to this definition">¶</a></dt>
+<dd><p>Formats a variant to a <a class="reference internal" href="#genomvar.vcf_utils.VCFRow" title="genomvar.vcf_utils.VCFRow"><code class="xref py py-class docutils literal notranslate"><span class="pre">genomvar.vcf_utils.VCFRow</span></code></a> instance.</p>
 <p>For indels reference is need to build correct REF field.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>reference</strong> (<em>Reference</em>) – Reference sequence</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>reference</strong> (<em>Reference</em>) – Reference sequence</p></li>
+<li><p><strong>kwds</strong> (<em>VCF fields</em>) – <p>optional. If given, these and only these parameters are
+used to populate corresponding VCF fields: <code class="docutils literal notranslate"><span class="pre">id</span></code>,
+<code class="docutils literal notranslate"><span class="pre">qual</span></code>, <code class="docutils literal notranslate"><span class="pre">filter</span></code>, <code class="docutils literal notranslate"><span class="pre">info</span></code>, <code class="docutils literal notranslate"><span class="pre">format</span></code>, <code class="docutils literal notranslate"><span class="pre">samples</span></code>.
+These parameters are taken as is and converted to string
+before returning a VCFRow.</p>
+<p>Any other keyword arguments are ignored.</p>
+</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>row</strong> – VCF row representation of variant</p>
+<dd class="field-even"><p><strong>row</strong> – <a class="reference internal" href="#genomvar.vcf_utils.VCFRow" title="genomvar.vcf_utils.VCFRow"><code class="xref py py-class docutils literal notranslate"><span class="pre">genomvar.vcf_utils.VCFRow</span></code></a> object instance</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>str</p>
+<dd class="field-odd"><p><a class="reference internal" href="#genomvar.vcf_utils.VCFRow" title="genomvar.vcf_utils.VCFRow">VCFRow</a></p>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">factory</span> <span class="o">=</span> <span class="n">variant</span><span class="o">.</span><span class="n">VariantFactory</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">v1</span> <span class="o">=</span> <span class="n">factory</span><span class="o">.</span><span class="n">from_edit</span><span class="p">(</span><span class="s1">&#39;chr15rgn&#39;</span><span class="p">,</span><span class="mi">2093</span><span class="p">,</span><span class="s1">&#39;TGG&#39;</span><span class="p">,</span><span class="s1">&#39;CCC&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">v1</span><span class="o">.</span><span class="n">to_vcf_row</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">row</span> <span class="o">=</span> <span class="n">v1</span><span class="o">.</span><span class="n">to_vcf_row</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">row</span>
+<span class="go">&lt;VCFRow chr15rgn:2094 TGG-&gt;CCC&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
 <span class="go">chr15rgn        2094    .   TGG     CCC     .     . .</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">v1</span><span class="o">.</span><span class="n">to_vcf_row</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="mi">123</span><span class="p">,</span><span class="n">info</span><span class="o">=</span><span class="s1">&#39;DP=10&#39;</span><span class="p">))</span>
+<span class="go">chr15rgn        2094    123   TGG     CCC     .     . DP=10</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -661,25 +774,41 @@ class hierarchy.</p>
 
 <dl class="py method">
 <dt id="genomvar.variant.AmbigIns.to_vcf_row">
-<code class="sig-name descname">to_vcf_row</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">reference</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.AmbigIns.to_vcf_row" title="Permalink to this definition">¶</a></dt>
-<dd><p>Formats a variant to a VCF row.</p>
+<code class="sig-name descname">to_vcf_row</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">reference</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwds</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.AmbigIns.to_vcf_row" title="Permalink to this definition">¶</a></dt>
+<dd><p>Formats a variant to a <a class="reference internal" href="#genomvar.vcf_utils.VCFRow" title="genomvar.vcf_utils.VCFRow"><code class="xref py py-class docutils literal notranslate"><span class="pre">genomvar.vcf_utils.VCFRow</span></code></a> instance.</p>
 <p>For indels reference is need to build correct REF field.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>reference</strong> (<em>Reference</em>) – Reference sequence</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>reference</strong> (<em>Reference</em>) – Reference sequence</p></li>
+<li><p><strong>kwds</strong> (<em>VCF fields</em>) – <p>optional. If given, these and only these parameters are
+used to populate corresponding VCF fields: <code class="docutils literal notranslate"><span class="pre">id</span></code>,
+<code class="docutils literal notranslate"><span class="pre">qual</span></code>, <code class="docutils literal notranslate"><span class="pre">filter</span></code>, <code class="docutils literal notranslate"><span class="pre">info</span></code>, <code class="docutils literal notranslate"><span class="pre">format</span></code>, <code class="docutils literal notranslate"><span class="pre">samples</span></code>.
+These parameters are taken as is and converted to string
+before returning a VCFRow.</p>
+<p>Any other keyword arguments are ignored.</p>
+</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>row</strong> – VCF row representation of variant</p>
+<dd class="field-even"><p><strong>row</strong> – <a class="reference internal" href="#genomvar.vcf_utils.VCFRow" title="genomvar.vcf_utils.VCFRow"><code class="xref py py-class docutils literal notranslate"><span class="pre">genomvar.vcf_utils.VCFRow</span></code></a> object instance</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>str</p>
+<dd class="field-odd"><p><a class="reference internal" href="#genomvar.vcf_utils.VCFRow" title="genomvar.vcf_utils.VCFRow">VCFRow</a></p>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">factory</span> <span class="o">=</span> <span class="n">variant</span><span class="o">.</span><span class="n">VariantFactory</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">v1</span> <span class="o">=</span> <span class="n">factory</span><span class="o">.</span><span class="n">from_edit</span><span class="p">(</span><span class="s1">&#39;chr15rgn&#39;</span><span class="p">,</span><span class="mi">2093</span><span class="p">,</span><span class="s1">&#39;TGG&#39;</span><span class="p">,</span><span class="s1">&#39;CCC&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">v1</span><span class="o">.</span><span class="n">to_vcf_row</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">row</span> <span class="o">=</span> <span class="n">v1</span><span class="o">.</span><span class="n">to_vcf_row</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">row</span>
+<span class="go">&lt;VCFRow chr15rgn:2094 TGG-&gt;CCC&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
 <span class="go">chr15rgn        2094    .   TGG     CCC     .     . .</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">v1</span><span class="o">.</span><span class="n">to_vcf_row</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="mi">123</span><span class="p">,</span><span class="n">info</span><span class="o">=</span><span class="s1">&#39;DP=10&#39;</span><span class="p">))</span>
+<span class="go">chr15rgn        2094    123   TGG     CCC     .     . DP=10</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -747,25 +876,41 @@ class hierarchy.</p>
 
 <dl class="py method">
 <dt id="genomvar.variant.AmbigDel.to_vcf_row">
-<code class="sig-name descname">to_vcf_row</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">reference</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.AmbigDel.to_vcf_row" title="Permalink to this definition">¶</a></dt>
-<dd><p>Formats a variant to a VCF row.</p>
+<code class="sig-name descname">to_vcf_row</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">reference</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwds</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.AmbigDel.to_vcf_row" title="Permalink to this definition">¶</a></dt>
+<dd><p>Formats a variant to a <a class="reference internal" href="#genomvar.vcf_utils.VCFRow" title="genomvar.vcf_utils.VCFRow"><code class="xref py py-class docutils literal notranslate"><span class="pre">genomvar.vcf_utils.VCFRow</span></code></a> instance.</p>
 <p>For indels reference is need to build correct REF field.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>reference</strong> (<em>Reference</em>) – Reference sequence</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>reference</strong> (<em>Reference</em>) – Reference sequence</p></li>
+<li><p><strong>kwds</strong> (<em>VCF fields</em>) – <p>optional. If given, these and only these parameters are
+used to populate corresponding VCF fields: <code class="docutils literal notranslate"><span class="pre">id</span></code>,
+<code class="docutils literal notranslate"><span class="pre">qual</span></code>, <code class="docutils literal notranslate"><span class="pre">filter</span></code>, <code class="docutils literal notranslate"><span class="pre">info</span></code>, <code class="docutils literal notranslate"><span class="pre">format</span></code>, <code class="docutils literal notranslate"><span class="pre">samples</span></code>.
+These parameters are taken as is and converted to string
+before returning a VCFRow.</p>
+<p>Any other keyword arguments are ignored.</p>
+</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>row</strong> – VCF row representation of variant</p>
+<dd class="field-even"><p><strong>row</strong> – <a class="reference internal" href="#genomvar.vcf_utils.VCFRow" title="genomvar.vcf_utils.VCFRow"><code class="xref py py-class docutils literal notranslate"><span class="pre">genomvar.vcf_utils.VCFRow</span></code></a> object instance</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>str</p>
+<dd class="field-odd"><p><a class="reference internal" href="#genomvar.vcf_utils.VCFRow" title="genomvar.vcf_utils.VCFRow">VCFRow</a></p>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">factory</span> <span class="o">=</span> <span class="n">variant</span><span class="o">.</span><span class="n">VariantFactory</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">v1</span> <span class="o">=</span> <span class="n">factory</span><span class="o">.</span><span class="n">from_edit</span><span class="p">(</span><span class="s1">&#39;chr15rgn&#39;</span><span class="p">,</span><span class="mi">2093</span><span class="p">,</span><span class="s1">&#39;TGG&#39;</span><span class="p">,</span><span class="s1">&#39;CCC&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">v1</span><span class="o">.</span><span class="n">to_vcf_row</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">row</span> <span class="o">=</span> <span class="n">v1</span><span class="o">.</span><span class="n">to_vcf_row</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">row</span>
+<span class="go">&lt;VCFRow chr15rgn:2094 TGG-&gt;CCC&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
 <span class="go">chr15rgn        2094    .   TGG     CCC     .     . .</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">v1</span><span class="o">.</span><span class="n">to_vcf_row</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="mi">123</span><span class="p">,</span><span class="n">info</span><span class="o">=</span><span class="s1">&#39;DP=10&#39;</span><span class="p">))</span>
+<span class="go">chr15rgn        2094    123   TGG     CCC     .     . DP=10</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -812,25 +957,41 @@ class hierarchy.</p>
 
 <dl class="py method">
 <dt id="genomvar.variant.Mixed.to_vcf_row">
-<code class="sig-name descname">to_vcf_row</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">reference</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.Mixed.to_vcf_row" title="Permalink to this definition">¶</a></dt>
-<dd><p>Formats a variant to a VCF row.</p>
+<code class="sig-name descname">to_vcf_row</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">reference</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwds</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.Mixed.to_vcf_row" title="Permalink to this definition">¶</a></dt>
+<dd><p>Formats a variant to a <a class="reference internal" href="#genomvar.vcf_utils.VCFRow" title="genomvar.vcf_utils.VCFRow"><code class="xref py py-class docutils literal notranslate"><span class="pre">genomvar.vcf_utils.VCFRow</span></code></a> instance.</p>
 <p>For indels reference is need to build correct REF field.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>reference</strong> (<em>Reference</em>) – Reference sequence</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>reference</strong> (<em>Reference</em>) – Reference sequence</p></li>
+<li><p><strong>kwds</strong> (<em>VCF fields</em>) – <p>optional. If given, these and only these parameters are
+used to populate corresponding VCF fields: <code class="docutils literal notranslate"><span class="pre">id</span></code>,
+<code class="docutils literal notranslate"><span class="pre">qual</span></code>, <code class="docutils literal notranslate"><span class="pre">filter</span></code>, <code class="docutils literal notranslate"><span class="pre">info</span></code>, <code class="docutils literal notranslate"><span class="pre">format</span></code>, <code class="docutils literal notranslate"><span class="pre">samples</span></code>.
+These parameters are taken as is and converted to string
+before returning a VCFRow.</p>
+<p>Any other keyword arguments are ignored.</p>
+</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>row</strong> – VCF row representation of variant</p>
+<dd class="field-even"><p><strong>row</strong> – <a class="reference internal" href="#genomvar.vcf_utils.VCFRow" title="genomvar.vcf_utils.VCFRow"><code class="xref py py-class docutils literal notranslate"><span class="pre">genomvar.vcf_utils.VCFRow</span></code></a> object instance</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>str</p>
+<dd class="field-odd"><p><a class="reference internal" href="#genomvar.vcf_utils.VCFRow" title="genomvar.vcf_utils.VCFRow">VCFRow</a></p>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">factory</span> <span class="o">=</span> <span class="n">variant</span><span class="o">.</span><span class="n">VariantFactory</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">v1</span> <span class="o">=</span> <span class="n">factory</span><span class="o">.</span><span class="n">from_edit</span><span class="p">(</span><span class="s1">&#39;chr15rgn&#39;</span><span class="p">,</span><span class="mi">2093</span><span class="p">,</span><span class="s1">&#39;TGG&#39;</span><span class="p">,</span><span class="s1">&#39;CCC&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">v1</span><span class="o">.</span><span class="n">to_vcf_row</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">row</span> <span class="o">=</span> <span class="n">v1</span><span class="o">.</span><span class="n">to_vcf_row</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">row</span>
+<span class="go">&lt;VCFRow chr15rgn:2094 TGG-&gt;CCC&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
 <span class="go">chr15rgn        2094    .   TGG     CCC     .     . .</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">v1</span><span class="o">.</span><span class="n">to_vcf_row</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="mi">123</span><span class="p">,</span><span class="n">info</span><span class="o">=</span><span class="s1">&#39;DP=10&#39;</span><span class="p">))</span>
+<span class="go">chr15rgn        2094    123   TGG     CCC     .     . DP=10</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -913,25 +1074,41 @@ class hierarchy.</p>
 
 <dl class="py method">
 <dt id="genomvar.variant.Haplotype.to_vcf_row">
-<code class="sig-name descname">to_vcf_row</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">reference</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.Haplotype.to_vcf_row" title="Permalink to this definition">¶</a></dt>
-<dd><p>Formats a variant to a VCF row.</p>
+<code class="sig-name descname">to_vcf_row</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">reference</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwds</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.Haplotype.to_vcf_row" title="Permalink to this definition">¶</a></dt>
+<dd><p>Formats a variant to a <a class="reference internal" href="#genomvar.vcf_utils.VCFRow" title="genomvar.vcf_utils.VCFRow"><code class="xref py py-class docutils literal notranslate"><span class="pre">genomvar.vcf_utils.VCFRow</span></code></a> instance.</p>
 <p>For indels reference is need to build correct REF field.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>reference</strong> (<em>Reference</em>) – Reference sequence</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>reference</strong> (<em>Reference</em>) – Reference sequence</p></li>
+<li><p><strong>kwds</strong> (<em>VCF fields</em>) – <p>optional. If given, these and only these parameters are
+used to populate corresponding VCF fields: <code class="docutils literal notranslate"><span class="pre">id</span></code>,
+<code class="docutils literal notranslate"><span class="pre">qual</span></code>, <code class="docutils literal notranslate"><span class="pre">filter</span></code>, <code class="docutils literal notranslate"><span class="pre">info</span></code>, <code class="docutils literal notranslate"><span class="pre">format</span></code>, <code class="docutils literal notranslate"><span class="pre">samples</span></code>.
+These parameters are taken as is and converted to string
+before returning a VCFRow.</p>
+<p>Any other keyword arguments are ignored.</p>
+</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>row</strong> – VCF row representation of variant</p>
+<dd class="field-even"><p><strong>row</strong> – <a class="reference internal" href="#genomvar.vcf_utils.VCFRow" title="genomvar.vcf_utils.VCFRow"><code class="xref py py-class docutils literal notranslate"><span class="pre">genomvar.vcf_utils.VCFRow</span></code></a> object instance</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>str</p>
+<dd class="field-odd"><p><a class="reference internal" href="#genomvar.vcf_utils.VCFRow" title="genomvar.vcf_utils.VCFRow">VCFRow</a></p>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">factory</span> <span class="o">=</span> <span class="n">variant</span><span class="o">.</span><span class="n">VariantFactory</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">v1</span> <span class="o">=</span> <span class="n">factory</span><span class="o">.</span><span class="n">from_edit</span><span class="p">(</span><span class="s1">&#39;chr15rgn&#39;</span><span class="p">,</span><span class="mi">2093</span><span class="p">,</span><span class="s1">&#39;TGG&#39;</span><span class="p">,</span><span class="s1">&#39;CCC&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">v1</span><span class="o">.</span><span class="n">to_vcf_row</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">row</span> <span class="o">=</span> <span class="n">v1</span><span class="o">.</span><span class="n">to_vcf_row</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">row</span>
+<span class="go">&lt;VCFRow chr15rgn:2094 TGG-&gt;CCC&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
 <span class="go">chr15rgn        2094    .   TGG     CCC     .     . .</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">v1</span><span class="o">.</span><span class="n">to_vcf_row</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="mi">123</span><span class="p">,</span><span class="n">info</span><span class="o">=</span><span class="s1">&#39;DP=10&#39;</span><span class="p">))</span>
+<span class="go">chr15rgn        2094    123   TGG     CCC     .     . DP=10</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -976,25 +1153,41 @@ class hierarchy.</p>
 
 <dl class="py method">
 <dt id="genomvar.variant.Null.to_vcf_row">
-<code class="sig-name descname">to_vcf_row</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">reference</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.Null.to_vcf_row" title="Permalink to this definition">¶</a></dt>
-<dd><p>Formats a variant to a VCF row.</p>
+<code class="sig-name descname">to_vcf_row</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">reference</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwds</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.Null.to_vcf_row" title="Permalink to this definition">¶</a></dt>
+<dd><p>Formats a variant to a <a class="reference internal" href="#genomvar.vcf_utils.VCFRow" title="genomvar.vcf_utils.VCFRow"><code class="xref py py-class docutils literal notranslate"><span class="pre">genomvar.vcf_utils.VCFRow</span></code></a> instance.</p>
 <p>For indels reference is need to build correct REF field.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>reference</strong> (<em>Reference</em>) – Reference sequence</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>reference</strong> (<em>Reference</em>) – Reference sequence</p></li>
+<li><p><strong>kwds</strong> (<em>VCF fields</em>) – <p>optional. If given, these and only these parameters are
+used to populate corresponding VCF fields: <code class="docutils literal notranslate"><span class="pre">id</span></code>,
+<code class="docutils literal notranslate"><span class="pre">qual</span></code>, <code class="docutils literal notranslate"><span class="pre">filter</span></code>, <code class="docutils literal notranslate"><span class="pre">info</span></code>, <code class="docutils literal notranslate"><span class="pre">format</span></code>, <code class="docutils literal notranslate"><span class="pre">samples</span></code>.
+These parameters are taken as is and converted to string
+before returning a VCFRow.</p>
+<p>Any other keyword arguments are ignored.</p>
+</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>row</strong> – VCF row representation of variant</p>
+<dd class="field-even"><p><strong>row</strong> – <a class="reference internal" href="#genomvar.vcf_utils.VCFRow" title="genomvar.vcf_utils.VCFRow"><code class="xref py py-class docutils literal notranslate"><span class="pre">genomvar.vcf_utils.VCFRow</span></code></a> object instance</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>str</p>
+<dd class="field-odd"><p><a class="reference internal" href="#genomvar.vcf_utils.VCFRow" title="genomvar.vcf_utils.VCFRow">VCFRow</a></p>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">factory</span> <span class="o">=</span> <span class="n">variant</span><span class="o">.</span><span class="n">VariantFactory</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">v1</span> <span class="o">=</span> <span class="n">factory</span><span class="o">.</span><span class="n">from_edit</span><span class="p">(</span><span class="s1">&#39;chr15rgn&#39;</span><span class="p">,</span><span class="mi">2093</span><span class="p">,</span><span class="s1">&#39;TGG&#39;</span><span class="p">,</span><span class="s1">&#39;CCC&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">v1</span><span class="o">.</span><span class="n">to_vcf_row</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">row</span> <span class="o">=</span> <span class="n">v1</span><span class="o">.</span><span class="n">to_vcf_row</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">row</span>
+<span class="go">&lt;VCFRow chr15rgn:2094 TGG-&gt;CCC&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
 <span class="go">chr15rgn        2094    .   TGG     CCC     .     . .</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">v1</span><span class="o">.</span><span class="n">to_vcf_row</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="mi">123</span><span class="p">,</span><span class="n">info</span><span class="o">=</span><span class="s1">&#39;DP=10&#39;</span><span class="p">))</span>
+<span class="go">chr15rgn        2094    123   TGG     CCC     .     . DP=10</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -1039,25 +1232,41 @@ class hierarchy.</p>
 
 <dl class="py method">
 <dt id="genomvar.variant.Asterisk.to_vcf_row">
-<code class="sig-name descname">to_vcf_row</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">reference</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.Asterisk.to_vcf_row" title="Permalink to this definition">¶</a></dt>
-<dd><p>Formats a variant to a VCF row.</p>
+<code class="sig-name descname">to_vcf_row</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">reference</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwds</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.Asterisk.to_vcf_row" title="Permalink to this definition">¶</a></dt>
+<dd><p>Formats a variant to a <a class="reference internal" href="#genomvar.vcf_utils.VCFRow" title="genomvar.vcf_utils.VCFRow"><code class="xref py py-class docutils literal notranslate"><span class="pre">genomvar.vcf_utils.VCFRow</span></code></a> instance.</p>
 <p>For indels reference is need to build correct REF field.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>reference</strong> (<em>Reference</em>) – Reference sequence</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>reference</strong> (<em>Reference</em>) – Reference sequence</p></li>
+<li><p><strong>kwds</strong> (<em>VCF fields</em>) – <p>optional. If given, these and only these parameters are
+used to populate corresponding VCF fields: <code class="docutils literal notranslate"><span class="pre">id</span></code>,
+<code class="docutils literal notranslate"><span class="pre">qual</span></code>, <code class="docutils literal notranslate"><span class="pre">filter</span></code>, <code class="docutils literal notranslate"><span class="pre">info</span></code>, <code class="docutils literal notranslate"><span class="pre">format</span></code>, <code class="docutils literal notranslate"><span class="pre">samples</span></code>.
+These parameters are taken as is and converted to string
+before returning a VCFRow.</p>
+<p>Any other keyword arguments are ignored.</p>
+</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>row</strong> – VCF row representation of variant</p>
+<dd class="field-even"><p><strong>row</strong> – <a class="reference internal" href="#genomvar.vcf_utils.VCFRow" title="genomvar.vcf_utils.VCFRow"><code class="xref py py-class docutils literal notranslate"><span class="pre">genomvar.vcf_utils.VCFRow</span></code></a> object instance</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>str</p>
+<dd class="field-odd"><p><a class="reference internal" href="#genomvar.vcf_utils.VCFRow" title="genomvar.vcf_utils.VCFRow">VCFRow</a></p>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">factory</span> <span class="o">=</span> <span class="n">variant</span><span class="o">.</span><span class="n">VariantFactory</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">v1</span> <span class="o">=</span> <span class="n">factory</span><span class="o">.</span><span class="n">from_edit</span><span class="p">(</span><span class="s1">&#39;chr15rgn&#39;</span><span class="p">,</span><span class="mi">2093</span><span class="p">,</span><span class="s1">&#39;TGG&#39;</span><span class="p">,</span><span class="s1">&#39;CCC&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">v1</span><span class="o">.</span><span class="n">to_vcf_row</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">row</span> <span class="o">=</span> <span class="n">v1</span><span class="o">.</span><span class="n">to_vcf_row</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">row</span>
+<span class="go">&lt;VCFRow chr15rgn:2094 TGG-&gt;CCC&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
 <span class="go">chr15rgn        2094    .   TGG     CCC     .     . .</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">v1</span><span class="o">.</span><span class="n">to_vcf_row</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="mi">123</span><span class="p">,</span><span class="n">info</span><span class="o">=</span><span class="s1">&#39;DP=10&#39;</span><span class="p">))</span>
+<span class="go">chr15rgn        2094    123   TGG     CCC     .     . DP=10</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -1100,32 +1309,45 @@ as <code class="docutils literal notranslate"><span class="pre">other</span></co
 
 <dl class="py method">
 <dt id="genomvar.variant.GenomVariant.to_vcf_row">
-<code class="sig-name descname">to_vcf_row</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">reference</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.GenomVariant.to_vcf_row" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">to_vcf_row</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">reference</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwds</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.GenomVariant.to_vcf_row" title="Permalink to this definition">¶</a></dt>
 <dd><p>Formats a variant to a VCF row.</p>
-<p>For indels reference is need to build correct REF field.
-if <code class="docutils literal notranslate"><span class="pre">attrib</span></code> contains <code class="docutils literal notranslate"><span class="pre">id</span></code>, <code class="docutils literal notranslate"><span class="pre">qual</span></code>, <code class="docutils literal notranslate"><span class="pre">filter</span></code> keys
-then their values are used to populate corresponding fields
-in a VCF row.</p>
-<p>FORMAT and SAMPLES are not yet supported.</p>
+<p>For indels reference might be needed to build correct REF field.
+Fields <code class="docutils literal notranslate"><span class="pre">id</span></code>, <code class="docutils literal notranslate"><span class="pre">qual</span></code>, <code class="docutils literal notranslate"><span class="pre">filter</span></code>, <code class="docutils literal notranslate"><span class="pre">info</span></code>, <code class="docutils literal notranslate"><span class="pre">format</span></code>,
+<code class="docutils literal notranslate"><span class="pre">samples</span></code> are populated from keyword parameters or (if not give)
+from corresponding <code class="docutils literal notranslate"><span class="pre">attrib</span></code> keys (except <code class="docutils literal notranslate"><span class="pre">format</span></code> and <code class="docutils literal notranslate"><span class="pre">samples</span></code>
+which can be given only as parameters).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>reference</strong> (<em>Reference</em>) – Reference sequence</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>reference</strong> (<em>Reference</em>) – Reference sequence</p></li>
+<li><p><strong>kwds</strong> (<em>VCF fields</em>) – <p>optional. If given, these and only these parameters are
+used to populate corresponding VCF fields: <code class="docutils literal notranslate"><span class="pre">id</span></code>,
+<code class="docutils literal notranslate"><span class="pre">qual</span></code>, <code class="docutils literal notranslate"><span class="pre">filter</span></code>, <code class="docutils literal notranslate"><span class="pre">info</span></code>, <code class="docutils literal notranslate"><span class="pre">format</span></code>, <code class="docutils literal notranslate"><span class="pre">samples</span></code>.
+These parameters are taken as is and converted to string
+before returning a VCFRow.</p>
+<p>Any other keyword arguments are ignored.</p>
+</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>row</strong> – VCF row representation of variant</p>
+<dd class="field-even"><p><strong>row</strong> – <a class="reference internal" href="#genomvar.vcf_utils.VCFRow" title="genomvar.vcf_utils.VCFRow"><code class="xref py py-class docutils literal notranslate"><span class="pre">genomvar.vcf_utils.VCFRow</span></code></a> object instance</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>str</p>
+<dd class="field-odd"><p><a class="reference internal" href="#genomvar.vcf_utils.VCFRow" title="genomvar.vcf_utils.VCFRow">VCFRow</a></p>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">factory</span> <span class="o">=</span> <span class="n">variant</span><span class="o">.</span><span class="n">VariantFactory</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">v1</span> <span class="o">=</span> <span class="n">factory</span><span class="o">.</span><span class="n">from_edit</span><span class="p">(</span><span class="s1">&#39;chr15rgn&#39;</span><span class="p">,</span><span class="mi">2093</span><span class="p">,</span><span class="s1">&#39;TGG&#39;</span><span class="p">,</span><span class="s1">&#39;CCC&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">gv</span> <span class="o">=</span> <span class="n">GenomVariant</span><span class="p">(</span><span class="n">v1</span><span class="p">,</span> <span class="n">attrib</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;id&#39;</span><span class="p">:</span><span class="s1">&#39;vrtid&#39;</span><span class="p">,</span>
-<span class="gp">... </span>                              <span class="s1">&#39;filter&#39;</span><span class="p">:</span><span class="s1">&#39;LOWQUAL&#39;</span><span class="p">,</span>
-<span class="gp">... </span>                              <span class="s1">&#39;qual&#39;</span><span class="p">:</span><span class="mi">100</span><span class="p">})</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">gv</span><span class="o">.</span><span class="n">to_vcf_row</span><span class="p">())</span>
-<span class="go">chr15rgn        2094    vrtid   TGG     CCC     100     LOWQUAL .</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">row</span> <span class="o">=</span> <span class="n">v1</span><span class="o">.</span><span class="n">to_vcf_row</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">row</span>
+<span class="go">&lt;VCFRow chr15rgn:2094 TGG-&gt;CCC&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+<span class="go">chr15rgn        2094    .   TGG     CCC     .     . .</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">v1</span><span class="o">.</span><span class="n">to_vcf_row</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="mi">123</span><span class="p">,</span><span class="n">info</span><span class="o">=</span><span class="s1">&#39;DP=10&#39;</span><span class="p">))</span>
+<span class="go">chr15rgn        2094    123   TGG     CCC     .     . DP=10</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -2495,13 +2717,6 @@ reasons these parameters are set to False and these fields are not
 parsed.</p>
 <p>.bcf format is supported, use <a class="reference internal" href="#genomvar.vcf.BCFReader" title="genomvar.vcf.BCFReader"><code class="xref py py-class docutils literal notranslate"><span class="pre">BCFReader</span></code></a>.</p>
 <dl class="py class">
-<dt id="genomvar.vcf.VCFRow">
-<em class="property">class </em><code class="sig-prename descclassname">genomvar.vcf.</code><code class="sig-name descname">VCFRow</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">CHROM</span></em>, <em class="sig-param"><span class="n">POS</span></em>, <em class="sig-param"><span class="n">ID</span></em>, <em class="sig-param"><span class="n">REF</span></em>, <em class="sig-param"><span class="n">ALT</span></em>, <em class="sig-param"><span class="n">QUAL</span></em>, <em class="sig-param"><span class="n">FILTER</span></em>, <em class="sig-param"><span class="n">INFO</span></em>, <em class="sig-param"><span class="n">FORMAT</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">SAMPLES</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">rnum</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.vcf.VCFRow" title="Permalink to this definition">¶</a></dt>
-<dd><p>Class to store a single row from VCF. Sample data if present is not
-splitted per sample and kept as a single string.</p>
-</dd></dl>
-
-<dl class="py class">
 <dt id="genomvar.vcf.VCFReader">
 <em class="property">class </em><code class="sig-prename descclassname">genomvar.vcf.</code><code class="sig-name descname">VCFReader</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vcf</span></em>, <em class="sig-param"><span class="n">index</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">reference</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.vcf.VCFReader" title="Permalink to this definition">¶</a></dt>
 <dd><p>Class to read VCF files.</p>
@@ -2682,63 +2897,21 @@ instantiated with reference. <em>Default: False</em></p></li>
 
 </dd></dl>
 
-<dl class="py class">
-<dt id="genomvar.vcf.DataParser">
-<em class="property">class </em><code class="sig-prename descclassname">genomvar.vcf.</code><code class="sig-name descname">DataParser</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dtype</span></em>, <em class="sig-param"><span class="n">sample_ind</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.vcf.DataParser" title="Permalink to this definition">¶</a></dt>
-<dd><p>Object for parsing INFO and SAMPLES data.</p>
-<dl class="py method">
-<dt id="genomvar.vcf.DataParser.tokenize_info">
-<code class="sig-name descname">tokenize_info</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">INFO</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.vcf.DataParser.tokenize_info" title="Permalink to this definition">¶</a></dt>
-<dd><p>Function splits info on simple key value pairs</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="genomvar.vcf.DataParser.get_info">
-<code class="sig-name descname">get_info</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">INFO</span></em>, <em class="sig-param"><span class="n">alts</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">parse_null</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.vcf.DataParser.get_info" title="Permalink to this definition">¶</a></dt>
-<dd><p>Given INFO string and number of alt alleles returns a list
-of lists with data corresponding to alleles, then fields.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="genomvar.vcf.DataParser.get_sampdata">
-<code class="sig-name descname">get_sampdata</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">row</span></em>, <em class="sig-param"><span class="n">alts</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.vcf.DataParser.get_sampdata" title="Permalink to this definition">¶</a></dt>
-<dd><p>Given SAMPLE data string and number of alt alleles returns a list
-of lists of lists with data corresponding to alleles, then samples,
-then fields.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt id="genomvar.vcf.BCFDataParser">
-<em class="property">class </em><code class="sig-prename descclassname">genomvar.vcf.</code><code class="sig-name descname">BCFDataParser</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dtype</span></em>, <em class="sig-param"><span class="n">sample_ind</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.vcf.BCFDataParser" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="py method">
-<dt id="genomvar.vcf.BCFDataParser.tokenize_info">
-<code class="sig-name descname">tokenize_info</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">INFO</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.vcf.BCFDataParser.tokenize_info" title="Permalink to this definition">¶</a></dt>
-<dd><p>Function splits info on simple key value pairs</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="genomvar.vcf.BCFDataParser.get_info">
-<code class="sig-name descname">get_info</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">INFO</span></em>, <em class="sig-param"><span class="n">alts</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">parse_null</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.vcf.BCFDataParser.get_info" title="Permalink to this definition">¶</a></dt>
-<dd><p>Given INFO string and number of alt alleles returns a list
-of lists with data corresponding to alleles, then fields.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="genomvar.vcf.BCFDataParser.get_sampdata">
-<code class="sig-name descname">get_sampdata</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">row</span></em>, <em class="sig-param"><span class="n">alts</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.vcf.BCFDataParser.get_sampdata" title="Permalink to this definition">¶</a></dt>
-<dd><p>Given SAMPLE data string and number of alt alleles returns a list
-of lists of lists with data corresponding to alleles, then samples,
-then fields.</p>
-</dd></dl>
-
+</div>
+<div class="section" id="module-vcf-utils-py">
+<h2>Module vcf_utils.py<a class="headerlink" href="#module-vcf-utils-py" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-genomvar.vcf_utils"></span><dl class="py class">
+<dt id="genomvar.vcf_utils.VCFRow">
+<em class="property">class </em><code class="sig-prename descclassname">genomvar.vcf_utils.</code><code class="sig-name descname">VCFRow</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">CHROM</span></em>, <em class="sig-param"><span class="n">POS</span></em>, <em class="sig-param"><span class="n">ID</span></em>, <em class="sig-param"><span class="n">REF</span></em>, <em class="sig-param"><span class="n">ALT</span></em>, <em class="sig-param"><span class="n">QUAL</span></em>, <em class="sig-param"><span class="n">FILTER</span></em>, <em class="sig-param"><span class="n">INFO</span></em>, <em class="sig-param"><span class="n">FORMAT</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">SAMPLES</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">rnum</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.vcf_utils.VCFRow" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tuple-like object storing variant information in VCF-like form.</p>
+<p>str() returns a string, formatted as a row in VCF file.</p>
 </dd></dl>
 
 </div>
 </div>
 
 
+            <div class="clearer"></div>
           </div>
         </div>
       </div>
@@ -2750,6 +2923,7 @@ then fields.</p>
 <li><a class="reference internal" href="#module-genomvar.variant">Module variant.py</a></li>
 <li><a class="reference internal" href="#module-genomvar.varset">Module varset.py</a></li>
 <li><a class="reference internal" href="#module-genomvar.vcf">Module vcf.py</a></li>
+<li><a class="reference internal" href="#module-vcf-utils-py">Module vcf_utils.py</a></li>
 </ul>
 </li>
 </ul>
@@ -2790,12 +2964,13 @@ then fields.</p>
         <li class="right" >
           <a href="Command_line_utility.html" title="Comparing two VCF files from command line"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">genomvar  documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">genomvar  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Package contents</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2020, AcademGene LLC.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.4.1.
     </div>
   </body>
 </html>

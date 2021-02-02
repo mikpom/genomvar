@@ -25,4 +25,12 @@ Module vcf.py
    :members:
    :no-undoc-members:
    :inherited-members:
-      
+
+Module vcf_utils.py
+****************
+
+.. automodule:: genomvar.vcf_utils
+   :members:
+   :no-undoc-members:
+   :inherited-members:
+   

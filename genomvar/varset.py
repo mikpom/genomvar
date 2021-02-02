@@ -370,7 +370,7 @@ class VariantSetBase(object):
                     continue
                 else:
                     raise exc
-            fh.write(row+'\n')
+            fh.write(str(row)+'\n')
 
         if opened:
             fh.close()

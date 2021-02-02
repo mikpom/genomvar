@@ -30,7 +30,6 @@ class TestStreamCmp(TestCase):
         rows = [VCFRow(*l.strip().split('\t')) for l in noheader]
 
         row0 = rows[0]
-        
         info = _get_info(row0.INFO)
         self.assertEqual([row0.CHROM,row0.POS,row0.REF,row0.ALT],
                          ['chr11rgn',7462,'G','T'])

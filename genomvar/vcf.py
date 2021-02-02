@@ -44,6 +44,7 @@ from genomvar import Reference,singleton,\
 from genomvar.utils import rgn_from,grouper
 from genomvar.variant import GenomVariant,VariantFactory
 import genomvar
+from genomvar.vcf_utils import VCFRow
 
 # Map of VCF types to NumPy types
 string2dtype = {'Float':np.float64,'Integer':np.int64,
@@ -189,35 +190,6 @@ def _parse_gt(gt,ind):
         gt_cache[(gt,ind)] = GT
         return GT
 
-VCF_fields = ["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER",  "INFO",
-              "FORMAT",  "SAMPLES"]
-class VCFRow(object):
-    """Class to store a single row from VCF. Sample data if present is not 
-    splitted per sample and kept as a single string."""
-    def __init__(self,CHROM,POS,ID,REF,ALT,QUAL,FILTER,INFO,
-                 FORMAT=None,SAMPLES=None,rnum=None):
-        self.CHROM = CHROM
-        self.POS = int(POS)
-        self.ID = ID
-        self.REF = REF
-        self.ALT = ALT
-        self.QUAL = QUAL
-        self.FILTER = FILTER
-        self.INFO = INFO
-        self.FORMAT = FORMAT
-        self.SAMPLES = SAMPLES
-        self.rnum = rnum
-
-    __slots__ = [*VCF_fields, 'rnum']
-
-    def __repr__(self):
-        return '<VCFRow {}:{} {}->{}>'\
-            .format(self.CHROM,self.POS,self.REF,self.ALT)
-    def __str__(self):
-        fields = [str(getattr(self, a)) for a in VCF_fields[:8]]
-        if not self.FORMAT is None:
-            fields += [str(self.FORMAT),str(self.SAMPLES)]
-        return '\t'.join(fields)
 
     
 class VCFReader(object):
