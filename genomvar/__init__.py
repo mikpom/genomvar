@@ -15,6 +15,7 @@ class UnsortedVariantFileError(Exception): pass
 class DifferentlySortedChromsError(Exception): pass
 class DuplicateVariants(Exception): pass
 class NoVCFNotationError(Exception): pass
+class StructuralVariantError(NotImplementedError): pass
 
 class ChromSet(collections.abc.Set):
     '''Chromosome set remembers the order of chromosome addition.'''

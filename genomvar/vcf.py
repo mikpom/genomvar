@@ -38,7 +38,7 @@ from collections import namedtuple,OrderedDict,deque
 import re
 import gzip
 import numpy as np
-from genomvar import Reference,singleton,\
+from genomvar import Reference,singleton,StructuralVariantError,\
     variant,ChromSet,VCFSampleMismatch,\
     UnsortedVariantFileError,MAX_END
 from genomvar.utils import rgn_from,grouper
@@ -366,7 +366,13 @@ class VCFReader(object):
             sampdata = repeat(None)
 
         for ind,(_alt,_info,_sampdata) in enumerate(zip(alts,info,sampdata)):
-            base  = factory.from_edit(row.CHROM,row.POS-1,row.REF,_alt)
+            try:
+                base  = factory.from_edit(row.CHROM,row.POS-1,row.REF,_alt)
+            except StructuralVariantError:
+                warnings.warn(
+                    'Structural variants are not yet supported, skipping row '\
+                    +str(row.rnum))
+                continue
             if parse_info:
                 infod = dict(zip(self._dtype['info'],_info))
             else:
@@ -383,7 +389,7 @@ class VCFReader(object):
                       'id':row.ID, 'qual':row.QUAL}
             attrib['vcf_notation'] = {'start' : row.POS-1,'ref' : row.REF,
                                       'row' : row.rnum}
-            _vrt = GenomVariant(base,attrib=attrib)
+            _vrt = GenomVariant(base, attrib=attrib)
             yield _vrt
 
         if parse_null: # experimental

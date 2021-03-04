@@ -1,3 +1,4 @@
+import warnings
 import unittest
 import numpy as np
 import io
@@ -101,6 +102,19 @@ class TestVCFReaderCase(unittest.TestCase):
         
         v = list(vs.iter_vrt(parse_samples=True))[0]
         self.assertEqual(v.attrib['samples']['S1']['GT'], (None,None))
+
+    def test_sv_types(self):
+        reader = VCFReader(pkg_file('genomvar.test', 'data/example4.vcf'))
+
+        with warnings.catch_warnings(record=True) as wrn:
+            warnings.simplefilter('always')
+            for cnt,vrt in enumerate(reader.iter_vrt()):
+                pass 
+            self.assertEqual(cnt, 99)
+            self.assertGreater(len(wrn), 0)
+            self.assertIn('Structural', str(wrn[-1].message))
+            
+        
 
     def test_bcf_format(self):
         reader = BCFReader(

@@ -59,7 +59,8 @@ import itertools
 import re
 from rbi_tree.tree import ITree
 from genomvar.utils import _strip_ref_alt
-from genomvar import Reference,MAX_END,NoVCFNotationError
+from genomvar import Reference,MAX_END,NoVCFNotationError,\
+    StructuralVariantError
 from genomvar.vcf_utils import row_tmpl as vcf_row_template, VCFRow
 
 hgvs_regex = {'SNP':'([0-9]+)([AGTC])>([AGTC])',
@@ -220,10 +221,10 @@ class VariantBase(object):
         >>> row
         <VCFRow chr15rgn:2094 TGG->CCC>
         >>> print(row)
-        chr15rgn        2094    .   TGG     CCC     .     . .
+        chr15rgn	2094	.	TGG	CCC	.	.	.
 
         >>> print(v1.to_vcf_row(id=123,info='DP=10'))
-        chr15rgn        2094    123   TGG     CCC     .     . DP=10
+        chr15rgn	2094	123	TGG	CCC	.	.	DP=10
         """
         pos, ref, alt = self.get_vcf_notation(
             reference=reference)
@@ -232,9 +233,7 @@ class VariantBase(object):
                       ref.upper(),alt.upper(),
                       kwds.get('qual'),
                       kwds.get('filter'),
-                      kwds.get('info'),
-                      kwds.get('format'),
-                      kwds.get('samples'))
+                      kwds.get('info'))
 
 class MNP(VariantBase):
     """
@@ -778,10 +777,10 @@ class GenomVariant(object):
         """Formats a variant to a VCF row. 
 
         For indels reference might be needed to build correct REF field.
-        Fields ``id``, ``qual``, ``filter``, ``info``, ``format``,
-        ``samples`` are populated from keyword parameters or (if not give)
-        from corresponding ``attrib`` keys (except ``format`` and ``samples``
-        which can be given only as parameters). 
+        Fields ``id``, ``qual``, ``filter``, ``info``, are populated from
+        keyword parameters or (if not given)
+        from corresponding ``attrib`` keys. FORMAT and samples DATA are
+        not yet supported.
 
         Parameters
         ----------
@@ -791,7 +790,7 @@ class GenomVariant(object):
         kwds : VCF fields
             optional. If given, these and only these parameters are 
             used to populate corresponding VCF fields: ``id``, 
-            ``qual``, ``filter``, ``info``, ``format``, ``samples``. 
+            ``qual``, ``filter``, ``info``. 
             These parameters are taken as is and converted to string
             before returning a VCFRow. 
 
@@ -810,10 +809,10 @@ class GenomVariant(object):
         >>> row
         <VCFRow chr15rgn:2094 TGG->CCC>
         >>> print(row)
-        chr15rgn        2094    .   TGG     CCC     .     . .
+        chr15rgn	2094	.	TGG	CCC	.	.	.
 
         >>> print(v1.to_vcf_row(id=123,info='DP=10'))
-        chr15rgn        2094    123   TGG     CCC     .     . DP=10
+        chr15rgn	2094	123	TGG	CCC	.	.	DP=10
         """
         def _get_filter(v):
             if v is None:
@@ -841,26 +840,8 @@ class GenomVariant(object):
                       ref.upper(),alt.upper(),
                       kwds.get('qual', dt.get('qual')),
                       _get_filter(kwds.get('filter',dt.get('filter'))),
-                      info,
-                      kwds.get('format'),
-                      kwds.get('samples'))
-        # return self._format_row(chrom=self.chrom, pos=pos,
-        #                  ref=ref, alt=alt)
+                      info)
 
-
-    # def _format_row(self,chrom,pos,ref,alt,id=None,qual=None,
-    #                 filter=None,info=None,format=None,samples=None):
-    #     _to_string = lambda v: '.' if v is None else str(v)
-    #     dt = self.attrib
-    #     row = vcf_row_template.render(
-    #         chrom=self.chrom,pos=pos,
-    #         id=_to_string(dt.get('id','.')),
-    #         ref=ref.upper(),alt=alt.upper(),
-    #         qual=_to_string(dt.get('qual','.')),
-    #         filt=_get_filter(dt.get('filter')),
-    #         info=';'.join(info) if info else '.')
-    #     return row
-    
     def _get_vcf_ref(self,start,end,reference=None):
         try:
             ref = self._get_ref_notation(start,end)
@@ -869,6 +850,7 @@ class GenomVariant(object):
                 raise ValueError('No reference')
             else:
                 return reference.get(self.chrom, start, end)
+
 class VariantFactory(object):
     """
     Factory class used to create Variant objects.  Can be instantiated
@@ -979,8 +961,9 @@ class VariantFactory(object):
           >>> print(vrt)
           <SNP chr15:67-68 G/C>
         """
+        # print('!! processing', chrom, start, ref, alt)
         chrom,start,end,ref,alt,cls = \
-               self._parse_edit(chrom,start,ref,alt)
+            self._parse_edit(chrom,start,ref,alt)
         return cls(chrom=chrom,start=start,end=end,ref=ref,alt=alt)
     
     def _parse_edit(self,chrom,start,ref,alt):
@@ -997,10 +980,13 @@ class VariantFactory(object):
         if len(ref)==1 and len(alt)==1 and ref!=alt:
             tp=SNP
             end = start+len(ref)
+            return (chrom,start,end,ref,alt,tp)
         else:
             ref,alt,shift = _strip_ref_alt(ref,alt)
             start += shift
             if not ref: # Ins
+                if '[' in alt or ']' in alt:
+                    raise StructuralVariantError
                 if not self.normindel:
                     return (chrom,start,start+1,'',alt,Ins)
                 else:
@@ -1020,10 +1006,11 @@ class VariantFactory(object):
             elif len(ref)==len(alt): #MNP
                 end = start+len(ref)
                 tp = MNP if len(ref)>1 else SNP
+                return (chrom,start,end,ref,alt,tp)
+            elif '<' in alt:
+                raise StructuralVariantError
             else: #Mixed
                 return (chrom,start,start+len(ref),ref,alt,Mixed)
-
-        return (chrom,start,end,ref,alt,tp)
 
     def _maybe_norm_ins(self,chrom,start,alt,max_len=MAX_END):
         """Check insertion for normalization"""
