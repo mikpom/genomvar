@@ -11,11 +11,11 @@ from genomvar.varset import MutableVariantSet,\
 from genomvar.variant import VariantBase,AmbigIndel,Haplotype,VariantFactory
 from genomvar import varset,Reference
 from genomvar import OverlappingHaplotypeVars,\
-    UnsortedVariantFileError,VCFSampleMismatch
+    UnsortedVariantFileError,VCFSampleMismatch,NoIndexFoundError
 from genomvar.vcf import VCFRow,VCFReader
 from genomvar import variant
 
-# The following is a scheme for example used here a lot (example1.vcf)
+# Representation of an example used here a lot (example1.vcf)
 # 
 # REF      AG    T|   T|  C    G     TGG   TT    G|      T    T      CACAGTTCCAC
 #          22    154  165 453  1206  2093  2099  3200    4754 6145   10044
@@ -268,7 +268,7 @@ class TestIndexedVariantFileCase(TestCase):
             self.assertEqual(len(match),1)
 
     def test_error_on_format(self):
-        with self.assertRaises(OSError):
+        with self.assertRaises(NoIndexFoundError):
             vset = IndexedVariantFileSet(
                 pkg_file('genomvar.test','data/example1.vcf'),
                 reference=CHR15RGN)
@@ -310,6 +310,11 @@ class TestIndexedVariantFileCase(TestCase):
         # Test finding all variants
         self.assertEqual(len(list(vset.find_vrt())),16)
         
+    def test_no_index(self):
+        with self.assertRaises(NoIndexFoundError):
+            vset = IndexedVariantFileSet(
+                pkg_file('genomvar.test','data/example3.vcf'))
+
     def test_ctg_len_without_ref(self):
         vset = IndexedVariantFileSet(
             pkg_file('genomvar.test','data/example1.vcf.gz'),

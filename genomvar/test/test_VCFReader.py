@@ -36,7 +36,7 @@ class TestVCFReaderCase(unittest.TestCase):
     def test_example3(self):
         reader = VCFReader(pkg_file(
             'genomvar.test','data/example3.vcf'))
-        self.assertEqual(list(reader.get_chroms(unindexed=True)),
+        self.assertEqual(list(reader.get_chroms(allow_no_index=True)),
                          ['chr1','chr2','chr10'])
         vrt = list(reader.iter_vrt(parse_info=True,parse_samples=True))
         self.assertGreater(len(vrt),0)

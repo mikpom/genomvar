@@ -1733,7 +1733,7 @@ class VariantFileSet(VariantSetBase):
         return N
 
     def get_chroms(self):
-        return self._reader.get_chroms(unindexed=True)
+        return self._reader.get_chroms(allow_no_index=True)
 
 class IndexedVariantFileSet(VariantFileSet):
     """

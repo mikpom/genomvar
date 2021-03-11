@@ -32,7 +32,6 @@ parsed.
 import os
 import warnings
 import heapq
-import pysam
 from itertools import dropwhile,groupby,repeat,takewhile,zip_longest,islice
 from collections import namedtuple,OrderedDict,deque
 import re
@@ -40,7 +39,7 @@ import gzip
 import numpy as np
 from genomvar import Reference,singleton,StructuralVariantError,\
     variant,ChromSet,VCFSampleMismatch,\
-    UnsortedVariantFileError,MAX_END
+    UnsortedVariantFileError,MAX_END,NoIndexFoundError
 from genomvar.utils import rgn_from,grouper
 from genomvar.variant import GenomVariant,VariantFactory
 import genomvar
@@ -208,18 +207,18 @@ class VCFReader(object):
                     if os.path.isfile(idx):
                         self.idx_file = idx
                     else:
-                        raise OSError('Index not found')
+                        raise NoIndexFoundError('no index for '+str(self.fl))
             elif isinstance(index,str):
                 if os.path.isfile(index):
                     self.idx_file = index
                 else:
                     raise OSError('{} not found'.format(index))
 
-            if self.idx_file:
-                self.tabix = pysam.TabixFile(
-                    filename=self.fl, index=self.idx_file)
-            else:
-                self.tabix = None
+            # if self.idx_file:
+            #     self.tabix = pysam.TabixFile(
+            #         filename=self.fl, index=self.idx_file)
+            # else:
+            #     self.tabix = None
 
             if self.compressed:
                 self.openfn = gzip.open
@@ -717,26 +716,50 @@ class VCFReader(object):
                 continue
             yield vrt
 
+    def _get_tabix(self):
+        if hasattr(self, 'tabix'):
+            return self.tabix
+        else:
+            if self.idx_file:
+                try:
+                    self.tabix = pysam.TabixFile(
+                        filename=self.fl, index=self.idx_file)
+                except NameError:
+                    import pysam
+                    self.tabix = pysam.TabixFile(
+                        filename=self.fl, index=self.idx_file)
+                except OSError as exc:
+                    msg = exc.args[0]
+                    if 'index' in msg and 'not found' in msg:
+                        raise NoIndexFoundError
+                    else:
+                        raise exc
+            else:
+                raise NoIndexFoundError
+        return self.tabix
+            
     def _query(self,chrom,start=None,end=None):
         """User tabix index to fetch VCFRow's"""
         if start and not end:
             raise ValueError('"start" was given but "end" was not')
+        tabix = self._get_tabix()
         try:
-            lines = self.tabix.fetch(chrom,start,end)
-        except ValueError: # no lines
+            lines = tabix.fetch(chrom,start,end)
+        except ValueError: # pysam raises on wrong chromosome
             return
         for line in lines:
             yield VCFRow(*line.strip().split('\t',maxsplit=9))
 
-    def get_chroms(self,unindexed=False):
+    def get_chroms(self,allow_no_index=False):
         """Returns ``ChromSet`` corresponding to VCF. If indexed 
-        then index is used for faster access. Alternatively if ``unindexed``
+        then index is used for faster access. Alternatively if ``allow_no_index``
         is True the whole file is parsed to get chromosome ordering."""
-        if self.tabix:
-            self._chroms = ChromSet(self.tabix.contigs)
+        try:
+            tabix = self._get_tabix()
+            self._chroms = ChromSet(tabix.contigs)
             return self._chroms
-        else:
-            if unindexed:
+        except NoIndexFoundError:
+            if allow_no_index:
                 self._chroms = ChromSet()
                 is_comment = lambda l: l.startswith('#')
                 with self.openfn(self.fl,'rt') as fh:
@@ -814,7 +837,7 @@ class BCFReader(VCFReader):
         self._factory = VariantFactory(reference,normindel=False)
         self.vrt_fac = {'nonorm':self._factory}
         self._dtype = {'info':OrderedDict(),'format':OrderedDict()}
-        buf = pysam.VariantFile(self.fl)
+        buf = self.get_buf()
         for cnt,line in enumerate(str(buf.header).splitlines()):
             if line.startswith('##INFO'):
                 nm,dat = self._parse_dtype(line)
@@ -839,8 +862,15 @@ class BCFReader(VCFReader):
             self.sample_ind[sample] = ind
 
     def iter_rows(self, check_order=None):
-        return BCFRowIterator(self, pysam.VariantFile(self.fl),
+        return BCFRowIterator(self, self.get_buf(),
                               check_order=check_order)
+
+    def get_buf(self):
+        try:
+            return pysam.VariantFile(self.fl)
+        except NameError:
+            import pysam
+            return pysam.VariantFile(self.fl)
 
     @property
     def dataparser(self):
@@ -1019,7 +1049,9 @@ class RowIterator:
 
 class BCFRowIterator(RowIterator):
     def __init__(self, *args, **kwds):
-        super().__init__(*args, *kwds)
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            super().__init__(*args, *kwds)
 
     def iterate(self):
         cnt = 0
