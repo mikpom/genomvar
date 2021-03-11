@@ -197,6 +197,11 @@ class TestVariantSetCase(TestCase):
                          sum([v.nof_unit_vrt() for v in dropped]))
 
 class TestIndexedVariantFileCase(TestCase):
+    ref = Reference(CHR15RGN)
+    
+    def tearDown(self):
+        self.ref.close()
+
     def test_complex_INFO_example(self):
         vset = IndexedVariantFileSet(
             pkg_file('genomvar.test','data/example_gnomad_1.vcf.gz'),
@@ -228,7 +233,7 @@ class TestIndexedVariantFileCase(TestCase):
     def test_find_vrt2(self):
         vset = IndexedVariantFileSet(
             pkg_file('genomvar.test','data/example1.vcf.gz'),
-            reference=CHR15RGN)
+            reference=self.ref)
         self.assertEqual(len(list(vset.find_vrt(rgn='chr15rgn:1200-1210'))),2)
         v1,v2 = list(vset.find_vrt(rgn='chr15rgn:1200-1210'))
         self.assertEqual([v1.start,v1.end],[1206,1207])
@@ -256,22 +261,21 @@ class TestIndexedVariantFileCase(TestCase):
         # vs1      CCC   GG
         # vrt            CG    
         #          r1   r2,r3
-        for ref in CHR15RGN,None: # should work with or without ref
-            vs1 = IndexedVariantFileSet(
-                pkg_file('genomvar.test','data/example1.vcf.gz'))
-            vrt = factory.from_edit('chr15rgn',2098,'TT','CG')
-            self.assertEqual(len(vs1.match(vrt)),1)
+        vs1 = IndexedVariantFileSet(
+            pkg_file('genomvar.test','data/example1.vcf.gz'))
+        vrt = factory.from_edit('chr15rgn',2098,'TT','CG')
+        self.assertEqual(len(vs1.match(vrt)),1)
 
-            # Test insertion
-            vrt = factory.from_edit('chr15rgn',22,'AG','AGG')
-            match = vs1.match(vrt)
-            self.assertEqual(len(match),1)
+        # Test insertion
+        vrt = factory.from_edit('chr15rgn',22,'AG','AGG')
+        match = vs1.match(vrt)
+        self.assertEqual(len(match),1)
 
     def test_error_on_format(self):
         with self.assertRaises(NoIndexFoundError):
             vset = IndexedVariantFileSet(
                 pkg_file('genomvar.test','data/example1.vcf'),
-                reference=CHR15RGN)
+                reference=self.ref)
 
     def test_wrong_chrom_name_in_ref(self):
         vset = IndexedVariantFileSet(
@@ -282,7 +286,7 @@ class TestIndexedVariantFileCase(TestCase):
     def test_class(self):
         vset = IndexedVariantFileSet(
             pkg_file('genomvar.test','data/example1.vcf.gz'),
-            parse_info=True,reference=CHR15RGN,parse_samples='SAMP1')
+            parse_info=True,reference=self.ref,parse_samples='SAMP1')
 
         # Test find_vrt and returned INFO
         vrt = list(vset.find_vrt('chr15rgn',1200,1210))

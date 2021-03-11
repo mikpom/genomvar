@@ -235,6 +235,7 @@ class VCFReader(object):
         self._factory = VariantFactory(reference,normindel=False)
         self.vrt_fac = {'nonorm':self._factory}
         self._dtype = {'info':OrderedDict(),'format':OrderedDict()}
+        self._samples = []
         for cnt,line in enumerate(self.buf):
             if line.startswith('##INFO'):
                 nm,dat = self._parse_dtype(line)
@@ -249,9 +250,8 @@ class VCFReader(object):
                 vals = line.strip().split('\t')
                 if len(vals)>9:
                     self._samples = vals[9:]
-                else:
-                    self._samples = []
                 self._vrt_start = True
+            elif not line.startswith('#'):
                 break
 
         if self.opened_file:
@@ -726,6 +726,7 @@ class VCFReader(object):
                         filename=self.fl, index=self.idx_file)
                 except NameError:
                     import pysam
+                    pysam.set_verbosity(0)
                     self.tabix = pysam.TabixFile(
                         filename=self.fl, index=self.idx_file)
                 except OSError as exc:
@@ -867,10 +868,12 @@ class BCFReader(VCFReader):
 
     def get_buf(self):
         try:
-            return pysam.VariantFile(self.fl)
+            f = pysam.VariantFile(self.fl)
         except NameError:
             import pysam
-            return pysam.VariantFile(self.fl)
+            pysam.set_verbosity(0)
+            f = pysam.VariantFile(self.fl)
+        return f
 
     @property
     def dataparser(self):
@@ -1049,9 +1052,7 @@ class RowIterator:
 
 class BCFRowIterator(RowIterator):
     def __init__(self, *args, **kwds):
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore')
-            super().__init__(*args, *kwds)
+        super().__init__(*args, *kwds)
 
     def iterate(self):
         cnt = 0
