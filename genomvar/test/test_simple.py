@@ -13,3 +13,5 @@ class test_Reference_class(TestCase):
         self.assertTrue(REF.get('chr15rgn',860,860+100).endswith('GCATTTT'))
         with self.assertRaises(IndexError):
             s = REF.get('chr15rgn',-1,0)
+
+        REF.close()

@@ -84,7 +84,7 @@ class VariantBase(object):
     __slots__ = 'chrom','start','end','ref','alt','_key'
 
     def __str__(self):
-        return '<{:s} {:s}:{:d}-{:d} {:s}/{:s}>'\
+        return '<{} {}:{}-{} {}/{}>'\
             .format(type(self).__name__,self.chrom,self.start,self.end,
                     self.ref if self.ref else '-',
                     self.alt if self.alt else '-')
@@ -129,7 +129,7 @@ class VariantBase(object):
 
     def tolist(self):
         return [self.chrom,self.start,self.end,
-                self.ref,self.alt,type(self)]
+                self.ref,self.alt,type(self),0,0]
         
     @property
     def vtp(self):
@@ -202,7 +202,7 @@ class VariantBase(object):
         kwds : VCF fields
             optional. If given, these and only these parameters are 
             used to populate corresponding VCF fields: ``id``, 
-            ``qual``, ``filter``, ``info``, ``format``, ``samples``. 
+            ``qual``, ``filter``, ``info``. 
             These parameters are taken as is and converted to string
             before returning a VCFRow. 
 
@@ -255,7 +255,7 @@ class MNP(VariantBase):
         super().__init__(chrom,start,end,ref,alt)
 
     def __str__(self):
-        return '<{:s} {:s}:{:d}-{:d} {:s}/{:s}>'\
+        return '<{} {}:{}-{} {}/{}>'\
             .format(type(self).__name__,self.chrom,self.start,self.end,
                     self.ref if self.ref else 'N'*(self.end-self.start),
                     self.alt if self.alt else '-')
@@ -297,7 +297,7 @@ class SNP(MNP):
             .format(self.chrom,self.start,self.alt)
 
     def __str__(self):
-        return '<{:s} {:s}:{:d} {:s}/{:s}>'\
+        return '<{} {}:{} {}/{}>'\
             .format(type(self).__name__,self.chrom,self.start,
                     self.ref if self.ref else '-',
                     self.alt if self.alt else '-')
@@ -341,7 +341,7 @@ class Ins(Indel):
             .format(self.chrom,self.start,self.alt)
 
     def __str__(self):
-        return '<{:s} {:s}:{:d} -/{:s}>'\
+        return '<{} {}:{} -/{}>'\
             .format(type(self).__name__,self.chrom,self.start,
                     self.alt if self.alt else '-')
 
@@ -382,7 +382,7 @@ class Del(Indel):
             .format(self.chrom,self.start,self.end)
 
     def __str__(self):
-        return '<{:s} {:s}:{:d}-{:d} {:s}/->'\
+        return '<{} {}:{}-{} {}/->'\
             .format(type(self).__name__,self.chrom,self.start,self.end,
                     self.ref if self.ref else 'N'*(self.end-self.start))
 
@@ -410,7 +410,7 @@ class AmbigIndel(Indel):
     alternative sequence.
     """
     def __str__(self):
-        return '<{:s} {:s}:{:d}-{:d}({:d}-{:d}) {:s}/{:s}>'\
+        return '<{} {}:{}-{}({}-{}) {}/{}>'\
             .format(type(self).__name__,
                     self.chrom,self.start,self.end,
                     self.act_start,self.act_end,
@@ -623,7 +623,7 @@ class Haplotype(VariantBase):
         self._variants = OrderedDict(list(zip(ivl_id,variants)))
 
     def __str__(self):
-        return '<Haplotype {:s}:{:d}-{:d} of {} variants>'\
+        return '<Haplotype {}:{}-{} of {} variants>'\
             .format(self.chrom,self.start,
                     self.end,len(self._variants))
     def __repr__(self):

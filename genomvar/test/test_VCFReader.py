@@ -41,6 +41,9 @@ class TestVCFReaderCase(unittest.TestCase):
         vrt = list(reader.iter_vrt(parse_info=True,parse_samples=True))
         self.assertGreater(len(vrt),0)
 
+        v = vrt[3]
+        self.assertEqual(v.attrib['id'], None)
+
     def test_check_getting_vrt_is_sorted(self):
         reader = VCFReader(pkg_file(
             'genomvar.test','data/example_gnomad_2.vcf.gz'),index=True)
@@ -107,11 +110,11 @@ class TestVCFReaderCase(unittest.TestCase):
         reader = VCFReader(pkg_file('genomvar.test', 'data/example4.vcf'))
 
         with warnings.catch_warnings(record=True) as wrn:
-            warnings.simplefilter('always')
+            # warnings.simplefilter(append=True)
             for cnt,vrt in enumerate(reader.iter_vrt()):
                 pass 
             self.assertEqual(cnt, 99)
-            self.assertGreater(len(wrn), 0)
+            self.assertGreater(len(wrn), 1)
             self.assertIn('Structural', str(wrn[-1].message))
             
         

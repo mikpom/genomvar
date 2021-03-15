@@ -385,7 +385,8 @@ class VCFReader(object):
             # FIXME avoid dictionaries
             attrib = {'info':infod,'samples':sampd,
                       'allele_num':ind,'filter':row.FILTER.split(';'),
-                      'id':row.ID, 'qual':row.QUAL}
+                      'id':row.ID if row.ID!='.' else None,
+                      'qual':row.QUAL}
             attrib['vcf_notation'] = {'start' : row.POS-1,'ref' : row.REF,
                                       'row' : row.rnum}
             _vrt = GenomVariant(base, attrib=attrib)
@@ -451,9 +452,15 @@ class VCFReader(object):
                     sampdata = self.dataparser.get_sampdata(row,len(alts))
                 else:
                     sampdata = repeat(None)
-                    
                 for _alt,_info,_sampdata in zip(alts,info,sampdata):
-                    base = vfac._parse_edit(row.CHROM, row.POS-1,row.REF,_alt)
+                    try:
+                        base = vfac._parse_edit(
+                            row.CHROM, row.POS-1,row.REF,_alt)
+                    except StructuralVariantError:
+                        warnings.warn(
+                            'Structural variants are not yet supported, '\
+                            +'skipping row '+str(row.rnum))
+                        continue
                     if base[-1].is_subclass(variant.AmbigIndel):
                         chrom,(start,start2),(end,end2),ref,alt,cls = base
                         tups['vrt'].append( (chrom,start,end,ref,alt,\

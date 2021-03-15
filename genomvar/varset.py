@@ -405,10 +405,12 @@ class VariantSet(VariantSetBase):
         if reference was not provided. If reference was given ``ctg_len`` 
         is taken from length of chromosomes in the reference.
     """
-    def __init__(self,variants,vcf_notation=None,info=None,
-                 sampdata=None,reference=None):
+    def __init__(self,variants, attrib=None, vcf_notation=None, info=None,
+                 sampdata=None, reference=None):
         super().__init__(reference=reference)
         self._variants = variants
+        if not attrib is None:
+            self._attrib = attrib
         self._info = info
         self._sampdata = sampdata
         self._vcf_notation = vcf_notation
@@ -459,7 +461,10 @@ class VariantSet(VariantSetBase):
             else:
                 raise exc
 
-    def _get_attrib(self,rnum):
+    def _get_attrib(self, rnum):
+        if hasattr(self, '_attrib'):
+            return self._attrib[rnum]
+
         EXPOSED_ATTRIB = ['id', 'qual', 'filter']
         if not self._info is None:
             attrib = {'info':self._info[rnum]}
@@ -497,30 +502,33 @@ class VariantSet(VariantSetBase):
         for vrt in vrt_iter:
             if vrt.is_instance(variant.Haplotype):
                 ind = cnt
-                yield (ind,singleton,*vrt.tolist())
+                yield (ind, singleton, *vrt.tolist(),
+                       getattr(vrt, 'attrib', None))
                 cnt += 1
                 for child in vrt.variants:
                     a = child.tolist()
-                    yield (cnt,ind,*a)
+                    yield (cnt, ind, *a, getattr(vrt, 'attrib', None))
                     cnt += 1
             else:
                 a = vrt.tolist()
-                b = (cnt,singleton,*a)
+                b = (cnt, singleton, *a, getattr(vrt, 'attrib', None))
                 yield b
                 cnt += 1
 
     @staticmethod
     def _rows_from_variants(variants):
         """Returns rows given variants"""
-        zipped = list(itertools.zip_longest(
-            *VariantSet._get_tups(variants),fillvalue=0))
+        zipped = list(zip(
+            *VariantSet._get_tups(variants))) # 0 for ambig
+        
         _variants = np.zeros(dtype=dtype0,shape=len(zipped[0]))
         for ind,field in enumerate(dtype0.fields):
             try:
                 _variants[field] = zipped[ind]
             except IndexError:
                 continue
-        return _variants
+        attrib = zipped[-1]
+        return _variants, attrib
 
     def _get_hap_variants(self,hapid):
         ind = hapid+1
@@ -580,6 +588,7 @@ class VariantSet(VariantSetBase):
         """Returns number of simple genomic variations in a variant set. 
 
         SNPs and indels count as 1. MNPs as number of affected nucleotides.
+        Mixed variants (if present) are count also as 1. 
         """
         N = 0
         for start,end,cls in zip(self._variants['start'],self._variants['end'],
@@ -591,6 +600,8 @@ class VariantSet(VariantSetBase):
                     N += 1
                 elif cls.is_subclass(variant.MNP):
                     N += (end-start)
+                elif cls.is_subclass(variant.Mixed):
+                    N += 1
         return N
 
     def drop_duplicates(self,return_dropped=False):
@@ -706,7 +717,7 @@ class VariantSet(VariantSetBase):
                                      parse_samples=parse_samples,
                                      normindel=normindel)
         if duplicates!='ignore':
-            records = cls._check_duplicates(records,duplicates=duplicates)
+            records = cls._check_duplicates(records, duplicates=duplicates)
         # else:
         #     vrt = records['vrt']
         #     vcf_notation = records['vcf']
@@ -714,9 +725,10 @@ class VariantSet(VariantSetBase):
         #     sampdata = records.get('sampdata')
             
         vset = cls.__new__(cls)
-        vset.__init__(records['vrt'],records['vcf'],
-                      records.get('info'),
-                      records.get('sampdata'),
+        vset.__init__(records['vrt'],
+                      vcf_notation=records['vcf'],
+                      info=records.get('info'),
+                      sampdata=records.get('sampdata'),
                       reference=reference)
         return vset
 
@@ -735,9 +747,10 @@ class VariantSet(VariantSetBase):
         -------
         VariantSet
         """
-        _variants = cls._rows_from_variants(variants)
+        _variants, attrib = cls._rows_from_variants(variants)
+        # print('!!', _variants, attrib)
         vset = cls.__new__(cls)
-        vset.__init__(_variants,reference=reference)
+        vset.__init__(_variants, attrib=attrib, reference=reference)
         return vset
 
     def to_records(self,nested=True):
@@ -761,23 +774,26 @@ class VariantSet(VariantSetBase):
                       ('chrom','start','end','ref','alt') ]
         dtype.append( ('vartype','U10') )
         dtype.append( ('phase_group',np.int_) )
-        
-        if not self._info is None:
-            if nested:
-                dtype.append( ('INFO',self._info.dtype) )
-            else:
-                for field,(_dtype,offset) in self._info.dtype.fields.items():
-                    dtype.append( ('INFO_'+field,_dtype) )
-        if not self._sampdata is None:
-            if nested:
-                samp_dtype = [(s,self._sampdata[s].dtype) for s in self._sampdata]
-                dtype.append( ('SAMPLES',samp_dtype) )
-            else:
-                for samp in self._sampdata:
-                    for field,(_dtype,offset) in \
-                                self._sampdata[samp].dtype.fields.items():
-                        dtype.append( ('SAMPLES_{}_{}'.format(samp,field),
-                                       _dtype) )
+
+        if hasattr(self, '_attrib'):
+            dtype.append( ('attrib', np.object_) )
+        else:
+            if not self._info is None:
+                if nested:
+                    dtype.append( ('INFO',self._info.dtype) )
+                else:
+                    for field,(_dtype,offset) in self._info.dtype.fields.items():
+                        dtype.append( ('INFO_'+field,_dtype) )
+            if not self._sampdata is None:
+                if nested:
+                    samp_dtype = [(s,self._sampdata[s].dtype) for s in self._sampdata]
+                    dtype.append( ('SAMPLES',samp_dtype) )
+                else:
+                    for samp in self._sampdata:
+                        for field,(_dtype,offset) in \
+                                    self._sampdata[samp].dtype.fields.items():
+                            dtype.append( ('SAMPLES_{}_{}'.format(samp,field),
+                                           _dtype) )
 
         ret = np.zeros(shape=self._variants.shape,dtype=dtype)
 
@@ -792,24 +808,26 @@ class VariantSet(VariantSetBase):
         ret[mask]['end'] = self._variants[mask]['end2']
 
         # now actually populating the data
-        if not self._info is None:
-            if nested:
-                ret['INFO'] = self._info
-            else:
-                for field in self._info.dtype.fields:
-                    ret['INFO_'+field] = self._info[field]
+        if hasattr(self, '_attrib'):
+            ret['attrib'] = self._attrib
+        else:
+            if not self._info is None:
+                if nested:
+                    ret['INFO'] = self._info
+                else:
+                    for field in self._info.dtype.fields:
+                        ret['INFO_'+field] = self._info[field]
 
-        if not self._sampdata is None:
-            if nested:
-                for samp in self._sampdata:
-                    ret['SAMPLES'][samp] = self._sampdata[samp]
-            else:
-                for samp in self._sampdata:
-                    for field in self._sampdata[samp].dtype.fields:
-                        ret['SAMPLES_{}_{}'.format(samp,field)] = \
-                                    self._sampdata[samp][field]
+            if not self._sampdata is None:
+                if nested:
+                    for samp in self._sampdata:
+                        ret['SAMPLES'][samp] = self._sampdata[samp]
+                else:
+                    for samp in self._sampdata:
+                        for field in self._sampdata[samp].dtype.fields:
+                            ret['SAMPLES_{}_{}'.format(samp,field)] = \
+                                        self._sampdata[samp][field]
 
-        
         nohp_mask = self._variants['vartype']!=variant.Haplotype
         ret = ret[nohp_mask]
 
@@ -982,7 +1000,7 @@ class VariantSet(VariantSetBase):
 
         new = np.take(self._variants,ind2take)
         if vrt2add:
-            append = VariantSet._rows_from_variants([t[1] for t in vrt2add])
+            append, append_attrib = VariantSet._rows_from_variants([t[1] for t in vrt2add])
             try:
                 new = np.concatenate([new,append])
             except TypeError as exc:

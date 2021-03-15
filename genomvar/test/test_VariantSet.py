@@ -4,16 +4,18 @@ import io
 import operator
 import itertools
 import re
+import warnings
 from pkg_resources import resource_filename as pkg_file
 import numpy as np
 from genomvar.varset import MutableVariantSet,\
     VariantFileSet,IndexedVariantFileSet,VariantSet
 from genomvar.variant import VariantBase,AmbigIndel,Haplotype,VariantFactory
-from genomvar import varset,Reference
+from genomvar import varset
 from genomvar import OverlappingHaplotypeVars,\
     UnsortedVariantFileError,VCFSampleMismatch,NoIndexFoundError
 from genomvar.vcf import VCFRow,VCFReader
 from genomvar import variant
+from genomvar.test import MyTestCase
 
 # Representation of an example used here a lot (example1.vcf)
 # 
@@ -25,9 +27,8 @@ from genomvar import variant
 # FILT           h    h;n                  n     n
 
 factory = variant.VariantFactory()
-CHR15RGN = pkg_file('genomvar.test','data/chr15rgn.fna')
 
-class TestVariantSetCase(TestCase):
+class TestVariantSetCase(MyTestCase):
     def test_empty_vcf(self):
         buf = io.StringIO()
         with open(pkg_file('genomvar.test','data/example1.vcf')) as fh:
@@ -71,15 +72,31 @@ class TestVariantSetCase(TestCase):
         with self.assertRaises(ValueError):
             VariantSet.from_variants(
                 list(vfset.iter_vrt())+[variant.SNP('chr15rgn',10000000,'C')],
-                reference=Reference(CHR15RGN))
+                reference=self.chr15rgn)
 
         # Test error on chromosome not in reference
         with self.assertRaises(ValueError):
             vs = VariantSet.from_variants(
                 list(vfset.iter_vrt())+[variant.SNP('chr2',10,'C')],
-                reference=Reference(CHR15RGN))
-            print(vs.chroms)
+                reference=self.chr15rgn)
 
+    def test_from_variants_with_attributes(self):
+        reader = VCFReader(
+            pkg_file('genomvar.test','data/example1.vcf'))
+        vset = VariantSet.from_variants(list(reader.iter_vrt(parse_info=True)))
+        vrt = list(vset.find_vrt('chr15rgn',1200,1210))
+        self.assertEqual(len(vrt),2)
+
+        v1 = vrt[0]
+        self.assertEqual(v1.attrib['info']['NSV'], 1)
+        self.assertEqual(v1.attrib['id'], '5')
+
+        v2 = vrt[1]
+        self.assertEqual(v2.attrib['id'], None)
+
+        recs = vset.to_records()
+        self.assertEqual(recs[0]['attrib']['info']['NSV'], 2)
+        
     def test_from_vcf(self):
         vset = VariantSet.from_vcf(pkg_file('genomvar.test','data/example1.vcf'))
 
@@ -196,12 +213,7 @@ class TestVariantSetCase(TestCase):
         self.assertEqual(vs2.nof_unit_vrt(),
                          sum([v.nof_unit_vrt() for v in dropped]))
 
-class TestIndexedVariantFileCase(TestCase):
-    ref = Reference(CHR15RGN)
-    
-    def tearDown(self):
-        self.ref.close()
-
+class TestIndexedVariantFileCase(MyTestCase):
     def test_complex_INFO_example(self):
         vset = IndexedVariantFileSet(
             pkg_file('genomvar.test','data/example_gnomad_1.vcf.gz'),
@@ -233,7 +245,7 @@ class TestIndexedVariantFileCase(TestCase):
     def test_find_vrt2(self):
         vset = IndexedVariantFileSet(
             pkg_file('genomvar.test','data/example1.vcf.gz'),
-            reference=self.ref)
+            reference=self.chr15rgn)
         self.assertEqual(len(list(vset.find_vrt(rgn='chr15rgn:1200-1210'))),2)
         v1,v2 = list(vset.find_vrt(rgn='chr15rgn:1200-1210'))
         self.assertEqual([v1.start,v1.end],[1206,1207])
@@ -275,18 +287,18 @@ class TestIndexedVariantFileCase(TestCase):
         with self.assertRaises(NoIndexFoundError):
             vset = IndexedVariantFileSet(
                 pkg_file('genomvar.test','data/example1.vcf'),
-                reference=self.ref)
+                reference=self.chr15rgn)
 
     def test_wrong_chrom_name_in_ref(self):
         vset = IndexedVariantFileSet(
             pkg_file('genomvar.test','data/example1.vcf.gz'),
-            reference=pkg_file('genomvar.test','data/chr1rgn.fasta'))
+            reference=self.chr1rgn)
         self.assertEqual(len(list(vset.find_vrt(rgn='chr15rgn:1200-1210'))),2)
 
     def test_class(self):
         vset = IndexedVariantFileSet(
             pkg_file('genomvar.test','data/example1.vcf.gz'),
-            parse_info=True,reference=self.ref,parse_samples='SAMP1')
+            parse_info=True,reference=self.chr15rgn,parse_samples='SAMP1')
 
         # Test find_vrt and returned INFO
         vrt = list(vset.find_vrt('chr15rgn',1200,1210))
@@ -325,7 +337,7 @@ class TestIndexedVariantFileCase(TestCase):
             parse_samples='SAMP1')
         self.assertEqual(vset.chroms,{'chr15rgn'})
         
-class TestVariantFileCase(TestCase):
+class TestVariantFileCase(MyTestCase):
     def test_unsorted_VCF_input(self):
         header = []
         lines = []
@@ -345,7 +357,7 @@ class TestVariantFileCase(TestCase):
         with self.assertRaises(UnsortedVariantFileError):
             list(vs1.diff_vrt(vs2).iter_vrt())
 
-class MutableVariantSetTestCase(TestCase):
+class MutableVariantSetTestCase(MyTestCase):
     def test_sort_chroms(self):
         vs = MutableVariantSet.from_vcf(
             pkg_file('genomvar.test','data/example2.vcf.gz'),
@@ -363,7 +375,7 @@ class MutableVariantSetTestCase(TestCase):
         # TTCACTTAGCATAATGTCTTCAAG|ATT
         # v1                   AA-|ATT
         # v2                   AAGGATT
-        s1 = MutableVariantSet(reference=CHR15RGN)
+        s1 = MutableVariantSet(reference=self.chr15rgn)
         vfac = s1.get_factory(normindel=True)
         vb = vfac.from_edit('chr15rgn',22,'AG','A')
         v1 = s1.add_vrt(vb,GT=(1,0))
@@ -389,7 +401,7 @@ class MutableVariantSetTestCase(TestCase):
         variants[1] = factory.from_edit('chr15rgn',2098,'TT','GG')
         variants[2] = factory.from_edit('chr15rgn',2098,'TT','CG')
         variants[3] = factory.from_edit('chr15rgn',3200,'G','GG')
-        s1 = MutableVariantSet(reference=CHR15RGN)
+        s1 = MutableVariantSet(reference=self.chr15rgn)
         for vrt in variants:
             try:
                 s1.add_vrt(vrt,GT=(1,0))
@@ -400,7 +412,7 @@ class MutableVariantSetTestCase(TestCase):
     def test_iter_vrt_by_chrom(self):
         vset = MutableVariantSet.from_vcf(
             pkg_file('genomvar.test','data/example1.vcf'),
-            reference=CHR15RGN,sample='SAMP1')
+            reference=self.chr15rgn,sample='SAMP1')
 
         chroms = {}
         for chrom,it in vset.iter_vrt_by_chrom():
@@ -411,7 +423,7 @@ class MutableVariantSetTestCase(TestCase):
         #                        23
         # TTCACTTAGCATAATGTCTTCAAGATT
         #                       AT-TT
-        s1 = MutableVariantSet(reference=CHR15RGN)
+        s1 = MutableVariantSet(reference=self.chr15rgn)
         vb = factory.from_edit('chr15rgn',23,'GA','T')
         v1 = s1.add_vrt(vb,GT=(0,1),attrib={'info':{'f1':'1'}})
         self.assertTrue(type(v1),variant.Mixed)
@@ -424,7 +436,7 @@ class MutableVariantSetTestCase(TestCase):
         # TTCACTTAGCATAATGTCTTCAAG|ATT
         #                         G
         #          interfering-> C C <- not interfering
-        s1 = MutableVariantSet(reference=CHR15RGN)
+        s1 = MutableVariantSet(reference=self.chr15rgn)
         vfac = s1.get_factory(normindel=True)
         s1.add_vrt(vfac.from_edit('chr15rgn',23,'G','GG'),
                    GT=(0,1))
@@ -435,7 +447,7 @@ class MutableVariantSetTestCase(TestCase):
         self.assertEqual(len(s1.ovlp(vb2,match_ambig=True)),1)
 
         # Same reversed
-        s1 = MutableVariantSet(reference=CHR15RGN)
+        s1 = MutableVariantSet(reference=self.chr15rgn)
         s1.add_vrt(vfac.from_edit('chr15rgn',23,'G','C'),
                    GT=(0,1))
         s1.add_vrt(vfac.from_edit('chr15rgn',24,'A','C'),
@@ -448,7 +460,7 @@ class MutableVariantSetTestCase(TestCase):
         #                        23
         # TTCACTTAGCATAATGTCTTCAAG|ATT
         #                         G
-        s1 = MutableVariantSet(reference=CHR15RGN)
+        s1 = MutableVariantSet(reference=self.chr15rgn)
         vb = vfac.from_edit('chr15rgn',23,'G','GG')
         s1.add_vrt(vb,GT=(0,1))
         vb = vfac.from_edit(chrom='chr15rgn',start=23,
@@ -464,7 +476,7 @@ class MutableVariantSetTestCase(TestCase):
         # TTCACTTAGCATAATGTCTTCAAG|ATT
         #                         G
         #                       AG -T
-        s1 = MutableVariantSet(reference=CHR15RGN)
+        s1 = MutableVariantSet(reference=self.chr15rgn)
         vb = vfac.from_edit('chr15rgn',23,'G','GG')
         s1.add_vrt(vb,GT=(0,1))
         vb = vfac.from_edit(chrom='chr15rgn',start=23,ref='GA',alt='G')
@@ -476,7 +488,7 @@ class MutableVariantSetTestCase(TestCase):
         # TTCACTTAGCATAATGTCTTCAAG|ATT
         #                         C
         #                       AG -T
-        s1 = MutableVariantSet(reference=CHR15RGN)
+        s1 = MutableVariantSet(reference=self.chr15rgn)
         vb = vfac.from_edit('chr15rgn',23,'G','GC')
         s1.add_vrt(vb,GT=(0,1))
         vb = vfac.from_edit(chrom='chr15rgn',start=23,ref='GA',alt='G')
@@ -487,7 +499,7 @@ class MutableVariantSetTestCase(TestCase):
         # TTCACTTAGCATAATGTC
         #            T-AT
         #              C
-        s1 = MutableVariantSet(reference=CHR15RGN)
+        s1 = MutableVariantSet(reference=self.chr15rgn)
         vb = vfac.from_edit('chr15rgn',11,'TA','T')
         s1.add_vrt(vb,GT=(0,1))
         vb = vfac.from_edit(chrom='chr15rgn',start=13,ref='A',alt='C')
@@ -505,13 +517,13 @@ class MutableVariantSetTestCase(TestCase):
         r3 = factory.from_edit('chr15rgn',2098,'TT','CC')
         r4 = factory.from_edit('chr15rgn',3200,'GG','G')
 
-        s1 = MutableVariantSet(reference=CHR15RGN)
+        s1 = MutableVariantSet(reference=self.chr15rgn)
         hap1 = s1.add_hap_variants([r1,r2],GT=(0,1))
         ccc1 = sorted(hap1.variants,key=lambda o: o.start)[0]
         hap2 = s1.add_hap_variants([r3,r4],GT=(0,1),
                                    allow_adjust_genotype=True)
 
-        s2 = MutableVariantSet(reference=CHR15RGN)
+        s2 = MutableVariantSet(reference=self.chr15rgn)
         hap = s2.add_hap_variants([r1,r4],GT=(0,1))
         ccc2 = sorted(hap.variants,key=lambda o: o.start)[0]
 
@@ -521,7 +533,7 @@ class MutableVariantSetTestCase(TestCase):
 
     def test_copy_with_attr(self):
         kwargs = {'vcf':pkg_file('genomvar.test','data/example1.vcf'),
-                  'reference':CHR15RGN,
+                  'reference':self.chr15rgn,
                   'sample':'SAMP1',
                   'normindel':True,
                   'parse_info':True}
@@ -543,11 +555,11 @@ class MutableVariantSetTestCase(TestCase):
         self.assertEqual(v.attrib['info']['origin'],'manual')
 
         
-class TestIO(TestCase):
+class TestIO(MyTestCase):
     def test_from_vcf(self):
         vset = MutableVariantSet.from_vcf(
             pkg_file('genomvar.test','data/example1.vcf'),
-            reference=CHR15RGN,sample='SAMP1',normindel=True)
+            reference=self.chr15rgn,sample='SAMP1',normindel=True)
 
         vrt = list(vset.find_vrt('chr15rgn',1200,1210))
         self.assertEqual(len(vrt),2)
@@ -567,7 +579,7 @@ class TestIO(TestCase):
         self.assertEqual(len(list(vset.iter_vrt())), 8)
 
     def test_from_variants_to_records(self):
-        fac = variant.VariantFactory(reference=CHR15RGN,normindel=True)
+        fac = variant.VariantFactory(reference=self.chr15rgn,normindel=True)
         hap = Haplotype.from_variants([fac.from_edit('chr15rgn',1207,'G','C'),
                                       fac.from_edit('chr15rgn',1207,'G','T')])
         vs = VariantSet.from_variants(
@@ -575,10 +587,10 @@ class TestIO(TestCase):
              fac.from_edit('chr15rgn',10045,'ACA','A'),
              hap])
         recs = vs.to_records()
-        self.assertEqual(recs.shape,(4,))
+        self.assertEqual(recs.shape, (4,))
         self.assertEqual(list(recs.dtype.fields),
                          ['chrom','start','end','ref','alt',
-                          'vartype','phase_group'])
+                          'vartype','phase_group','attrib'])
         
     def test_from_vcf_to_records(self):
         vs = VariantSet.from_vcf(
@@ -652,10 +664,10 @@ class TestIO(TestCase):
     def test_wrong_sample(self):
         with self.assertRaises(VCFSampleMismatch):
             MutableVariantSet.from_vcf(pkg_file('genomvar.test','data/example1.vcf'),
-                     reference=CHR15RGN,sample='ZAMP1',normindel=True)
+                     reference=self.chr15rgn,sample='ZAMP1',normindel=True)
 
     def test_to_vcf(self):
-        s1 = MutableVariantSet(reference=CHR15RGN)
+        s1 = MutableVariantSet(reference=self.chr15rgn)
         s1.add_vrt(variant.Del("chr15rgn",23,24),GT=(1,0))
         s1.add_vrt(variant.SNP("chr15rgn",1206,"C"),GT=(1,0))
         s1.add_vrt(variant.MNP("chr15rgn",2093,"CCC"),GT=(1,0))
@@ -690,11 +702,9 @@ class TestIO(TestCase):
         row1 = rows[1]
         self.assertEqual([row1.CHROM,row1.POS,row1.REF,row1.ALT],
                          ['chr15rgn',1207,'G','C'])
-
         row3 = rows[3]
         self.assertEqual([row3.CHROM,row3.POS,row3.REF,row3.ALT],
                          ['chr15rgn',2344,'T','TTCCA'])
-
         row4 = rows[4]
         self.assertEqual([row4.CHROM,row4.POS,row4.REF,row4.ALT],
                          ['chr15rgn',9946,'CTT','C'])
@@ -706,7 +716,7 @@ class TestIO(TestCase):
         )
 
         buf = io.StringIO()
-        vs1.to_vcf(buf, reference=CHR15RGN)
+        vs1.to_vcf(buf, reference=self.chr15rgn)
         buf.seek(0)
 
         vs2 = VariantSet.from_vcf(buf)
@@ -735,5 +745,15 @@ class TestIO(TestCase):
         buf.seek(0)
         vs = VariantSet.from_vcf(buf)
         self.assertEqual(len(list(vs.find_vrt('chr15rgn',150,160))), 1)
+        self.assertEqual(len(list(vs.find_vrt('chr15rgn',20,30))), 2)
+
+    def test_sv_types(self):
+        with warnings.catch_warnings(record=True) as wrn:
+            vs = VariantSet.from_vcf(pkg_file('genomvar.test', 'data/example4.vcf'))
+            warnings.simplefilter('always')
+            self.assertEqual(vs.nof_unit_vrt(), 100)
+            self.assertGreater(len(wrn), 1)
+            self.assertIn('Structural', str(wrn[-1].message))
+
 if __name__ == '__main__':
     unittest.main()
