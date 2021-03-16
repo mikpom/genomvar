@@ -47,7 +47,7 @@ from genomvar.vcf_utils import VCFRow
 
 # Map of VCF types to NumPy types
 string2dtype = {'Float':np.float64,'Integer':np.int64,
-                'String':np.object_,'Flag':np.bool,
+                'String':np.object_,'Flag':np.bool_,
                 'Character':'U1'}
 # inverse for writing VCFs
 dtype2string = {v:k for k,v in string2dtype.items()}
@@ -93,7 +93,10 @@ def _make_converter_func(tp,num,convert=True):
     if convert==False:
         conv = lambda v: v
     else:
-        conv = tp
+        if tp=='U1':
+            conv = np.str_
+        else:
+            conv = tp
     if num=='R':
         def f(v,n):
             try:
@@ -149,6 +152,8 @@ def _make_converter_func(tp,num,convert=True):
                         r.append(conv(v[i]))
                 return tuple(r)
     return f
+
+no_converter = _make_converter_func(np.object_, 1, convert=False)
 
 def _isindexed(file):
     idx = file+'.tbi'
@@ -306,7 +311,8 @@ class VCFReader(object):
             tp = np.object_
         else:
             raise ValueError('Unknown NUMBER:'+num)
-        return NAME,{'type':tp,'size':size,'number':num}
+        return NAME,{'type':tp, 'size':size, 'number':num,
+                     'description':DESCRIPTION}
 
     def _sample_indices(self,samples):
         ind = {}
@@ -343,24 +349,19 @@ class VCFReader(object):
         buf = self.get_buf()
         buf.seek(0)
         return RowByChromIterator(self,buf,check_order)
-        # rows = self.iter_rows()
-        # if check_order:
-        #     rows = _check_VCF_order(rows)
-        # for chrom,it in groupby(rows,key=lambda r: r.CHROM):
-        #     yield chrom,it
 
     def _parse_vrt(self,row,factory,parse_info=False,parse_samples=False,
-                parse_null=False):
+                   parse_null=False):
         """Given the row returns variant objects with alts splitted.
         INFO, SAMPLE data are correctly parsed if needed"""
         alts = row.ALT.split(',')
         # TODO avoid list structure, generator instead
         if parse_info: # Read INFO if necessary
-            info = self.dataparser.get_info(row.INFO,alts=len(alts))
+            info = self.dataparser.get_infod(row.INFO, alts=len(alts))
         else:
             info = repeat(None)
         if parse_samples and row.SAMPLES:
-            sampdata = self.dataparser.get_sampdata(row,len(alts))
+            sampdata = self.dataparser.get_sampdata(row, len(alts))
         else:
             sampdata = repeat(None)
 
@@ -372,10 +373,11 @@ class VCFReader(object):
                     'Structural variants are not yet supported, skipping row '\
                     +str(row.rnum))
                 continue
-            if parse_info:
-                infod = dict(zip(self._dtype['info'],_info))
-            else:
-                infod = {}
+            infod = _info
+            # if parse_info:
+            #     infod = dict(zip(self._dtype['info'],_info))
+            # else:
+            #     infod = {}
             if parse_samples:
                 sampd = {}
                 for sn,samp in enumerate(self._samples):
@@ -930,7 +932,11 @@ class _DataParser(object):
                 info.append((field, None))
             else:
                 key,val=keyval
-                if self.dtype['info'][key]['number'] in [0,1]:
+                try:
+                    num = self.dtype['info'][key]['number']
+                except KeyError:
+                    num=1
+                if num in [0,1]:
                     info.append( (key, val) )
                 else:
                     info.append( (key, val.split(',')) )
@@ -945,7 +951,11 @@ class _DataParser(object):
             info1 = list(self.none['info'])
             for ind,(key,val) in enumerate(tokenized):
                 try:
-                    v = self.converters['info'][key](val,an)
+                    conv = self.converters['info'][key]
+                except KeyError:
+                    conv = no_converter
+                try:
+                    v = conv(val,an)
                 except ValueError as exc:
                     if val=='' or val=='.':
                         v = None
@@ -954,6 +964,29 @@ class _DataParser(object):
                 info1[self.order['info'][key]] = v
             info2.append(info1)
 
+        return info2
+
+    def get_infod(self, INFO, alts=1, parse_null=False):
+        """Given INFO string and number of alt alleles returns a list
+        of dicts with data corresponding to alleles"""
+        tokenized = self.tokenize_info(INFO)
+        info2 = []
+        for an in range(alts):
+            info1 = {}
+            for ind,(key,val) in enumerate(tokenized):
+                try:
+                    conv = self.converters['info'][key]
+                except KeyError:
+                    conv = no_converter
+                try:
+                    v = conv(val,an)
+                except ValueError as exc:
+                    if val=='' or val=='.':
+                        v = None
+                    else:
+                        raise exc
+                info1[key] = v
+            info2.append(info1)
         return info2
 
     def tokenize_sampdata(self,FORMAT,SAMPLES):
@@ -1024,7 +1057,6 @@ class _BCFDataParser(_DataParser):
     def tokenize_sampdata(self, FORMAT, SAMPLES):
         return [v.items() for v in SAMPLES.values()]
                     
-        
 class RowIterator:
     def iterate(self):
         cnt = 0
@@ -1040,23 +1072,31 @@ class RowIterator:
         self.fh = fh
         self.check_order = check_order
         self.reader = reader
+        if self.check_order:
+            self.iterator = _check_VCF_order(self.iterate())
+        else:
+            self.iterator = self.iterate()
 
     def __iter__(self):
         return self
 
     def __next__(self):
-        try:
-            return next(self.iterator)
-        except AttributeError:
-            if self.check_order:
-                self.iterator = _check_VCF_order(self.iterate())
-            else:
-                self.iterator = self.iterate()
-            return next(self.iterator)
+        return next(self.iterator)
 
     def close(self):
         self.fh.close()
 
+class RowByChromIterator(RowIterator):
+    def iterate(self):
+        rows = super().iterate()
+        if self.check_order:
+            rows = _check_VCF_order(rows)
+        for chrom,it in groupby(rows,key=lambda r: r.CHROM):
+            yield chrom,it
+        
+    def __init__(self,*args,**kwds):
+        super().__init__(*args,**kwds)
+        
 class BCFRowIterator(RowIterator):
     def __init__(self, *args, **kwds):
         super().__init__(*args, *kwds)
@@ -1073,34 +1113,16 @@ class BCFRowIterator(RowIterator):
             cnt += 1
         self.close()
 
-class RowByChromIterator(RowIterator):
-    def iterate(self):
-        rows = super().iterate()
-        if self.check_order:
-            rows = _check_VCF_order(rows)
-        for chrom,it in groupby(rows,key=lambda r: r.CHROM):
-            yield chrom,it
-        
-    def __init__(self,*args,**kwds):
-        super().__init__(*args,**kwds)
-        
-    def __next__(self):
-        try:
-            return next(self.iterator)
-        except AttributeError:
-            self.iterator = self.iterate()
-            return next(self.iterator)
-
 class VrtIterator():
     def iterate(self):
         variants = self.reader._variants_from_rows(
                 self.rows,self.factory,self.parse_info,self.samps)
         for vrt in variants:
             yield vrt
-
         self.close()
         
-    def __init__(self,row_iterator,factory,parse_info,samps):
+    def __init__(self,row_iterator,factory,parse_info,samps,
+                 ensure_sorted=True):
         try:
             self.fh = row_iterator.fh
         except AttributeError:
@@ -1110,16 +1132,16 @@ class VrtIterator():
         self.factory = factory
         self.parse_info = parse_info
         self.samps = samps
+        if ensure_sorted:
+            self.iterator = _ensure_sorted(self.iterate())
+        else:
+            self.iterator = self.iterate()
         
     def __iter__(self):
         return self
 
     def __next__(self):
-        try:
-            return next(self.iterator)
-        except AttributeError:
-            self.iterator = _ensure_sorted(self.iterate())
-            return next(self.iterator)
+        return next(self.iterator)
 
     def close(self):
         if self.fh is None:
@@ -1133,14 +1155,9 @@ class VrtByChromIterator(VrtIterator):
             yield chrom,_ensure_sorted(it)
 
     def __init__(self, *args, **kwds):
+        kwds['ensure_sorted'] = False
         super().__init__(*args, **kwds)
 
-    def __next__(self):
-        try:
-            return next(self.iterator)
-        except AttributeError:
-            self.iterator = self.iterate()
-            return next(self.iterator)
         
 def _get_reader(file, reference=None):
     if isinstance(file, str) and file.endswith('.bcf'):

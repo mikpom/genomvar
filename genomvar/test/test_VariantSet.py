@@ -214,7 +214,7 @@ class TestVariantSetCase(MyTestCase):
                          sum([v.nof_unit_vrt() for v in dropped]))
 
 class TestIndexedVariantFileCase(MyTestCase):
-    def test_complex_INFO_example(self):
+    def test_complex_info_example(self):
         vset = IndexedVariantFileSet(
             pkg_file('genomvar.test','data/example_gnomad_1.vcf.gz'),
             parse_info=True)
@@ -573,6 +573,17 @@ class TestIO(MyTestCase):
             if _v.vtp!=variant.Null:
                 self.assertEqual(_v.attrib['id'],'1')
 
+    def test_from_vcf_problematic(self):
+        vset = VariantSet.from_vcf(
+            pkg_file('genomvar.test', 'data/example5.vcf.gz'),
+            parse_info=True)
+
+        v = list(vset.find_vrt('1', 160109406, 160109409))
+        
+        self.assertEqual(len(v), 1)
+        v = v[0]
+        self.assertEqual(v.attrib['info']['PH'], ('.',))
+
     def test_from_bcf(self):
         vset = VariantSet.from_vcf(
             pkg_file('genomvar.test', 'data/example3.bcf'))
@@ -602,8 +613,8 @@ class TestIO(MyTestCase):
         self.assertEqual(list(recs.dtype.fields),
                          ['chrom','start','end','ref','alt',
                           'vartype','phase_group',
-                          'INFO','SAMPLES'])
-        self.assertEqual(list(recs['INFO'].dtype.fields),
+                          'info','SAMPLES'])
+        self.assertEqual(list(recs['info'].dtype.fields),
                          ['NSV','AF','DP4','ECNT','pl','mt','RECN','STR'])
         self.assertEqual(list(recs['SAMPLES'].dtype.fields),
                          ['SAMP1'])
@@ -615,8 +626,8 @@ class TestIO(MyTestCase):
         self.assertEqual(list(recs.dtype.fields),
                          ['chrom','start','end','ref','alt',
                           'vartype','phase_group',
-                          'INFO_NSV', 'INFO_AF', 'INFO_DP4', 'INFO_ECNT',
-                          'INFO_pl', 'INFO_mt', 'INFO_RECN', 'INFO_STR',
+                          'info_NSV', 'info_AF', 'info_DP4', 'info_ECNT',
+                          'info_pl', 'info_mt', 'info_RECN', 'info_STR',
                           'SAMPLES_SAMP1_GT'])
     # ΤΟDO
     # def test_reading_empty_ALT(self):
@@ -722,21 +733,56 @@ class TestIO(MyTestCase):
         vs2 = VariantSet.from_vcf(buf)
         self.assertEqual(vs1.comm(vs2).nof_unit_vrt(), 2)
 
+    # def test_from_to_vcf(self):
+    #     variants1 = sorted(VCFReader(
+    #         pkg_file('genomvar.test','data/example1.vcf')).iter_vrt(),
+    #                     key=lambda v: v.key)
+    #     vs = VariantSet.from_vcf(pkg_file('genomvar.test','data/example1.vcf'))
+    #     tf = tempfile.NamedTemporaryFile(suffix='.vcf')
+    #     with open(tf.name,'wt') as fh:
+    #         vs.to_vcf(fh)
+    #     variants2 = sorted(VCFReader(tf.name).iter_vrt(),
+    #                        key=lambda v: v.key)
+    #     self.assertEqual(len(variants1),len(variants2))
+    #     cnt = 0
+    #     for v1,v2 in zip(variants1,variants2):
+    #         self.assertTrue(v1.edit_equal(v2))
+
+        # # Check INFO fields
+        # rows1 = sorted(
+        #     VCFReader(
+        #         pkg_file('genomvar.test','data/example1.vcf')).iter_rows(),
+        #     key=lambda v: v.POS)
+        # rows2 = sorted(
+        #     VCFReader(tf.name).iter_rows(),
+        #     key=lambda v: v.POS)
+
     def test_from_to_vcf(self):
         variants1 = sorted(VCFReader(
-            pkg_file('genomvar.test','data/example1.vcf')).iter_vrt(),
+            pkg_file('genomvar.test','data/example1.vcf')).iter_vrt(parse_info=True),
                         key=lambda v: v.key)
-        vs = VariantSet.from_vcf(pkg_file('genomvar.test','data/example1.vcf'))
+        vs = VariantSet.from_vcf(pkg_file('genomvar.test','data/example1.vcf'),
+                                 parse_info=True)
         tf = tempfile.NamedTemporaryFile(suffix='.vcf')
         with open(tf.name,'wt') as fh:
             vs.to_vcf(fh)
-        variants2 = sorted(VCFReader(tf.name).iter_vrt(),
+
+            
+        with open(tf.name,'rt') as fh:
+            self.assertIn(
+                '##INFO=<ID=DP4,Number=4,Type=Integer,Description="Test for multinumber field">',
+                fh.read().splitlines())
+            # with open('/home/mikpom/tmp/tmp.txt', 'wt') as ofh:
+            #     ofh.write(fh.read())
+        variants2 = sorted(VCFReader(tf.name).iter_vrt(parse_info=True),
                            key=lambda v: v.key)
         self.assertEqual(len(variants1),len(variants2))
         cnt = 0
         for v1,v2 in zip(variants1,variants2):
             self.assertTrue(v1.edit_equal(v2))
+            self.assertEqual(v1.attrib['info']['NSV'], v2.attrib['info']['NSV'])
 
+        
     def test_from_string_buffer(self):
         buf = io.StringIO() 
         with open(pkg_file('genomvar.test','data/example1.vcf'),'rt') as fh:

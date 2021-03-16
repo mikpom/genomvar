@@ -1,5 +1,6 @@
 import os
 from jinja2 import Environment,FileSystemLoader
+import numpy as np
 
 VCF_fields = ["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER",  "INFO",
               "FORMAT",  "SAMPLES"]
@@ -48,3 +49,15 @@ env = Environment(
 header_simple = env.get_template('vcf_head_simple.tmpl')
 header = env.get_template('vcf_head.tmpl')
 row_tmpl = env.get_template('vcf_row.tmpl')
+
+def _make_field_writer_func(tp, num):
+    if tp==np.bool_:
+        return lambda k,v: str(k)
+    if tp==np.int_:
+        tostring = lambda v: str(int(v)) if not np.isnan(v) else '.'
+    else:
+        tostring = lambda v: str(v) if not v is None else '.'
+    if num in ('.', 'G') or (isinstance(num, int) and num>1):
+        return lambda k,v: '{}={}'.format(k, ','.join(map(tostring, v)))
+    else:
+        return lambda k,v: '{}={}'.format(k, tostring(v))

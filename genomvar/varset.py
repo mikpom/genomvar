@@ -29,8 +29,9 @@ from genomvar.variant import VariantBase,AmbigIndel,\
     GenomVariant,Haplotype,VariantFactory
 from genomvar.utils import rgn_from,zip_variants,\
     chunkit,no_ovlp
-from genomvar.vcf import _get_reader,VCFReader,dtype0,dtype1
-from genomvar.vcf_utils import header_simple,row_tmpl
+from genomvar.vcf import _get_reader,VCFReader,dtype0,dtype1,dtype2string
+from genomvar.vcf_utils import header as vcf_header,\
+    row_tmpl, _make_field_writer_func
 from genomvar import OverlappingHaplotypeVars,\
     Reference,DifferentlySortedChromsError,\
     DuplicateVariants,singleton,ChromSet
@@ -358,13 +359,26 @@ class VariantSetBase(object):
         else:
             reference = self.reference
 
-        header = header_simple.render(
+        info = []
+        if hasattr(self, 'dtype'):
+            for field, props in self.dtype['info'].items():
+                info.append( {'name':field, 'number':props['number'],
+                              'type':dtype2string[props['type']],
+                              'description':props['description']} )
+            writers = {f:_make_field_writer_func(p['type'], p['number']) \
+                       for f,p in self.dtype['info'].items()}
+        else:
+            writers = None
+            
+        header = vcf_header.render(
+            info=info,
             ctg_len=self.ctg_len if reference else {})
         fh.write(header)
+        
         for vrt in self.find_vrt(expand=True):
             try:
-                row = vrt.to_vcf_row(reference=reference)
-            except ValueError as exc:
+                row = vrt.to_vcf_row(reference=reference, _writers=writers)
+            except ValueError as exc: # TODO more specific error
                 if vrt.is_instance(variant.Haplotype) \
                         or vrt.is_instance(variant.Asterisk):
                     continue
@@ -406,11 +420,13 @@ class VariantSet(VariantSetBase):
         is taken from length of chromosomes in the reference.
     """
     def __init__(self,variants, attrib=None, vcf_notation=None, info=None,
-                 sampdata=None, reference=None):
+                 sampdata=None, reference=None, dtype=None):
         super().__init__(reference=reference)
         self._variants = variants
         if not attrib is None:
             self._attrib = attrib
+        if not dtype is None:
+            self.dtype = dtype
         self._info = info
         self._sampdata = sampdata
         self._vcf_notation = vcf_notation
@@ -712,7 +728,7 @@ class VariantSet(VariantSetBase):
         -------
         VariantSet
         """
-        reader = _get_reader(vcf,reference=reference)
+        reader = _get_reader(vcf, reference=reference)
         records = reader.get_records(parse_info=parse_info,
                                      parse_samples=parse_samples,
                                      normindel=normindel)
@@ -729,7 +745,8 @@ class VariantSet(VariantSetBase):
                       vcf_notation=records['vcf'],
                       info=records.get('info'),
                       sampdata=records.get('sampdata'),
-                      reference=reference)
+                      reference=reference,
+                      dtype=reader.dataparser.dtype)
         return vset
 
     @classmethod
@@ -753,7 +770,7 @@ class VariantSet(VariantSetBase):
         vset.__init__(_variants, attrib=attrib, reference=reference)
         return vset
 
-    def to_records(self,nested=True):
+    def to_records(self, nested=True):
         """
         Export ``self`` to NumPy ndarray.
         
@@ -763,7 +780,7 @@ class VariantSet(VariantSetBase):
         nested : bool, optional
             Matters only if ``self`` was instatiated with INFO or SAMPDATA.
             When ``True`` dtype of the return will be nested. If ``False``
-            no recursive fields will be present and "INFO_" or "SAMP_%SAMP%" will
+            no recursive fields will be present and "info_" or "SAMP_%SAMP%" will
             be prepended to corresponding fields *Default: True*
 
         Returns
@@ -780,10 +797,10 @@ class VariantSet(VariantSetBase):
         else:
             if not self._info is None:
                 if nested:
-                    dtype.append( ('INFO',self._info.dtype) )
+                    dtype.append( ('info',self._info.dtype) )
                 else:
                     for field,(_dtype,offset) in self._info.dtype.fields.items():
-                        dtype.append( ('INFO_'+field,_dtype) )
+                        dtype.append( ('info_'+field,_dtype) )
             if not self._sampdata is None:
                 if nested:
                     samp_dtype = [(s,self._sampdata[s].dtype) for s in self._sampdata]
@@ -813,10 +830,10 @@ class VariantSet(VariantSetBase):
         else:
             if not self._info is None:
                 if nested:
-                    ret['INFO'] = self._info
+                    ret['info'] = self._info
                 else:
                     for field in self._info.dtype.fields:
-                        ret['INFO_'+field] = self._info[field]
+                        ret['info_'+field] = self._info[field]
 
             if not self._sampdata is None:
                 if nested:

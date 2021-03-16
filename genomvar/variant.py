@@ -57,6 +57,7 @@ etc.).
 from collections import OrderedDict
 import itertools
 import re
+import numpy as np
 from rbi_tree.tree import ITree
 from genomvar.utils import _strip_ref_alt
 from genomvar import Reference,MAX_END,NoVCFNotationError,\
@@ -189,7 +190,7 @@ class VariantBase(object):
         else:
             raise ValueError('Reference is required')
 
-    def to_vcf_row(self,reference=None,**kwds):
+    def to_vcf_row(self, reference=None, **kwds):
         """Formats a variant to a :class:`genomvar.vcf_utils.VCFRow` instance. 
 
         For indels reference is need to build correct REF field.
@@ -740,6 +741,17 @@ class GenomVariant(object):
     def __repr__(self):
         return 'GenomVariant({})'.format(repr(self.base),str(self.GT))
 
+    @classmethod
+    def _format_info(cls, info, _writers=None):
+        if info is None:
+            return '.'
+        if isinstance(info, np.void):
+            _info = [_writers[k](k,v) for k,v in zip(info.dtype.fields, info)]
+        else:
+            _info = ['{}={}'.format(k,v) for k,v in \
+                             info.items()]
+        return ';'.join(_info)
+
     def edit_equal(self,other):
         """
         Check if GenomVariant holds the same genome alteration
@@ -757,7 +769,7 @@ class GenomVariant(object):
         
         return self.base.edit_equal(other)
 
-    def _get_ref_notation(self,start,end):
+    def _get_ref_notation(self, start, end):
         try:
             vcf_notation = self.attrib['vcf_notation']
         except AttributeError:
@@ -773,7 +785,8 @@ class GenomVariant(object):
             raise NoVCFNotationError('Out of bounds of vcf notation ref')
         return ref
 
-    def to_vcf_row(self, reference=None, **kwds):
+    def to_vcf_row(self, reference=None, _writers=None,
+                   **kwds):
         """Formats a variant to a VCF row. 
 
         For indels reference might be needed to build correct REF field.
@@ -829,12 +842,9 @@ class GenomVariant(object):
         if 'info' in kwds:
             info = kwds['info']
         elif 'info' in dt:
-            _info = ['{}={}'.format(k,v) for k,v in \
-                             dt['info'].items()]
-            
-            info = ';'.join(_info) if _info else None
+            info = self._format_info(dt['info'], _writers=_writers)
         else:
-            info=None
+            info = None
         return VCFRow(self.chrom,pos,
                       kwds.get('id', dt.get('id')),
                       ref.upper(),alt.upper(),
