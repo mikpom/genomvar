@@ -48,10 +48,10 @@ class TestVariantSetComparison(MyTestCase):
         # v1 TCACA--CAG
         # v2 T--CACACAG
         factory = variant.VariantFactory(
-            reference=pkg_file('genomvar.test','data/chr15rgn.fna'),
+            reference=pkg_file('genomvar.test','data/chr24.fna'),
             normindel=True)
-        v1 = factory.from_edit('chr15rgn',10043,'T','TCA')
-        v2 = factory.from_edit('chr15rgn',10045,'A','ACA')
+        v1 = factory.from_edit('chr24',10043,'T','TCA')
+        v2 = factory.from_edit('chr24',10045,'A','ACA')
         s1 = VariantSet.from_variants([v1])
         s2 = VariantSet.from_variants([v2])
 
@@ -72,22 +72,22 @@ class TestSetComparisonCase(MyTestCase):
         # s2           TT           T
         #              AC           T
 
-        s1 = MutableVariantSet(reference=self.chr15rgn)
-        vb = factory.from_edit('chr15rgn',1206,'G','C')
+        s1 = MutableVariantSet(reference=self.chr24)
+        vb = factory.from_edit('chr24',1206,'G','C')
         s1.add_vrt(vb,GT=(1,0))
-        vb = factory.from_edit('chr15rgn',2093,'TG','CC')
+        vb = factory.from_edit('chr24',2093,'TG','CC')
         s1.add_vrt(vb,GT=(1,1))
-        vb = factory.from_edit('chr15rgn',2095,'G','C')
+        vb = factory.from_edit('chr24',2095,'G','C')
         s1.add_vrt(vb,GT=(1,1))
-        vb = factory.from_edit('chr15rgn',10044,'C','T')
+        vb = factory.from_edit('chr24',10044,'C','T')
         s1.add_vrt(vb,GT=(1,0))
-        vb = factory.from_edit('chr15rgn',10044,'C','G')
+        vb = factory.from_edit('chr24',10044,'C','G')
         s1.add_vrt(vb,GT=(0,1))
 
-        s2 = MutableVariantSet(reference=self.chr15rgn)
-        vb = factory.from_edit('chr15rgn',2092,'TT','AC')
+        s2 = MutableVariantSet(reference=self.chr24)
+        vb = factory.from_edit('chr24',2092,'TT','AC')
         s2.add_vrt(vb,GT=(0,1),allow_adjust_genotype=True)
-        vb = factory.from_edit('chr15rgn',10044,'C','T')
+        vb = factory.from_edit('chr24',10044,'C','T')
         s2.add_vrt(vb,GT=(1,1),allow_adjust_genotype=True)
 
         diff = s1.diff(s2)
@@ -106,19 +106,19 @@ class TestSetComparisonCase(MyTestCase):
     def test_diff_with_attr_filters(self):
         s1 = MutableVariantSet.from_vcf(
             pkg_file('genomvar.test','data/example1.vcf'),
-            reference=self.chr15rgn,normindel=True,parse_info=True,
+            reference=self.chr24,normindel=True,parse_info=True,
             sample='SAMP1')
-        _vrt = list(s1.find_vrt('chr15rgn',1200,1210))
+        _vrt = list(s1.find_vrt('chr24',1200,1210))
         self.assertEqual(len(_vrt),2)
         v1,v2 = _vrt
         self.assertEqual(v1.attrib['info']['AF'],1.0)
 
-        s2 = MutableVariantSet(reference=self.chr15rgn)
-        s2.add_vrt(factory.from_edit('chr15rgn',1206,'G','C'),
+        s2 = MutableVariantSet(reference=self.chr24)
+        s2.add_vrt(factory.from_edit('chr24',1206,'G','C'),
                    GT=(0,1))
 
         diff = s1.diff(s2)
-        _vrt = list(diff.find_vrt('chr15rgn',1200,1210))
+        _vrt = list(diff.find_vrt('chr24',1200,1210))
         self.assertEqual(len(_vrt),1)
         v = _vrt[0]
         self.assertEqual(v.attrib['filter'],['PASS'])
@@ -129,13 +129,13 @@ class TestSetComparisonCase(MyTestCase):
         #    TCACAG
         # s1 TC--AG
         # s2 T--CAG
-        vfac = VariantFactory(reference=self.chr15rgn,normindel=True)
+        vfac = VariantFactory(reference=self.chr24,normindel=True)
         
-        s1 = MutableVariantSet(reference=self.chr15rgn)
-        vb = vfac.from_edit('chr15rgn',10044,'CAC','C')
+        s1 = MutableVariantSet(reference=self.chr24)
+        vb = vfac.from_edit('chr24',10044,'CAC','C')
         s1.add_vrt(vb,GT=(0,1))
-        s2 = MutableVariantSet(reference=self.chr15rgn)
-        vb = vfac.from_edit('chr15rgn',10043,'TCA','T')
+        s2 = MutableVariantSet(reference=self.chr24)
+        vb = vfac.from_edit('chr24',10043,'TCA','T')
         s2.add_vrt(vb,GT=(0,1))
 
         diff = s1.diff(s2,match_ambig=True)
@@ -150,11 +150,11 @@ class TestSetComparisonCase(MyTestCase):
         #     CTTTTTCAT
         # s1  CTT--TCAT
         # s2  C--TTTCAT
-        s1 = MutableVariantSet(reference=self.chr15rgn)
-        vb = factory.from_edit('chr15rgn',9947,'TT','T')
+        s1 = MutableVariantSet(reference=self.chr24)
+        vb = factory.from_edit('chr24',9947,'TT','T')
         s1.add_vrt(vb,GT=(0,1))
-        s2 = MutableVariantSet(reference=self.chr15rgn)
-        vb = factory.from_edit('chr15rgn',9945,'CTT','C')
+        s2 = MutableVariantSet(reference=self.chr24)
+        vb = factory.from_edit('chr24',9945,'CTT','C')
         s2.add_vrt(vb,GT=(1,0))
 
         diff = s1.diff(s2)
@@ -170,32 +170,32 @@ class TestSetComparisonCase(MyTestCase):
         # s2           TT           T        CC
         #              AC           T           G
 
-        s1 = MutableVariantSet(reference=self.chr15rgn)
+        s1 = MutableVariantSet(reference=self.chr24)
         vfac = s1.get_factory(normindel=True)
-        vb = vfac.from_edit('chr15rgn',1206,'G','C')
+        vb = vfac.from_edit('chr24',1206,'G','C')
         s1.add_vrt(vb,GT=(1,1))
-        vb = vfac.from_edit('chr15rgn',2093,'TG','CC')
+        vb = vfac.from_edit('chr24',2093,'TG','CC')
         s1.add_vrt(vb,GT=(1,1))
-        vb = vfac.from_edit('chr15rgn',2095,'G','C')
+        vb = vfac.from_edit('chr24',2095,'G','C')
         s1.add_vrt(vb,GT=(1,1))
-        vb = vfac.from_edit('chr15rgn',10044,'C','T')
+        vb = vfac.from_edit('chr24',10044,'C','T')
         s1.add_vrt(vb,GT=(1,0))
-        vb = vfac.from_edit('chr15rgn',10044,'C','G')
+        vb = vfac.from_edit('chr24',10044,'C','G')
         s1.add_vrt(vb,GT=(0,1))
-        vb = vfac.from_edit('chr15rgn',10051,'C','CCC')
+        vb = vfac.from_edit('chr24',10051,'C','CCC')
         s1.add_vrt(vb,GT=(1,1))
-        vb = vfac.from_edit('chr15rgn',10053,'A','AG')
+        vb = vfac.from_edit('chr24',10053,'A','AG')
         s1.add_vrt(vb,GT=(1,0))
 
-        s2 = MutableVariantSet(reference=self.chr15rgn)
+        s2 = MutableVariantSet(reference=self.chr24)
         vfac = s2.get_factory(normindel=True)
-        vb = vfac.from_edit('chr15rgn',2092,'TT','AC')
+        vb = vfac.from_edit('chr24',2092,'TT','AC')
         s2.add_vrt(vb,GT=(0,1))
-        vb = vfac.from_edit('chr15rgn',10044,'C','T')
+        vb = vfac.from_edit('chr24',10044,'C','T')
         s2.add_vrt(vb,GT=(1,1))
-        vb = vfac.from_edit('chr15rgn',10052,'C','CCC')
+        vb = vfac.from_edit('chr24',10052,'C','CCC')
         s2.add_vrt(vb,GT=(1,0))
-        vb = vfac.from_edit('chr15rgn',10053,'A','AG')
+        vb = vfac.from_edit('chr24',10053,'A','AG')
         s2.add_vrt(vb,GT=(0,1))
 
         com1 = s1.comm(s2,match_ambig=True)
@@ -220,8 +220,8 @@ class TestSetComparisonCase(MyTestCase):
         vset1 = MutableVariantSet()
         vset2 = MutableVariantSet()
         fac = VariantFactory()
-        ins1 = fac.from_hgvs('chr15rgn:g.10053_10054insG')
-        ins2 = fac.from_edit('chr15rgn',10052,'A','AG')
+        ins1 = fac.from_hgvs('chr24:g.10053_10054insG')
+        ins2 = fac.from_edit('chr24',10052,'A','AG')
 
         del1 = fac.from_hgvs('NG_012232.1:g.19_21del')
         del2 = fac.from_edit('NG_012232.1',17,'GTTT','G')
@@ -276,13 +276,13 @@ class TestSetComparisonCase(MyTestCase):
         #    TTCACTTAGCATAATGTCTTCAAGATT
         # v1                       TT -single
         # v2                       TT -splitted
-        vset1 = MutableVariantSet(reference=self.chr15rgn)
-        vb = factory.from_edit('chr15rgn',22,'AG','TT')
+        vset1 = MutableVariantSet(reference=self.chr24)
+        vb = factory.from_edit('chr24',22,'AG','TT')
         vset1.add_vrt(vb,GT=(1,0))
-        vset2 = MutableVariantSet(reference=self.chr15rgn)
-        vb = factory.from_edit('chr15rgn',22,'A','T')
+        vset2 = MutableVariantSet(reference=self.chr24)
+        vb = factory.from_edit('chr24',22,'A','T')
         vset2.add_vrt(vb,GT=(0,1))
-        vb = factory.from_edit('chr15rgn',23,'G','T')
+        vb = factory.from_edit('chr24',23,'G','T')
         vset2.add_vrt(vb,GT=(0,1))
 
         com = vset1.comm(vset2)
@@ -297,11 +297,11 @@ class TestSetComparisonCase(MyTestCase):
         #    TTCACTTAGCAT
         # v1   GGG
         # v2    G
-        s1 = MutableVariantSet(reference=self.chr15rgn)
-        vb = factory.from_edit('chr15rgn',2,'CAC','GGG')
+        s1 = MutableVariantSet(reference=self.chr24)
+        vb = factory.from_edit('chr24',2,'CAC','GGG')
         s1.add_vrt(vb,GT=(1,0))
-        s2 = MutableVariantSet(reference=self.chr15rgn)
-        vb = factory.from_edit('chr15rgn',3,'A','G')
+        s2 = MutableVariantSet(reference=self.chr24)
+        vb = factory.from_edit('chr24',3,'A','G')
         s2.add_vrt(vb,GT=(1,0))
 
         diff = s1.diff(s2)
@@ -316,11 +316,11 @@ class TestSetComparisonCase(MyTestCase):
 
     def test_diff_without_ref(self):
         vset1 = MutableVariantSet()
-        vb = factory.from_edit('chr15rgn',10053,'A','AG')
+        vb = factory.from_edit('chr24',10053,'A','AG')
         vset1.add_vrt(vb,GT=(1,0))
 
         vset2 = MutableVariantSet()
-        vb = factory.from_edit('chr15rgn',10053,'A','AG')
+        vb = factory.from_edit('chr24',10053,'A','AG')
         vset2.add_vrt(vb,GT=(0,1))
 
         com = vset1.comm(vset2)
@@ -382,13 +382,13 @@ class TestSetComparisonCase(MyTestCase):
         # v2 s1   T------CA--G del CA left
         # v1 s2   TCACA--CA--G ins CA left
         # v2 s2   T--CA------G del CA right
-        fac = variant.VariantFactory(reference=self.chr15rgn,normindel=True)
+        fac = variant.VariantFactory(reference=self.chr24,normindel=True)
         s1 = VariantSet.from_variants(
-            [fac.from_edit('chr15rgn',10047,'A','ACA'),
-             fac.from_edit('chr15rgn',10043,'TCA','T')])
+            [fac.from_edit('chr24',10047,'A','ACA'),
+             fac.from_edit('chr24',10043,'TCA','T')])
         s2 = VariantSet.from_variants(
-            [fac.from_edit('chr15rgn',10043,'T','TCA'),
-             fac.from_edit('chr15rgn',10045,'ACA','A')])
+            [fac.from_edit('chr24',10043,'T','TCA'),
+             fac.from_edit('chr24',10045,'ACA','A')])
         self.assertEqual(len(list(s1.diff(s2,match_ambig=True).iter_vrt())),0)
 
     def test_ambig_difference_snp_in_locus(self):
@@ -397,12 +397,12 @@ class TestSetComparisonCase(MyTestCase):
         # v1 s1         CA
         # v1 s2    G
         # v2 s2     T
-        fac = variant.VariantFactory(reference=self.chr15rgn,normindel=True)
+        fac = variant.VariantFactory(reference=self.chr24,normindel=True)
         s1 = VariantSet.from_variants(
-            [fac.from_edit('chr15rgn',10047,'A','ACA')])
+            [fac.from_edit('chr24',10047,'A','ACA')])
         s2 = VariantSet.from_variants(
-            [fac.from_edit('chr15rgn',10044,'C','G'),
-             fac.from_edit('chr15rgn',10044,'C','CT')])
+            [fac.from_edit('chr24',10044,'C','G'),
+             fac.from_edit('chr24',10044,'C','CT')])
         self.assertEqual(len(list(s1.comm(s2,match_ambig=True).iter_vrt())),0)
 
     def test_differently_sorted_chroms(self):
@@ -465,7 +465,7 @@ class TestSetComparisonCase(MyTestCase):
         vs2 = IndexedVariantFileSet(
             pkg_file('genomvar.test','data/example2.vcf.gz'),
             parse_samples='SAMP1',parse_info=True)
-        comm = list(vs1.comm_vrt(vs2).region(rgn='chr15rgn:10040-10050'))
+        comm = list(vs1.comm_vrt(vs2).region(rgn='chr24:10040-10050'))
         self.assertEqual(len(comm),2)
         v1,v2 = comm
         self.assertEqual(v1.attrib['info']['AF'],1.0)
@@ -502,16 +502,16 @@ class TestSetComparisonCase(MyTestCase):
         # varset1  CCC   GG
         #                CC    GG
         #          v1   v2,v3   v4
-        v1 = factory.from_edit('chr15rgn',2093,'TGG','CCC')
-        v2 = factory.from_edit('chr15rgn',2098,'TT','GG')
-        v3 = factory.from_edit('chr15rgn',2098,'TT','CC')
-        v4 = factory.from_edit('chr15rgn',3200,'G','GG')
-        s1 = MutableVariantSet(reference=self.chr15rgn)
+        v1 = factory.from_edit('chr24',2093,'TGG','CCC')
+        v2 = factory.from_edit('chr24',2098,'TT','GG')
+        v3 = factory.from_edit('chr24',2098,'TT','CC')
+        v4 = factory.from_edit('chr24',3200,'G','GG')
+        s1 = MutableVariantSet(reference=self.chr24)
         s1.add_hap_variants([v1,v2],GT=(1,0))
         s1.add_vrt(v3,GT=(0,1))
         s1.add_vrt(v4,GT=(0,1))
         s2 = VariantSet.from_variants(s1.iter_vrt())
-        vrt = list(s2.find_vrt('chr15rgn', 2090, 2095, expand=True))
+        vrt = list(s2.find_vrt('chr24', 2090, 2095, expand=True))
         self.assertEqual(len(vrt),2)
         self.assertEqual(s2.nof_unit_vrt(),8)
         self.assertEqual(s1.diff(s2).nof_unit_vrt(), 0)

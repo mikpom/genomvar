@@ -15,7 +15,6 @@ Requirements:
 1. Python >=3.6
 2. rbi-tree
 3. jinja2
-4. pysam
 
 To install::
 

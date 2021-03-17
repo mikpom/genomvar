@@ -1,6 +1,6 @@
 import itertools
 import warnings
-from genomvar.vcf import VCFReader,\
+from genomvar.vcf import VCFReader, VCFWriter,\
     dtype2string,_isindexed
 from genomvar.vcf_utils import row_tmpl, header as vcf_header
 from genomvar.varset import VariantFileSet,IndexedVariantFileSet
@@ -19,16 +19,13 @@ def _cmp_vcf(f1,f2,out,match_partial=False,chunk=1000):
     """
     Writes comparison of two VCF files to a specified file handle.
     """
-    info = [{'name':'VT','number':1,'type':'String','description':
-               '"Variant type"'},
-            {'name':'whichVCF','number':1,'type':'String','description':
-               '"Which input VCF contains the variant; first, second or both"'},
-            {'name':'ln','number':1,'type':'Integer','description':
-               '"Line number in input VCF variant originating from"'},
-            {'name':'ln2','number':'.','type':'Integer','description':
-               '"If whichVCF is both indicates line number'\
-                +'in the second file"'}]
-    header = vcf_header.render(ctg_len={},info=info)
+    info = [('VT', 1, 'String', 'Variant type'),
+            ('whichVCF', 1, 'String', 'Which input VCF contains the variant; first, second or both'),
+            ('ln', 1, 'Integer', 'Line number in input VCF variant originating from'),
+            ('ln2', '.', 'Integer', 'If whichVCF is both indicates line numberin the second file')]
+
+    writer = VCFWriter(info_spec=info)
+    header = writer.get_header()
     out.write(header)
 
     if _isindexed(f1):
@@ -59,10 +56,10 @@ def _cmp_vcf(f1,f2,out,match_partial=False,chunk=1000):
 
         vrt.attrib['info'] = {'whichVCF':_which[which],
                               'ln':lineno,
-                              'ln2':','.join(map(str,lineno2)) if which==2\
-                                  else '.'}
+                              'ln2':lineno2 if which==2\
+                                  else None}
         try:
-            row = vrt.to_vcf_row()
+            row = writer.get_row(vrt)
         except ValueError as exc:
             if vrt.is_instance(variant.Haplotype) \
                     or vrt.is_instance(variant.Asterisk):

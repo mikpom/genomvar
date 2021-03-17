@@ -47,9 +47,9 @@ class Reference(object):
     Speed up is achieved by minimizing disk IO
     when consequtive queries are close to one another.
     """
-    def __init__(self,fl,cache_dst=1000000):
-        self.fl = fl
-        self.REF = pyfaidx.Fasta(self.fl)
+    def __init__(self, filename, cache_dst=1000000):
+        self.filename = filename
+        self.REF = pyfaidx.Fasta(self.filename)
         self.ctg_len = {k:len(v) for k,v in self.REF.records.items()}
         self.cache_dst = cache_dst
         self.cache = {}
@@ -87,6 +87,6 @@ class Reference(object):
     def get_chroms(self):
         return list(self.REF.records)
 
-singleton = -1
+SINGLETON = -1
 
 MAX_END = np.iinfo(np.int32).max # Looks like it is max for bx-python

@@ -3,7 +3,7 @@ from pkg_resources import resource_filename as pkg_file
 from genomvar import Reference
 from genomvar.varset import VariantBase
 from genomvar import variant
-from genomvar.vcf import VCFReader
+from genomvar.vcf import VCFReader, VCFWriter
 from genomvar.vcf_utils import VCF_fields, VCFRow
 from genomvar.variant import GenomVariant
 from genomvar.test import MyTestCase
@@ -11,6 +11,7 @@ from genomvar.test import MyTestCase
 # Factory normalizing indels
 
 class TestVariantsCase(MyTestCase):
+    writer = VCFWriter()
         
     def test_indel_equality(self):
         #       1
@@ -33,51 +34,51 @@ class TestVariantsCase(MyTestCase):
         #                15
         # TTCACTTAGCATAATG|TCTT
         #                 C
-        vb = self.nvf.from_edit('chr15rgn',15,'G','GC')
+        vb = self.nvf.from_edit('chr24',15,'G','GC')
         self.assertEqual([vb.start,vb.end],[16,17])
         # Now deletion
-        vb = self.nvf.from_edit(chrom='chr15rgn',start=15,ref='GT',alt='G')
+        vb = self.nvf.from_edit(chrom='chr24',start=15,ref='GT',alt='G')
         self.assertEqual([vb.start,vb.end],[16,17])
-        vb = self.nvf.from_edit('chr15rgn',15,'GT','G')
+        vb = self.nvf.from_edit('chr24',15,'GT','G')
         self.assertEqual([vb.start,vb.end],[16,17])
 
         #    575
         # ATTTAATA
         #    T-AT   v1
-        vb = self.nvf.from_edit('chr15rgn',575,'TA','T')
+        vb = self.nvf.from_edit('chr24',575,'TA','T')
         self.assertTrue(isinstance(vb,variant.AmbigIndel))
 
         #       65
         # TAAGG CTG     AATACTAT
         #       CTC
-        vb = self.svf.from_edit('chr15rgn',start=65,ref='CTG',alt='CTC')
+        vb = self.svf.from_edit('chr24',start=65,ref='CTG',alt='CTC')
         self.assertEqual([vb.start,vb.end,vb.ref,vb.alt,type(vb).__name__],
                          [67,68,'G','C','SNP'])
 
         #       65
         # TAAGG CTG     AATACTAT
         #       CCGTCGTG
-        vb = self.svf.from_edit('chr15rgn',start=65,ref='CTG',alt='CCGTCGTG')
+        vb = self.svf.from_edit('chr24',start=65,ref='CTG',alt='CCGTCGTG')
         self.assertEqual([vb.start,vb.end,bool(vb.ref),vb.alt,type(vb).__name__],
                          [66,67,False,'CGTCG','Ins'])
 
         #     2343
         # CTG TTTCCA    ACATACATCATGAGACTTCTG
         #     TTCCATTCCA
-        vb = self.nvf.from_edit('chr15rgn',2343,'TTTCCA','TTCCATTCCA')
+        vb = self.nvf.from_edit('chr24',2343,'TTTCCA','TTCCATTCCA')
         self.assertEqual([vb.start,vb.end,vb.alt,type(vb).__name__],
                          [2344,2346,'CCAT','AmbigIns'])
 
         #      3300
         #   TATC TTTTTGAC TGG
         #        --------
-        vb = self.nvf.from_edit('chr15rgn',3300,'CTTTTTGAC','C')
+        vb = self.nvf.from_edit('chr24',3300,'CTTTTTGAC','C')
         self.assertEqual([vb.start,vb.end,vb.alt,type(vb).__name__],
                          [3300,3310,'','AmbigDel'])
 
         #   0
         #   TTCACTTAGCA
-        vb = self.nvf.from_edit('chr15rgn',0,'T','TT')
+        vb = self.nvf.from_edit('chr24',0,'T','TT')
         self.assertEqual([vb.start,vb.end,vb.alt,vb.vtp],
                          [0,3,'T',variant.AmbigIns])
     def test_instantiation_from_hgvs(self):
@@ -108,8 +109,8 @@ class TestVariantsCase(MyTestCase):
         #      3300
         #   TATC TTTTTGAC TGG
         #        --------
-        ve = self.nvf.from_edit('chr15rgn',3299,'TCTTTTTGA','T')
-        vb = self.nvf.from_hgvs('chr15rgn:g.3302_3309del')
+        ve = self.nvf.from_edit('chr24',3299,'TCTTTTTGA','T')
+        vb = self.nvf.from_hgvs('chr24:g.3302_3309del')
         self.assertEqual([vb.start,vb.end,vb.alt,vb.vtp],
                          [3300,3310,'',variant.AmbigDel])
         self.assertFalse(vb.edit_equal(ve))
@@ -117,61 +118,64 @@ class TestVariantsCase(MyTestCase):
 
     def test_haplotype_edit_equality(self):
         factory = variant.VariantFactory()
-        v1 = factory.from_edit('chr15rgn',2093,'TGG','CCC')
-        v2 = factory.from_edit('chr15rgn',2098,'TT','GG')
-        v3 = factory.from_edit('chr15rgn',2098,'TT','CC')
+        v1 = factory.from_edit('chr24',2093,'TGG','CCC')
+        v2 = factory.from_edit('chr24',2098,'TT','GG')
+        v3 = factory.from_edit('chr24',2098,'TT','CC')
         h1 = variant.Haplotype.from_variants([v1,v2])
         h1_ = variant.Haplotype.from_variants([v1,v2])
         h2 = variant.Haplotype.from_variants([v1,v3])
         self.assertTrue(h1.edit_equal(h1_))
         self.assertFalse(h1.edit_equal(h2))
 
-    def test_to_vcf_row_instantiated_variant(self):
+    def test_get_vcf_row_instantiated_variant(self):
         factory = variant.VariantFactory()
-        v1 = factory.from_edit('chr15rgn',2093,'TGG','CCC')
-        row = v1.to_vcf_row()
+        v1 = factory.from_edit('chr24',2093,'TGG','CCC')
+
+        row = self.writer.get_row(v1)
         self.assertEqual(row.REF, 'TGG')
         self.assertEqual(row.POS, 2094)
-        self.assertEqual(str(row), 'chr15rgn\t2094\t.\tTGG\tCCC\t.\t.\t.')
+        self.assertEqual(str(row), 'chr24\t2094\t.\tTGG\tCCC\t.\t.\t.')
 
         gv = GenomVariant(v1, attrib={'id':'vrtid', 'filter':'LOWQUAL',
                                       'qual':100})
-        row = gv.to_vcf_row()
+        row = self.writer.get_row(gv)
         self.assertEqual(
-            str(row),'chr15rgn\t2094\tvrtid\tTGG\tCCC\t100\tLOWQUAL\t.')
+            str(row),'chr24\t2094\tvrtid\tTGG\tCCC\t100\tLOWQUAL\t.')
         
         vrt = factory.from_edit('chr20', 1253922,'TGT','G')
-        row = vrt.to_vcf_row()
+        # test vcf notations TODO
+        
+        row = self.writer.get_row(vrt)
         self.assertEqual(str(row), 'chr20\t1253923\t.\tTGT\tG\t.\t.\t.')
 
         # vf = VariantFactory(reference=ref,
         #                     normindel=True)
         vrt = factory.from_edit('chr1',13957,'TCCCCCA','TCCCCA')
         with self.assertRaises(ValueError) as cm:
-            row = vrt.to_vcf_row()
+            row = self.writer.get_row(vrt)
         self.assertIn('Reference is required',cm.exception.args[0])
 
     def test_change_of_attributes(self):
         reader = VCFReader(
             pkg_file('genomvar.test','data/example1.vcf'))
         vrt = list(reader.iter_vrt())[0]
-        self.assertEqual(str(vrt.to_vcf_row()),
-                         'chr15rgn\t23\t1\tAG\tA\t100\tPASS\t.')
+        self.assertEqual(str(self.writer.get_row(vrt)),
+                         'chr24\t23\t1\tAG\tA\t100\tPASS\t.')
         vrt2 = copy.deepcopy(vrt)
         vrt2.attrib['id'] = '.'
         vrt2.attrib['qual'] = '.'
         vrt2.attrib['filter'] = '.'
-        self.assertEqual(str(vrt2.to_vcf_row()),
-                         'chr15rgn\t23\t.\tAG\tA\t.\t.\t.')
-        self.assertEqual(str(vrt2.to_vcf_row(id='.', qual='.', filter='.')),
-                         'chr15rgn\t23\t.\tAG\tA\t.\t.\t.')
+        self.assertEqual(str(self.writer.get_row(vrt2)),
+                         'chr24\t23\t.\tAG\tA\t.\t.\t.')
+        self.assertEqual(str(self.writer.get_row(vrt2, id='.', qual='.', filter='.')),
+                         'chr24\t23\t.\tAG\tA\t.\t.\t.')
         
         vrt3 = copy.deepcopy(vrt)
         vrt3.attrib['id'] = None
         vrt3.attrib['qual'] = None
         vrt3.attrib['filter'] = None
-        self.assertEqual(str(vrt3.to_vcf_row()),
-                         'chr15rgn\t23\t.\tAG\tA\t.\t.\t.')
+        self.assertEqual(str(self.writer.get_row(vrt3)),
+                         'chr24\t23\t.\tAG\tA\t.\t.\t.')
         reader.close()
         reader.close()
 
@@ -189,7 +193,7 @@ class TestVariantsCase(MyTestCase):
         reader = VCFReader(pkg_file('genomvar.test','data/example1.vcf'))
         variants = list(reader.iter_vrt(
             parse_info=False,parse_samples=False))
-        rows = [str(v.to_vcf_row()) for v in variants]
+        rows = [str(self.writer.get_row(v)) for v in variants]
         
         for r1, r2 in zip(
                 _split_multiallelic(reader.iter_rows()), rows):
@@ -201,7 +205,7 @@ class TestVariantsCase(MyTestCase):
     def test_to_vcf_row_instantiated_variant_numeric_chrom(self):
         factory = variant.VariantFactory()
         v1 = factory.from_edit(1,2093,'TGG','CCC')
-        row = str(v1.to_vcf_row())
+        row = str(self.writer.get_row(v1))
         row2 = str(v1)
         self.assertIn('TGG', row)
         self.assertIn('TGG', row2)

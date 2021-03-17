@@ -2,9 +2,23 @@ import warnings
 import unittest
 import numpy as np
 import io
-from genomvar.vcf import VCFReader, BCFReader
+from genomvar.test import MyTestCase
+from genomvar import variant
+from genomvar.vcf import VCFReader, BCFReader, VCFWriter
 from genomvar.vcf_utils import header as vcf_header
 from pkg_resources import resource_filename as pkg_file
+
+class TestVCFWriterCase(MyTestCase):
+    def test_writer_instantiation(self):
+        deletion = variant.Del("chr24",5,10)
+        writer = VCFWriter(reference=self.chr24.filename)
+        row = writer.get_row(deletion)
+        self.assertEqual(
+            row.REF,
+            self.chr24.get(deletion.chrom, deletion.start-1, deletion.end))
+
+        writer.reference.close()
+        
 
 class TestVCFReaderCase(unittest.TestCase):
     def test_init(self):
@@ -12,7 +26,7 @@ class TestVCFReaderCase(unittest.TestCase):
         self.assertEqual(reader.header_len,15)
         dtype = reader._dtype
         self.assertEqual(len(dtype['format']),1)
-        self.assertTrue(issubclass(dtype['format']['GT']['type'],np.object_),
+        self.assertTrue(issubclass(dtype['format']['GT']['dtype'],np.object_),
                         msg='Got type'+str(dtype['format']['GT']['type']))
     
     def test_iter_chrom_rows(self):
@@ -23,15 +37,15 @@ class TestVCFReaderCase(unittest.TestCase):
             chroms.add(chrom)
             l = list(it)
             rows[chrom] = len(l)
-        self.assertEqual(chroms,{'chr15rgn','chr11rgn'})
-        self.assertEqual(rows['chr11rgn'],5)
-        self.assertEqual(rows['chr15rgn'],4)
+        self.assertEqual(chroms,{'chr24','chr23'})
+        self.assertEqual(rows['chr23'],5)
+        self.assertEqual(rows['chr24'],4)
 
         # same but without reading the chroms
         chroms = set()
         for chrom,it in reader.iter_rows_by_chrom():
             chroms.add(chrom)
-        self.assertEqual(chroms,{'chr15rgn','chr11rgn'})
+        self.assertEqual(chroms,{'chr24','chr23'})
 
     def test_example3(self):
         reader = VCFReader(pkg_file(
@@ -79,13 +93,13 @@ class TestVCFReaderCase(unittest.TestCase):
     def test_iter_vrt_gzipped(self):
         reader = VCFReader(pkg_file('genomvar.test','data/example2.vcf.gz'),
                            index=True)
-        self.assertEqual(list(reader.chroms),['chr11rgn','chr15rgn'])
+        self.assertEqual(list(reader.chroms),['chr23','chr24'])
         for vrt in reader.iter_vrt():
-            self.assertIn(vrt.chrom,['chr15rgn','chr11rgn'])
+            self.assertIn(vrt.chrom,['chr24','chr23'])
 
-        self.assertEqual(len(list(reader.find_vrt(chrom='chr15rgn'))),4)
+        self.assertEqual(len(list(reader.find_vrt(chrom='chr24'))),4)
         self.assertEqual(len(list(
-            reader.find_vrt('chr11rgn',7464,7465))),3)
+            reader.find_vrt('chr23',7464,7465))),3)
 
     def test_from_vcf_missing_values(self):
         buf = io.StringIO()
@@ -107,7 +121,7 @@ class TestVCFReaderCase(unittest.TestCase):
         self.assertEqual(v.attrib['samples']['S1']['GT'], (None,None))
 
     def test_sv_types(self):
-        reader = VCFReader(pkg_file('genomvar.test', 'data/example4.vcf'))
+        reader = VCFReader(pkg_file('genomvar.test', 'data/example4.vcf.gz'))
 
         with warnings.catch_warnings(record=True) as wrn:
             # warnings.simplefilter(append=True)

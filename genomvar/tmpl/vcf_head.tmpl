@@ -1,6 +1,6 @@
 {% extends "vcf_head_base.tmpl" %}
 {% block INFO %}{% for field in info -%}
-   ##INFO=<ID={{field.name}},Number={{field.number}},Type={{field.type}},Description="{{field.description}}">
+##INFO=<ID={{field.name}},Number={{field.number}},Type={{field.type}},Description="{% if field.description %}{{field.description}}{% else %}{% endif %}"{% if field.source %},Source="{{field.source}}"{% else %}{% endif %}{% if field.version %},Version="{{field.version}}"{% else %}{% endif %}>
 {% endfor -%}{% endblock %}
 {% block FORMAT %}{% for field in format -%}
    ##FORMAT=<ID={{field.name}},Number={{field.number}},Type={{field.type}},Description={{field.description}}>

@@ -21,9 +21,9 @@ class TestStreamCmp(TestCase):
         out = io.StringIO()
         with warnings.catch_warnings(record=True):
             cnt = _cmp_vcf(self.f1,self.f2,out=out)
-        self.assertEqual(cnt[0],14)
-        self.assertEqual(cnt[2],4)
-        self.assertEqual(cnt[1],12)
+        self.assertEqual(cnt[0], 14)
+        self.assertEqual(cnt[2], 4)
+        self.assertEqual(cnt[1], 12)
         
         out.seek(0)
         noheader = itertools.dropwhile(lambda l: l.startswith('#'),out)
@@ -32,7 +32,7 @@ class TestStreamCmp(TestCase):
         row0 = rows[0]
         info = _get_info(row0.INFO)
         self.assertEqual([row0.CHROM,row0.POS,row0.REF,row0.ALT],
-                         ['chr11rgn',7462,'G','T'])
+                         ['chr23',7462,'G','T'])
         self.assertEqual(info['whichVCF'],'second')
         self.assertEqual(info['ln'],'13')
 

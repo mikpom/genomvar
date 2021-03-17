@@ -62,7 +62,9 @@ from rbi_tree.tree import ITree
 from genomvar.utils import _strip_ref_alt
 from genomvar import Reference,MAX_END,NoVCFNotationError,\
     StructuralVariantError
-from genomvar.vcf_utils import row_tmpl as vcf_row_template, VCFRow
+from genomvar.vcf_utils import (row_tmpl as vcf_row_template,
+                                VCFRow, field_writer_simple)
+
 
 hgvs_regex = {'SNP':'([0-9]+)([AGTC])>([AGTC])',
               'Del':'([0-9]+)(?:_([0-9]+))?del',
@@ -190,52 +192,6 @@ class VariantBase(object):
         else:
             raise ValueError('Reference is required')
 
-    def to_vcf_row(self, reference=None, **kwds):
-        """Formats a variant to a :class:`genomvar.vcf_utils.VCFRow` instance. 
-
-        For indels reference is need to build correct REF field.
-
-        Parameters
-        ----------
-        reference : Reference
-            Reference sequence
-
-        kwds : VCF fields
-            optional. If given, these and only these parameters are 
-            used to populate corresponding VCF fields: ``id``, 
-            ``qual``, ``filter``, ``info``. 
-            These parameters are taken as is and converted to string
-            before returning a VCFRow. 
-
-            Any other keyword arguments are ignored.
-
-        Returns
-        -------
-        row : VCFRow
-            :class:`genomvar.vcf_utils.VCFRow` object instance
-
-        Notes
-        -----
-        >>> factory = variant.VariantFactory()
-        >>> v1 = factory.from_edit('chr15rgn',2093,'TGG','CCC')
-        >>> row = v1.to_vcf_row()
-        >>> row
-        <VCFRow chr15rgn:2094 TGG->CCC>
-        >>> print(row)
-        chr15rgn	2094	.	TGG	CCC	.	.	.
-
-        >>> print(v1.to_vcf_row(id=123,info='DP=10'))
-        chr15rgn	2094	123	TGG	CCC	.	.	DP=10
-        """
-        pos, ref, alt = self.get_vcf_notation(
-            reference=reference)
-        return VCFRow(self.chrom,pos,
-                      kwds.get('id'),
-                      ref.upper(),alt.upper(),
-                      kwds.get('qual'),
-                      kwds.get('filter'),
-                      kwds.get('info'))
-
 class MNP(VariantBase):
     """
     Multiple-nucleotide polymorphism.  Substitute N nucleotides of the
@@ -271,7 +227,7 @@ class MNP(VariantBase):
     def get_key(self):
         return ('MNP',self.chrom,self.start,self.end,self.alt)
 
-    def get_vcf_notation(self,vcf_notation=None,reference=None):
+    def _get_vcf_notation(self,vcf_notation=None,reference=None):
         ref = self.ref if self.ref else self._get_vcf_ref(
             self.start,self.end,vcf_notation=vcf_notation,reference=reference)
         alt = self.alt
@@ -357,7 +313,7 @@ class Ins(Indel):
         else: # regular ins
             return self.edit_equal(other)
 
-    def get_vcf_notation(self,vcf_notation=None,reference=None):
+    def _get_vcf_notation(self,vcf_notation=None,reference=None):
         ref = self._get_vcf_ref(
             self.start-1,self.start,vcf_notation=vcf_notation,
             reference=reference)
@@ -398,7 +354,7 @@ class Del(Indel):
         else: # regular ins
             return self.edit_equal(other)
 
-    def get_vcf_notation(self,vcf_notation=None,reference=None):
+    def _get_vcf_notation(self,vcf_notation=None,reference=None):
         ref = self._get_vcf_ref(
             self.start-1, self.end,vcf_notation=vcf_notation,
             reference=reference)
@@ -508,7 +464,7 @@ class AmbigIns(AmbigIndel,Ins):
         else:
             return False
 
-    def get_vcf_notation(self,vcf_notation=None,reference=None):
+    def _get_vcf_notation(self,vcf_notation=None,reference=None):
         ref = self._get_vcf_ref(
             self.start-1, self.start,
             vcf_notation=vcf_notation,reference=reference)
@@ -573,7 +529,7 @@ class AmbigDel(AmbigIndel,Del):
             else:
                 return False
 
-    def get_vcf_notation(self,vcf_notation=None,reference=None):
+    def _get_vcf_notation(self,vcf_notation=None,reference=None):
         ref = self._get_vcf_ref(
             self.start-1, self.start+(self.act_end-self.act_start),
             vcf_notation=vcf_notation,
@@ -599,7 +555,7 @@ class Mixed(VariantBase):
     def get_key(self):
         return ('Mixed',self.chrom,self.start,self.end,self.alt)
 
-    def get_vcf_notation(self,vcf_notation=None,reference=None):
+    def _get_vcf_notation(self,vcf_notation=None,reference=None):
         ref = self.ref if self.ref else self._get_vcf_ref(
             self.start,self.end,vcf_notation=vcf_notation,reference=reference)
         alt = self.alt
@@ -620,8 +576,7 @@ class Haplotype(VariantBase):
 
         super().__init__(chrom,start,ref='-',alt='-',end=end)
         self.data = ITree()
-        ivl_id = [self.data.insert(v.start,v.end) for v in variants]
-        self._variants = OrderedDict(list(zip(ivl_id,variants)))
+        ivl_id = [self.data.insert(v.start,v.end,v) for v in variants]
 
     def __str__(self):
         return '<Haplotype {}:{}-{} of {} variants>'\
@@ -649,8 +604,8 @@ class Haplotype(VariantBase):
         -------
         vrt : variants
         """
-        for iv in self.data.find(start,end):
-            yield self._variants[iv]
+        for s,e,v in self.data.find(start,end):
+            yield v
 
     @classmethod
     def from_variants(cls,variants):
@@ -694,8 +649,8 @@ class Haplotype(VariantBase):
 
     @property
     def variants(self):
-        for vrt in self._variants.values():
-            yield vrt
+        for s,e,v in self.data.iter_ivl():
+            yield v
 
     def get_key(self):
         return tuple([v.key for v in self.variants])
@@ -708,7 +663,7 @@ class Asterisk(VariantBase):
     def nof_unit_vrt(self):
         return 0
 
-    def get_vcf_notation(self,*args,**kwds):
+    def _get_vcf_notation(self,*args,**kwds):
         raise NotImplementedError
 
 class GenomVariant(object):
@@ -741,16 +696,6 @@ class GenomVariant(object):
     def __repr__(self):
         return 'GenomVariant({})'.format(repr(self.base),str(self.GT))
 
-    @classmethod
-    def _format_info(cls, info, _writers=None):
-        if info is None:
-            return '.'
-        if isinstance(info, np.void):
-            _info = [_writers[k](k,v) for k,v in zip(info.dtype.fields, info)]
-        else:
-            _info = ['{}={}'.format(k,v) for k,v in \
-                             info.items()]
-        return ';'.join(_info)
 
     def edit_equal(self,other):
         """
@@ -784,73 +729,6 @@ class GenomVariant(object):
         else:
             raise NoVCFNotationError('Out of bounds of vcf notation ref')
         return ref
-
-    def to_vcf_row(self, reference=None, _writers=None,
-                   **kwds):
-        """Formats a variant to a VCF row. 
-
-        For indels reference might be needed to build correct REF field.
-        Fields ``id``, ``qual``, ``filter``, ``info``, are populated from
-        keyword parameters or (if not given)
-        from corresponding ``attrib`` keys. FORMAT and samples DATA are
-        not yet supported.
-
-        Parameters
-        ----------
-        reference : Reference
-            Reference sequence
-
-        kwds : VCF fields
-            optional. If given, these and only these parameters are 
-            used to populate corresponding VCF fields: ``id``, 
-            ``qual``, ``filter``, ``info``. 
-            These parameters are taken as is and converted to string
-            before returning a VCFRow. 
-
-            Any other keyword arguments are ignored.
-
-        Returns
-        -------
-        row : VCFRow
-            :class:`genomvar.vcf_utils.VCFRow` object instance
-
-        Notes
-        -----
-        >>> factory = variant.VariantFactory()
-        >>> v1 = factory.from_edit('chr15rgn',2093,'TGG','CCC')
-        >>> row = v1.to_vcf_row()
-        >>> row
-        <VCFRow chr15rgn:2094 TGG->CCC>
-        >>> print(row)
-        chr15rgn	2094	.	TGG	CCC	.	.	.
-
-        >>> print(v1.to_vcf_row(id=123,info='DP=10'))
-        chr15rgn	2094	123	TGG	CCC	.	.	DP=10
-        """
-        def _get_filter(v):
-            if v is None:
-                return
-            elif isinstance(v, list):
-                return ';'.join(v)
-            else:
-                return str(v)
-
-        pos, ref, alt = self.base.get_vcf_notation(
-            vcf_notation=self.attrib.get('vcf_notation'),
-            reference=reference)
-        dt = self.attrib
-        if 'info' in kwds:
-            info = kwds['info']
-        elif 'info' in dt:
-            info = self._format_info(dt['info'], _writers=_writers)
-        else:
-            info = None
-        return VCFRow(self.chrom,pos,
-                      kwds.get('id', dt.get('id')),
-                      ref.upper(),alt.upper(),
-                      kwds.get('qual', dt.get('qual')),
-                      _get_filter(kwds.get('filter',dt.get('filter'))),
-                      info)
 
     def _get_vcf_ref(self,start,end,reference=None):
         try:
@@ -897,12 +775,12 @@ class VariantFactory(object):
           <SNP chr1:14 C/A>
           >>> print(fac.from_hgvs('chrW:g.19_21del'))
           <Del chrW:18-21 NNN/->
-          >>> print(fac.from_hgvs('chrZ:g.10_11insCCT'))
-          <Ins chrZ:10 -/CCT>
-          >>> print(fac.from_hgvs('chr23:g.10delinsGA'))
-          <Mixed chr23:9-10 -/GA>
-          >>> print(fac.from_hgvs('chr24:g.145_147delinsTGG'))
-          <MNP chr24:144-147 NNN/TGG>
+          >>> print(fac.from_hgvs('chr24:g.10_11insCCT'))
+          <Ins chr24:10 -/CCT>
+          >>> print(fac.from_hgvs('chr24:g.10delinsGA'))
+          <Mixed chr24:9-10 -/GA>
+          >>> print(fac.from_hgvs('chr23:g.145_147delinsTGG'))
+          <MNP chr23:144-147 NNN/TGG>
         """
         chrom,rest = st.split(':',maxsplit=1)
         tp,posedit = rest.split('.',maxsplit=1)

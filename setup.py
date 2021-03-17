@@ -9,7 +9,7 @@ def readme():
         return desc
 
 setup(name='genomvar',
-      version='0.2.12',
+      version='0.2.14',
       description='Sequence variant analysis in Python',
       long_description=readme(),
       classifiers=[
@@ -27,9 +27,8 @@ setup(name='genomvar',
           'genomvar':['tmpl/*']
       },
       install_requires=[
-          'rbi-tree',
-          'jinja2',
-          'pysam'],
+          'rbi-tree>=0.1.3.1',
+          'jinja2'],
       test_suite='unittest',
       tests_require=['setuptools'],
       zip_safe=False)

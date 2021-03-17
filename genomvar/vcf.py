@@ -14,7 +14,7 @@ Alternatively iteration of variants is supported. It yields
     >>> reader = VCFReader('example.vcf.gz')
     >>> vrt = next(reader.iter_vrt(parse_info=True, parse_samples=True))
     >>> print(vrt)
-    <GenomVariant: Del chr15rgn:23-24 G/->
+    <GenomVariant: Del chr24:23-24 G/->
     >>> print(vrt.attrib['info'])
     {'NSV': 2, 'AF': 0.5, 'DP4': (11, 22, 33, 44), 'ECNT': 1,\
     'pl': 3, 'mt': 'SUBSTITUTE', 'RECN': 18, 'STR': None}
@@ -32,25 +32,24 @@ parsed.
 import os
 import warnings
 import heapq
-from itertools import dropwhile,groupby,repeat,takewhile,zip_longest,islice
+from itertools import dropwhile,groupby,repeat,takewhile,\
+    zip_longest,islice,chain,repeat
 from collections import namedtuple,OrderedDict,deque
 import re
 import gzip
 import numpy as np
-from genomvar import Reference,singleton,StructuralVariantError,\
+from genomvar import Reference,SINGLETON,StructuralVariantError,\
     variant,ChromSet,VCFSampleMismatch,\
     UnsortedVariantFileError,MAX_END,NoIndexFoundError
-from genomvar.utils import rgn_from,grouper
+from genomvar.utils import rgn_from, grouper
 from genomvar.variant import GenomVariant,VariantFactory
 import genomvar
-from genomvar.vcf_utils import VCFRow
+from genomvar.vcf_utils import (VCFRow, VCFInfoSpec, VCF_info_fields,
+                                _make_field_writer_func,
+                                header as vcf_header,
+                                dtype2string, string2dtype,
+                                field_writer_simple)
 
-# Map of VCF types to NumPy types
-string2dtype = {'Float':np.float64,'Integer':np.int64,
-                'String':np.object_,'Flag':np.bool_,
-                'Character':'U1'}
-# inverse for writing VCFs
-dtype2string = {v:k for k,v in string2dtype.items()}
 
 # data type of main variants array of VariantSet class
 dtype0 = np.dtype([('ind',np.int_),('haplotype',np.int_),('chrom','O'),
@@ -194,7 +193,145 @@ def _parse_gt(gt,ind):
         gt_cache[(gt,ind)] = GT
         return GT
 
+def validate_spec(spec):
+    name, 
+    
+class VCFWriter(object):
+    """Class for writing variant to VCF format."""
+    def __init__(self, reference=None, info_spec=None):
+        if isinstance(reference, str):
+            self.reference = Reference(reference)
+        else:
+            self.reference = reference
+        if not info_spec is None:
+            self.writers = {}
+            dtype = {}
+            for spec in info_spec:
+                if len(spec)<3:
+                    raise ValueError(
+                        'INFO spec expected to have at '\
+                        +'least 3 fields while {} found'\
+                        .format(len(spec)))
+                _spec = VCFInfoSpec(
+                    *islice(
+                        chain.from_iterable(
+                            [spec, repeat(None)]),
+                        6))
+                self.writers[_spec.NAME] = _make_field_writer_func(
+                    _spec.TYPE, _spec.NUMBER)
+                dt = {
+                    'name' : _spec.NAME,
+                    'number' : _spec.NUMBER,
+                    'type' : _spec.TYPE,
+                    'dtype' : string2dtype[_spec.TYPE],
+                    'description' : _spec.DESCRIPTION,
+                    'source' : _spec.SOURCE,
+                    'version' : _spec.VERSION
+                }
+                dtype[_spec.NAME] = dt
+            self.dtype = dtype
 
+    def get_header(self):
+        if hasattr(self, 'dtype'):
+            info = [{f.lower():p.get(f.lower(), '.') for f in VCF_info_fields} \
+                    for p in self.dtype.values()]
+        else:
+            info = {}
+        header = vcf_header.render(
+            info=info,
+            ctg_len=self.reference.ctg_len if self.reference else {})
+        return header
+
+    @staticmethod
+    def _get_filter(v):
+        if v is None:
+            return
+        elif isinstance(v, list):
+            return ';'.join(v)
+        else:
+            return str(v)
+
+    def get_row(self, vrt, **kwds):
+        """Formats a variant to a :class:`genomvar.vcf_utils.VCFRow` instance. 
+
+        For indels writer with reference 
+        might be needeed to costruct correct REF field.
+
+        Parameters
+        ----------
+        vrt : Variant instance
+            variant to get row for. 
+
+        kwds : VCF fields
+            optional. If given, these and only these parameters are 
+            used to populate corresponding VCF fields: ``id``, 
+            ``qual``, ``filter``, ``info``. 
+            These parameters are taken as is and converted to string
+            before returning a VCFRow. 
+            If the keyword is not given corresponding field will be 
+            populated from ``attrib`` attribute if possible.
+
+            Any other keyword arguments are ignored.
+
+        Returns
+        -------
+        row : VCFRow
+            :class:`genomvar.vcf_utils.VCFRow` object instance
+
+        Notes
+        -----
+        >>> factory = variant.VariantFactory()
+        >>> writer = VCFWriter()
+        >>> v1 = factory.from_edit('chr24', 2093, 'TGG', 'CCC')
+        >>> row = writer.get_row(v1)
+        >>> row
+        <VCFRow chr24:2094 TGG->CCC>
+        >>> print(row)
+        chr24	2094	.	TGG	CCC	.	.	.
+
+        >>> print(writer.get_row(v1, id=123, info='DP=10'))
+        chr24	2094	123	TGG	CCC	.	.	DP=10
+        """
+        if hasattr(vrt, 'attrib'):
+            pos, ref, alt = vrt._get_vcf_notation(
+                vcf_notation=vrt.attrib.get('vcf_notation'),
+                reference=self.reference)
+            dt = vrt.attrib
+            if 'info' in kwds:
+                info = kwds['info']
+            elif 'info' in dt and not dt['info'] is None:
+                info = self._format_info(dt['info'])
+            else:
+                info = '.'
+            r = VCFRow(vrt.chrom, pos,
+                       kwds.get('id', dt.get('id')),
+                       ref.upper(), alt.upper(),
+                       kwds.get('qual', dt.get('qual')),
+                       self._get_filter(kwds.get('filter', dt.get('filter'))),
+                       info)
+            return r
+        else:
+            pos, ref, alt = vrt._get_vcf_notation(reference=self.reference)
+            return VCFRow(vrt.chrom, pos, kwds.get('id', '.'),
+                          ref.upper(),alt.upper(),
+                          kwds.get('qual', '.'), kwds.get('filter', '.'),
+                          kwds.get('info', '.'))
+
+
+    def _format_info(self, info):
+        if info is None:
+            return '.'
+
+        if isinstance(info, np.void):
+            # special case of VariantSet read-in INFO data
+            _info = [self.writers[k](k,v) for k,v in zip(info.dtype.fields, info)]
+        else:
+            if hasattr(self, 'writers'):
+                _info = [w(k,info.get(k)) for k,w in \
+                         self.writers.items()]
+            else:
+                _info = [field_writer_simple(k,v) for k,v in info.items()]
+        return ';'.join(_info)
     
 class VCFReader(object):
     """Class to read VCF files."""
@@ -219,12 +356,6 @@ class VCFReader(object):
                 else:
                     raise OSError('{} not found'.format(index))
 
-            # if self.idx_file:
-            #     self.tabix = pysam.TabixFile(
-            #         filename=self.fl, index=self.idx_file)
-            # else:
-            #     self.tabix = None
-
             if self.compressed:
                 self.openfn = gzip.open
             else:
@@ -243,11 +374,11 @@ class VCFReader(object):
         self._samples = []
         for cnt,line in enumerate(self.buf):
             if line.startswith('##INFO'):
-                nm,dat = self._parse_dtype(line)
-                self._dtype['info'][nm] = dat
+                dat = self._parse_dtype(line)
+                self._dtype['info'][dat['name']] = dat
             elif line.startswith('##FORMAT'):
-                nm,dat = self._parse_dtype(line)
-                self._dtype['format'][nm] = dat
+                dat = self._parse_dtype(line)
+                self._dtype['format'][dat['name']] = dat
             elif line.startswith('#CHROM'):
                 # this should be the last header line
                 self.header_len = cnt + 1
@@ -277,21 +408,11 @@ class VCFReader(object):
     @staticmethod
     def _parse_dtype(line):
         """Parses VCF header and returns correct datatypes."""
-        info_rx = '##INFO=\<ID=(\S+),Number=([\w.]+),'\
-            +'Type=(\w+),Description="(.*)".*\>'
-        format_rx = '##FORMAT=\<ID=(\S+),Number=([\w.]+),'\
-            +'Type=(\w+),Description="(.*)".*\>'
+        rx = '##(?:(?:INFO)|(?:FORMAT))=\<ID=(\S+),Number=([\w.]+),'\
+            +'Type=(\w+),Description="(.*)"(:?,Source="(.*)")?(?:,Version=".*")?\>'
+        match = re.match(rx, line)
+        NAME,NUMBER,TYPE,DESCRIPTION,SOURCE,VERSION = match.groups()
 
-        if line.startswith('##INFO'):
-            rx = info_rx
-            hh = 'info'
-        elif line.startswith('##FORMAT'):
-            rx = format_rx
-            hh = 'format'
-        else:
-            raise ValueError
-        match = re.match(rx,line)
-        NAME,NUMBER,TYPE,DESCRIPTION = match.groups()
         try:
             num = int(NUMBER)
         except ValueError:
@@ -311,9 +432,10 @@ class VCFReader(object):
             tp = np.object_
         else:
             raise ValueError('Unknown NUMBER:'+num)
-        return NAME,{'type':tp, 'size':size, 'number':num,
-                     'description':DESCRIPTION}
-
+        return {'name':NAME, 'type':TYPE, 'dtype':tp,
+                'size':size, 'number':num,
+                'description':DESCRIPTION}
+        
     def _sample_indices(self,samples):
         ind = {}
         for sample in samples:
@@ -468,11 +590,11 @@ class VCFReader(object):
                         tups['vrt'].append( (chrom,start,end,ref,alt,\
                                              cls,start2,end2) )
                         added = 1
-                        haps.append(singleton)
+                        haps.append(SINGLETON)
                     else:
                         tups['vrt'].append(base)
                         added = 1
-                        haps.append(singleton)
+                        haps.append(SINGLETON)
 
                     # Adding VCF notation related fields
                     tups['vcf'].append([row.POS-1,row.REF,row.ALT,row.ID,
@@ -521,8 +643,8 @@ class VCFReader(object):
             if parse_info:
                 for ind,field in enumerate(self._dtype['info']):
                     fd = self._dtype['info'][field]
-                    dtype = fd['type'] if fd['size']==1 \
-                        else (fd['type'],fd['size'])
+                    dtype = fd['dtype'] if fd['size']==1 \
+                        else (fd['dtype'],fd['size'])
                     ar = np.zeros(dtype=dtype,shape=cur_sz)
                     try:
                         ar[:] = zipped['info'][ind]
@@ -540,8 +662,8 @@ class VCFReader(object):
                 for samp in self._samples:
                     for ind,field in enumerate(self._dtype['format']):
                         fd = self._dtype['format'][field]
-                        dtype = fd['type'] if fd['size']==1 \
-                            else (fd['type'],fd['size'])
+                        dtype = fd['dtype'] if fd['size']==1 \
+                            else (fd['dtype'],fd['size'])
                         ar = np.zeros(dtype=dtype,shape=cur_sz)
                         try:
                             ar[:] = zipped['sampdata'][samp][ind]
@@ -850,11 +972,11 @@ class BCFReader(VCFReader):
         buf = self.get_buf()
         for cnt,line in enumerate(str(buf.header).splitlines()):
             if line.startswith('##INFO'):
-                nm,dat = self._parse_dtype(line)
-                self._dtype['info'][nm] = dat
+                dat = self._parse_dtype(line)
+                self._dtype['info'][dat['name']] = dat
             elif line.startswith('##FORMAT'):
-                nm,dat = self._parse_dtype(line)
-                self._dtype['format'][nm] = dat
+                dat = self._parse_dtype(line)
+                self._dtype['format'][dat['name']] = dat
             elif line.startswith('#CHROM'):
                 # this should be the last header line
                 self.header_len = cnt + 1
@@ -908,7 +1030,7 @@ class _DataParser(object):
         self.none = {'info':[],'format':[]}
         for hh in ['info','format']:
             for field,props in self.dtype[hh].items():
-                tp = props['type']
+                tp = props['dtype']
                 sz = props['size']
                 num = props['number']
                 self.converters[hh][field] = _make_converter_func(tp,num)
@@ -1026,9 +1148,9 @@ class _DataParser(object):
         dtype = []
         for field,props in self.dtype[hh].items():
             if props['size']==1:
-                dtype.append( (field,props['type']) )
+                dtype.append( (field,props['dtype']) )
             else:
-                dtype.append( (field,props['type'],props['size']) )
+                dtype.append( (field,props['dtype'],props['size']) )
         return dtype
 
 class _BCFDataParser(_DataParser):
@@ -1038,7 +1160,7 @@ class _BCFDataParser(_DataParser):
         self.none = {'info':[],'format':[]}
         for hh in ['info','format']:
             for field,props in self.dtype[hh].items():
-                tp = props['type']
+                tp = props['dtype']
                 sz = props['size']
                 num = props['number']
                 self.converters[hh][field] = _make_converter_func(tp,num,convert=False)
