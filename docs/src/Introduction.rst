@@ -66,13 +66,13 @@ with some data associated with variants in the latter.
 
 This case is different from the previous in that DB file might not
 comfortably fit into memory. Class
-:class:`~genomvar.varset.IndexedVariantFileSet` can be used for this
+:class:`~genomvar.varset.VariantSetFromFile` can be used for this
 purpose:
 
 .. code-block:: python
 
     >>> vs = varset.VariantSet.from_vcf('vcf_of_interest.vcf')
-    >>> dbSNP = varset.IndexedVariantFileSet('DBSNP.vcf.gz')
+    >>> dbSNP = varset.VariantSetFromFile('DBSNP.vcf.gz', index=Trueg)
     >>> annots = []
     >>> for vrt in vs.iter_vrt():
     >>>     m = dbSNP.match(vrt)

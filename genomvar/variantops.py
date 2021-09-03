@@ -13,9 +13,9 @@ def novlp_grp(variants):
       v2,v4      G    A
 
     >>> novlp_grp([v1,v2,v3,v4])
-    [[MNP""<1:1-4 TTA->AGT GT=None>,SNP""<1:2-3 T->G GT=None>],
-     [MNP""<1:5-7 AT->TG GT=None>],
-     [SNP""<1:7-8 T->A GT=None>]]
+    [[MNP""<1:1-4 TTA->AGT>,SNP""<1:2-3 T->G GT=None>],
+     [MNP""<1:5-7 AT->TG>],
+     [SNP""<1:7-8 T->A>]]
     """
     if len(variants)==1:
         yield variants
@@ -57,10 +57,10 @@ def novlp_cmbtns(variants):
       vrt2,vrt4  G    A
 
     >>> novlp_cmbtns([vrt1,vrt2,vrt3,vrt4])
-    [[MNP""<1:1-4 TTA->AGT GT=None>,
-         MNP""<1:5-7 AT->TG GT=None>,SNP""<1:7-8 T->A GT=None>],
-     [SNP""<1:2-3 T->G GT=None>,
-         MNP""<1:5-7 AT->TG GT=None>,SNP""<1:7-8 T->A GT=None>]]
+    [[MNP""<1:1-4 TTA->AGT>,
+         MNP""<1:5-7 AT->TG>,SNP""<1:7-8 T->A>],
+     [SNP""<1:2-3 T->G>,
+         MNP""<1:5-7 AT->TG>,SNP""<1:7-8 T->A>]]
     """
 
     if len(variants) == 1:
@@ -123,10 +123,10 @@ def _cmp_mnps(vrt,variants,action):
     # v2,v4      G    A
 
     >>> _cmp_mnps(v0,[v1,v2,v3,v4],'comm')
-    [SNP""<1:1-4 TTA->AGT GT=None>,SNP""<1:5-8 ATT->TGA GT=None>]
+    [SNP""<1:1-4 TTA->AGT>,SNP""<1:5-8 ATT->TGA>]
 
     >>> _cmp_mnps(v0,[v1,v2,v3,v4],'diff')
-    [SNP""<1:4-5 T->C GT=None>]
+    [SNP""<1:4-5 T->C>]
     """
     alt = ['-']*len(vrt.alt)
     _key = lambda cmbtn: len(list(filter(lambda e: e!='-',
@@ -190,39 +190,39 @@ def nof_snp_vrt(mnps):
     
 def matchv2(v1,v2,match_partial=True,match_ambig=False):
     """Take v1 (non-compound) and v2 (maybe Compound) and returns a 
-    list of [(sub-v2,score),...]"""
+    list of [([sub-v2, ...], score), ...]"""
     
-    if v2.is_instance(variant.Haplotype):
+    if v2.is_variant_instance(variant.Haplotype):
         ovlp = v2.find_vrt(v1.start,v1.end)
     else:
         ovlp = [v2]
     m = []
-    if v1.is_instance(variant.MNP):
+    if v1.is_variant_instance(variant.MNP):
         # vrt holds matching MNPs
         if match_partial:
-            vrt = list(filter(lambda o: o.is_instance(variant.MNP),ovlp))
+            vrt = list(filter(lambda o: o.is_variant_instance(variant.MNP),ovlp))
             s = _mnp_isect(v1,vrt)
             if len(vrt)>0:
-                if v1.is_instance(variant.SNP):
-                    assert len(vrt)==1
+                if v1.is_variant_instance(variant.SNP):
+                    assert len(vrt)==1 # ???
                 score = len(s)-s.count('-')
                 if score>0:
                     m.append( (vrt,score) )
         else:
             vrt = list(filter(
-                lambda o: o.is_instance(variant.MNP) and \
-                o.start==v1.start and o.end==v1.end \
-                and o.alt==v1.alt,ovlp))
+                lambda o: o.is_variant_instance(variant.MNP) and \
+                     o.start==v1.start and o.end==v1.end \
+                     and o.alt==v1.alt,ovlp))
             if vrt:
-                m.append( (vrt[0],v1.end-v1.start) )
-    elif v1.is_instance(variant.AmbigIndel):
+                m.append( (vrt, v1.end-v1.start) )
+    elif v1.is_variant_instance(variant.AmbigIndel):
         if match_ambig:
             vrt = list(filter(lambda o: v1.ambig_equal(o),ovlp))
         else:
             vrt = list(filter(lambda o: v1.edit_equal(o),ovlp))
         if len(vrt)>0:
             m.append( (vrt,1) )
-    elif v1.is_instance(variant.Indel):
+    elif v1.is_variant_instance(variant.Indel):
         vrt = list(filter(
             lambda o: v1.edit_equal(o),ovlp))
         if len(vrt)>0:
@@ -236,8 +236,8 @@ def matchv(target,locus,match_partial=True,match_ambig=False):
     """
     if len(locus)==0:
         return {}
-    if not target.is_instance(variant.Haplotype):
-        if target.is_instance(variant.MNP):
+    if not target.is_variant_instance(variant.Haplotype):
+        if target.is_variant_instance(variant.MNP):
             tot_dt = []
             for grp in novlp_grp(locus):
                 grp_dt = []
@@ -246,8 +246,9 @@ def matchv(target,locus,match_partial=True,match_ambig=False):
                     cmb_score = 0
                     _dt = []
                     for locusv in cmb:
-                        m = matchv2(target,locusv,match_ambig=match_ambig,
-                                     match_partial=match_partial)
+                        m = matchv2(
+                            target, locusv, match_ambig=match_ambig,
+                            match_partial=match_partial)
                         # m is {target_key:([vrt_key from locus],score)}
                         for locus_vrts,vrt_score in m:
                             cmb_score += vrt_score
@@ -257,13 +258,13 @@ def matchv(target,locus,match_partial=True,match_ambig=False):
                         grp_score = cmb_score
                 tot_dt.extend(grp_dt)
             return tot_dt
-        elif target.is_instance(variant.Indel):
-            if not any((v.is_instance(variant.Haplotype) for v in locus)):
+        elif target.is_variant_instance(variant.Indel):
+            if not any((v.is_variant_instance(variant.Haplotype) for v in locus)):
                 # this could be done using matchv2 but dealing
                 # with it explicitely for performance
                 if match_ambig:
                     indels = filter(
-                        lambda v: v.is_instance(variant.Indel),locus)
+                        lambda v: v.is_variant_instance(variant.Indel),locus)
                     return list(filter(
                         lambda v: target.ambig_equal(v),indels))
                     
@@ -314,7 +315,7 @@ def cmpv2(target,match,action,callback=None):
     Returns a comparison result."""
     if not match:
         raise ValueError('no match')
-    if target.is_instance(variant.MNP):
+    if target.is_variant_instance(variant.MNP):
         vrt2add = []
         if isinstance(target,variant.GenomVariant) or callback:
             for vrt in _cmp_mnps(target,match,action=action):
@@ -326,7 +327,7 @@ def cmpv2(target,match,action,callback=None):
         else:
             vrt2add.extend(_cmp_mnps(target,match,action=action))
         return vrt2add
-    else: # target.is_instance(variant.Indel):
+    else: # target.is_variant_instance(variant.Indel):
         if action=='comm':
             if callback:
                 cv = callback(match)
@@ -366,7 +367,7 @@ def cmpv(target,match,action,callback=None):
     -------
     cmp_result : list of :class:`variant.GenomVariant`.
     """
-    if not target.is_instance(variant.Haplotype):
+    if not target.is_variant_instance(variant.Haplotype):
         if not match:
             if action=='diff':
                 return [target]

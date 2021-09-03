@@ -48,18 +48,13 @@
 <span id="variant-sets"></span><h1>Variant sets<a class="headerlink" href="#module-genomvar.varset" title="Permalink to this headline">¶</a></h1>
 <p>Module <code class="docutils literal notranslate"><span class="pre">varset</span></code> defines variant set classes which are containers of variants
 supporting set-like operations, searching variants, export to NumPy…</p>
-<p>There are several classes depending on whether all the variants are loaded
-into memory or not and whether the object is mutable:</p>
+<p>There are two classes depending on whether all the variants are loaded
+into memory or not:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p><a class="reference internal" href="Package_contents.html#genomvar.varset.VariantSet" title="genomvar.varset.VariantSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">VariantSet</span></code></a> is immutable, in-memory, random
-access supporting class</p></li>
-<li><p><a class="reference internal" href="Package_contents.html#genomvar.varset.MutableVariantSet" title="genomvar.varset.MutableVariantSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">MutableVariantSet</span></code></a> mutable, in-memory, random
-access</p></li>
-<li><p><a class="reference internal" href="Package_contents.html#genomvar.varset.VariantFileSet" title="genomvar.varset.VariantFileSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">VariantFileSet</span></code></a> immutable, VCF file storage, no
-random access</p></li>
-<li><p><a class="reference internal" href="Package_contents.html#genomvar.varset.IndexedVariantFileSet" title="genomvar.varset.IndexedVariantFileSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">IndexedVariantFileSet</span></code></a> immutable, VCF file
-storage, random access</p></li>
+<li><p><a class="reference internal" href="Package_contents.html#genomvar.varset.VariantSet" title="genomvar.varset.VariantSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">VariantSet</span></code></a> in-memory</p></li>
+<li><p><a class="reference internal" href="Package_contents.html#genomvar.varset.VariantSetFromFile" title="genomvar.varset.VariantSetFromFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">VariantSetFromFile</span></code></a> can read VCF files
+on demand, needs index for random access</p></li>
 </ul>
 </div></blockquote>
 <p>Important operation on variant sets is their comparison, answering a
@@ -109,12 +104,7 @@ to <code class="docutils literal notranslate"><span class="pre">vs1</span></code
 </pre></div>
 </div>
 <p>This does not require any indexes because <code class="docutils literal notranslate"><span class="pre">test.vcf</span></code> is assumed to
-be sorted by coordinate. Using
-<a class="reference internal" href="Package_contents.html#genomvar.varset.IndexedVariantFileSet" title="genomvar.varset.IndexedVariantFileSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">IndexedVariantFileSet</span></code></a> would give the same
-result. The latter is actually preferred because when comparing object of
-<a class="reference internal" href="Package_contents.html#genomvar.varset.VariantFileSet" title="genomvar.varset.VariantFileSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">VariantFileSet</span></code></a> class on the first pass
-chromosome ordering will be evaluated and then the actual result will
-start to be processed.</p>
+be sorted by coordinate.</p>
 </div>
 
 

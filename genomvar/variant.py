@@ -17,7 +17,7 @@ All variants have ``start`` and ``end`` attributes defining a range they
 act on and can be searched overlap for.
 
 To test whether a variant is instance of some type
-:meth:`~VariantBase.is_instance` method can be used.  Variant equality
+:meth:`~VariantBase.is_variant_instance` method can be used.  Variant equality
 can be tested using :meth:`~VariantBase.edit_equal`.
 
 Objects can be instantiated directly, e.g.::
@@ -106,8 +106,8 @@ class VariantBase(object):
     def get_key(self):
         return (type(self),self.chrom,self.start,self.end,self.alt)
 
-    def __getattribute__(self,name):
-        return object.__getattribute__(self,name)
+    # def __getattribute__(self,name):
+    #     return object.__getattribute__(self,name)
 
     @classmethod
     def is_subclass(cls,other):
@@ -120,7 +120,7 @@ class VariantBase(object):
         else:
             return False
 
-    def is_instance(self,cls):
+    def is_variant_instance(self,cls):
         """Returns True if object's variant class is subclass of
         ``cls``.  See module :mod:`genomvar.variant` documentation for
         class hierarchy.
@@ -306,9 +306,9 @@ class Ins(Indel):
         return ('Ins',self.chrom,self.start,self.alt)
     
     def shift_equal(self,other):
-        if not other.is_instance(Ins):
+        if not other.is_variant_instance(Ins):
             return False
-        elif other.is_instance(AmbigIns):
+        elif other.is_variant_instance(AmbigIns):
             return other.shift_equal(self)
         else: # regular ins
             return self.edit_equal(other)
@@ -347,9 +347,9 @@ class Del(Indel):
         return ('Del',self.chrom,self.start,self.end)
     
     def shift_equal(self,other):
-        if not other.is_instance(Del):
+        if not other.is_variant_instance(Del):
             return False
-        elif other.is_instance(AmbigDel):
+        elif other.is_variant_instance(AmbigDel):
             return other.shift_equal(self)
         else: # regular ins
             return self.edit_equal(other)
@@ -375,14 +375,14 @@ class AmbigIndel(Indel):
                     self.alt if self.alt else '-')
 
     # def shift_equal(self,other):
-    #     if other.is_instance(AmbigIndel):
+    #     if other.is_variant_instance(AmbigIndel):
     #         a = (other.act_start-self.act_start) % len(self.seq)
     #         other_seq = other.seq
-    #     elif not other.is_instance(Indel):
+    #     elif not other.is_variant_instance(Indel):
     #         return False
     #     else:
     #         a = (other.start-self.act_start) % len(self.seq)
-    #         other_seq = other.alt if other.is_instance(Ins) else other.
+    #         other_seq = other.alt if other.is_variant_instance(Ins) else other.
     #         self_shift = self.seq[a:]+self.seq[:a]
     #         if self_shift==other.seq and self.chrom==other.chrom \
     #                  and self.vtp==other.vtp:
@@ -431,14 +431,15 @@ class AmbigIns(AmbigIndel,Ins):
                              ref=ref,alt=alt)
         
     # def edit_equal(self,other):
-    #     return other.is_instance(Ins) \
+    #     return other.is_variant_instance(Ins) \
     #         and self.chrom==other.chrom\
     #         and self.act_start==(other.act_start \
-    #                   if other.is_instance(AmbigIns) else other.start)\
+    #                   if other.is_variant_instance(AmbigIns) else other.start)\
     #         and self.alt==other.alt
 
     @property
     def seq(self):
+        """Inserted sequence."""
         return self.alt
 
     def __repr__(self):
@@ -450,9 +451,9 @@ class AmbigIns(AmbigIndel,Ins):
         return ('Ins',self.chrom,self.act_start,self.alt)
 
     def shift_equal(self,other):
-        if not other.is_instance(Ins):
+        if not other.is_variant_instance(Ins):
             return False
-        elif other.is_instance(AmbigIns):
+        elif other.is_variant_instance(AmbigIns):
             a = (other.act_start-self.act_start) % len(self.seq)
             other_seq = other.seq
         else:
@@ -509,12 +510,13 @@ class AmbigDel(AmbigIndel,Del):
 
     @property
     def seq(self):
+        """Deleted sequence."""
         return self.ref
 
     def shift_equal(self,other):
-        if not other.is_instance(Del):
+        if not other.is_variant_instance(Del):
             return False
-        elif other.is_instance(AmbigDel):
+        elif other.is_variant_instance(AmbigDel):
             other_span = other.act_end - other.act_start
             if other.start==self.start and other.end==self.end \
                        and other_span==self.act_end-self.act_start:
@@ -676,27 +678,70 @@ class GenomVariant(object):
     underlying ``base`` (start, end etc.) are accessible from
     GenomVariant object.
     """
-    def __init__(self,base,GT=None,attrib=None):
+    def __init__(self,base,attrib=None):
         if not isinstance(base,VariantBase):
             raise TypeError('Should be VariantBase or str')
         self.base = base
-        self.GT = GT
         self.attrib = attrib if attrib else {}
 
-    def __getattr__(self,name):
-        if name=='base':
-            raise AttributeError
-        return object.__getattribute__(self.base,name)
+    # def __getattr__(self,name):
+    #     if name=='base':
+    #         raise AttributeError
+    #     return object.__getattribute__(self.base,name)
 
     def __str__(self):
         return '<GenomVariant: {}'.\
-            format(self.base.__str__()[1:],
-                   getattr(self,'GT',None))
+            format(self.base.__str__()[1:])
 
     def __repr__(self):
-        return 'GenomVariant({})'.format(repr(self.base),str(self.GT))
+        return 'GenomVariant({})'.format(repr(self.base))
 
+    @property
+    def chrom(self):
+        return self.base.chrom
 
+    @property
+    def start(self):
+        return self.base.start
+
+    @property
+    def act_start(self):
+        return self.base.act_start
+    
+    @property
+    def end(self):
+        return self.base.end
+
+    @property
+    def act_end(self):
+        return self.base.act_end
+
+    @property
+    def ref(self):
+        return self.base.ref
+
+    @property
+    def alt(self):
+        return self.base.alt
+
+    @property
+    def variants(self):
+        for vrt in self.base.variants:
+            yield vrt
+
+    def find_vrt(self,start=0,end=MAX_END):
+        return self.base.find_vrt(start=start, end=end)
+    
+    @property
+    def key(self):
+        return self.base.key
+
+    def is_variant_instance(self, cls):
+        return self.base.is_variant_instance(cls)
+
+    def nof_unit_vrt(self):
+        return self.base.nof_unit_vrt()
+    
     def edit_equal(self,other):
         """
         Check if GenomVariant holds the same genome alteration
@@ -713,6 +758,16 @@ class GenomVariant(object):
         """
         
         return self.base.edit_equal(other)
+
+    def shift_equal(self, other):
+        return self.base.shift_equal(other)
+    
+    def tolist(self):
+        return self.base.tolist()
+
+    def _get_vcf_notation(self,vcf_notation=None,reference=None):
+        return self.base._get_vcf_notation(
+            vcf_notation=vcf_notation,reference=reference)
 
     def _get_ref_notation(self, start, end):
         try:

@@ -4,7 +4,7 @@ from genomvar import Reference
 from genomvar.varset import VariantBase
 from genomvar import variant
 from genomvar.vcf import VCFReader, VCFWriter
-from genomvar.vcf_utils import VCF_fields, VCFRow
+from genomvar.vcf_utils import VCF_FIELDS, VCFRow
 from genomvar.variant import GenomVariant
 from genomvar.test import MyTestCase
 
@@ -90,18 +90,18 @@ class TestVariantsCase(MyTestCase):
         self.assertEqual([vb.chrom,vb.start,vb.end,vb.ref,vb.alt],
                          ['NG_012232.1',18,21,None,None])
         vb = self.svf.from_hgvs('NG_012232.1:g.19del')
-        self.assertTrue(vb.is_instance(variant.Del))
+        self.assertTrue(vb.is_variant_instance(variant.Del))
         self.assertEqual([vb.chrom,vb.start,vb.end,vb.ref,vb.alt],
                          ['NG_012232.1',18,19,None,None])
         vb = self.svf.from_hgvs('NC_000023.10:g.10_11insCCT')
         self.assertEqual([vb.chrom,vb.start,vb.end,vb.ref,vb.alt],
                          ['NC_000023.10',10,11,None,'CCT'])
         vb = self.svf.from_hgvs('NC_000023.11:g.10delinsGA')
-        self.assertTrue(vb.is_instance(variant.Mixed))
+        self.assertTrue(vb.is_variant_instance(variant.Mixed))
         self.assertEqual([vb.chrom,vb.start,vb.end,vb.ref,vb.alt],
                          ['NC_000023.11',9,10,None,'GA'])
         vb = self.svf.from_hgvs('LRG_199:g.145_147delinsTGG')
-        self.assertTrue(vb.is_instance(variant.MNP))
+        self.assertTrue(vb.is_variant_instance(variant.MNP))
         self.assertEqual([vb.chrom,vb.start,vb.end,vb.ref,vb.alt],
                          ['LRG_199',144,147,None,'TGG'])
 
@@ -183,7 +183,7 @@ class TestVariantsCase(MyTestCase):
         def _split_multiallelic(rows):
             for row in rows:
                 for alt in row.ALT.split(','):
-                    kwds = {f:getattr(row,f) for f in VCF_fields}
+                    kwds = {f:getattr(row,f) for f in VCF_FIELDS}
                     kwds['ALT'] = alt
                     kwds['INFO'] = '.'
                     kwds['FORMAT'] = None

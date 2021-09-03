@@ -4,7 +4,8 @@ import numpy as np
 import io
 from genomvar.test import MyTestCase
 from genomvar import variant
-from genomvar.vcf import VCFReader, BCFReader, VCFWriter
+from genomvar.vcf import VCFReader, BCFReader, VCFWriter, \
+    RESERVED_FORMAT, RESERVED_INFO
 from genomvar.vcf_utils import header as vcf_header
 from pkg_resources import resource_filename as pkg_file
 
@@ -18,6 +19,40 @@ class TestVCFWriterCase(MyTestCase):
             self.chr24.get(deletion.chrom, deletion.start-1, deletion.end))
 
         writer.reference.close()
+
+    def test_minimal_VCF_definition_io(self):
+        buf = io.StringIO()
+        with open(pkg_file('genomvar.test','data/example1.vcf'), 'rt') as fh:
+            for line in fh:
+                if line.startswith('##fileformat') \
+                          or line.startswith('#CHROM') \
+                          or not line.startswith('#'):
+                    buf.write(line)
+        
+        buf.seek(0)
+        reader = VCFReader(buf)
+
+        outbuf = io.StringIO()
+        writer = VCFWriter(format_spec=[RESERVED_FORMAT.GT],
+                           samples=reader.samples)
+        variants1 = []
+        for vrt in reader.iter_vrt(parse_samples=True):
+            self.assertTrue(
+                isinstance(vrt.attrib['samples']['SAMP1']['GT'], str))
+            if vrt.attrib['samples']['SAMP1'].get('GT')=='0/1':
+                vrt.attrib['samples']['SAMP1']['GT'] = (0, 1)
+            else:
+                vrt.attrib['samples']['SAMP1']['GT'] = None
+            outbuf.write(str(writer.get_row(vrt)))
+            variants1.append(vrt)
+        variants1.sort(key=lambda v: v.start)
+        
+        outbuf.seek(0)
+        variants2 = list(VCFReader(outbuf).iter_vrt())
+        variants2.sort(key=lambda v: v.start)
+        
+        for v1, v2 in zip(variants1, variants2):
+            self.assertTrue(v1.edit_equal(v2))
         
 
 class TestVCFReaderCase(unittest.TestCase):
@@ -70,7 +105,8 @@ class TestVCFReaderCase(unittest.TestCase):
         
     def test_iter_vrt_example1(self):
         reader = VCFReader(pkg_file('genomvar.test','data/example1.vcf'))
-        vrts = list(reader.iter_vrt(parse_info=True,parse_samples=True))
+        self.assertEqual(reader.samples, ['SAMP1'])
+        vrts = list(reader.iter_vrt(parse_info=True, parse_samples=True))
         vrt1,vrt2 = vrts[:2]
 
         # Test Ref and Alt
@@ -82,6 +118,8 @@ class TestVCFReaderCase(unittest.TestCase):
         # Check row numbers
         self.assertEqual(vrt1.attrib['vcf_notation']['row'],0)
         self.assertEqual(vrt2.attrib['vcf_notation']['row'],0)
+        self.assertEqual(vrt1.attrib['allele_num'], 0)
+        self.assertEqual(vrt2.attrib['allele_num'], 1)
         # Test INFO
         self.assertEqual(vrt1.attrib['info']['AF'],0.5)
         self.assertEqual(vrt2.attrib['info']['AF'],0.5)
@@ -103,17 +141,19 @@ class TestVCFReaderCase(unittest.TestCase):
 
     def test_from_vcf_missing_values(self):
         buf = io.StringIO()
+        format_fields = (RESERVED_FORMAT.AD, RESERVED_FORMAT.DP, RESERVED_FORMAT.GT)
         header = vcf_header.render(
-            samp='\t'.join(['S1','S2']),
+            samples=['S1','S2'],
             ctg_len={},
-            format=[{'name':'AD','number':'R',
-                     'type':'Integer','description':'""'},
-                    {'name':'DP','number':'1',
-                     'type':'Integer','description':'""'}])
+            format=[{k:getattr(spec, k.upper()) for k in \
+                     ('name', 'number', 'type', 'description')} \
+                    for spec in format_fields])
+
         buf.write(header)
         buf.write('chr15\t17017413\t.\tA\tG\t38\t.\t.\tGT\t./.\t0/1\n')
         buf.write('chr15\t17017413\t.\tA\tG\t38\t.\t.\tGT:AD\t./.\t0/1:10,.\n')
         buf.write('chr15\t17017413\t.\tA\tG\t38\t.\t.\tGT:DP\t./.\t1/1:.\n')
+        buf.seek(0)
         buf.seek(0)
         vs = VCFReader(buf)
         

@@ -7,13 +7,12 @@ import re
 import warnings
 from pkg_resources import resource_filename as pkg_file
 import numpy as np
-from genomvar.varset import MutableVariantSet,\
-    VariantFileSet,IndexedVariantFileSet,VariantSet
+from genomvar.varset import VariantSetFromFile, VariantSetFromFile, VariantSet
 from genomvar.variant import VariantBase,AmbigIndel,Haplotype,VariantFactory
 from genomvar import varset, Reference
 from genomvar import OverlappingHaplotypeVars,\
     UnsortedVariantFileError,VCFSampleMismatch,NoIndexFoundError
-from genomvar.vcf import VCFRow,VCFReader
+from genomvar.vcf import VCFRow,VCFReader, RESERVED_FORMAT
 from genomvar import variant
 from genomvar.test import MyTestCase
 
@@ -38,6 +37,13 @@ class TestVariantSetCase(MyTestCase):
         buf.seek(0)
         vs = VariantSet.from_vcf(buf)
         self.assertEqual(vs.nof_unit_vrt(),0)
+
+    def test_random_sample(self):
+        vs = VariantSet.from_vcf(pkg_file('genomvar.test',
+                                          'data/example1.vcf'))
+        sample = vs.sample(5)
+        self.assertEqual(len(sample), 5)
+        
     
     def test_sort_chroms(self):
         vs = VariantSet.from_vcf(pkg_file('genomvar.test',
@@ -63,7 +69,7 @@ class TestVariantSetCase(MyTestCase):
         self.assertEqual(len(s1.ovlp(vb2,match_ambig=False)),1)
 
     def test_from_variants(self):
-        vfset = VariantFileSet(pkg_file('genomvar.test','data/example1.vcf'))
+        vfset = VariantSetFromFile(pkg_file('genomvar.test','data/example1.vcf'))
         vset = VariantSet.from_variants(list(vfset.iter_vrt()))
         vrt = list(vset.find_vrt('chr24',1200,1210))
         self.assertEqual(len(vrt),2)
@@ -105,7 +111,7 @@ class TestVariantSetCase(MyTestCase):
         vrt = list(vset.find_vrt('chr24',1200,1210))
         self.assertEqual(len(vrt),2)
         v1,v2 = vrt
-        self.assertTrue(v1.is_instance(variant.SNP))
+        self.assertTrue(v1.is_variant_instance(variant.SNP))
         self.assertEqual(v1.attrib['vcf_notation']['ref'],'G')
         self.assertEqual(v1.attrib['vcf_notation']['start'],1206)
         self.assertEqual(v1.attrib['vcf_notation']['row'],4)
@@ -115,7 +121,7 @@ class TestVariantSetCase(MyTestCase):
         vrt = list(vset.find_vrt('chr24',154,156))
         self.assertEqual(len(vrt),1)
         v1 = vrt[0]
-        self.assertTrue(v1.is_instance(variant.Ins))
+        self.assertTrue(v1.is_variant_instance(variant.Ins))
         vrt = list(vset.find_vrt('chr24',20,25))
         self.assertEqual(len(vrt),2)
         self.assertEqual(len(list(vset.iter_vrt())),16)
@@ -213,11 +219,42 @@ class TestVariantSetCase(MyTestCase):
         self.assertEqual(vs2.nof_unit_vrt(),
                          sum([v.nof_unit_vrt() for v in dropped]))
 
-class TestIndexedVariantFileCase(MyTestCase):
+    def test_match_with_haplotypes(self):
+        # REF      TGG   TT    G|
+        #          2093  2099  3200
+        # varset1  CCC   GG
+        #                CC    GG
+        #          r1   r2,r3   r4
+        r1 = factory.from_edit('chr24',2093,'TGG','CCC')
+        r2 = factory.from_edit('chr24',2098,'TT','GG')
+        r3 = factory.from_edit('chr24',2098,'TT','CC')
+        r4 = factory.from_edit('chr24',3200,'GG','G')
+
+        hap1 = Haplotype.from_variants([r1,r2])
+        ccc1 = sorted(hap1.variants,key=lambda o: o.start)[0]
+        hap2 = Haplotype.from_variants([r3,r4])
+        s1 = VariantSet.from_variants([hap1, hap2])
+
+        hap = Haplotype.from_variants([r1,r4])
+        ccc2 = sorted(hap.variants,key=lambda o: o.start)[0]
+
+        match = s1.match(hap)
+        self.assertEqual(len(match),1)
+        d1 = {k:[v2.base for v2 in v] for k,v in match.items()}
+        d2 = {ccc2.key:[ccc1]}
+        self.assertEqual(len(d1), len(d2))
+        self.assertEqual(list(d1.keys()), list(d2.keys()))
+        for k in d1:
+            self.assertTrue(
+                all(
+                    [v1.edit_equal(v2) for v1,v2 in zip(d1[k], d2[k])]))
+
+class TestVariantFileSetWithIndexCase(MyTestCase):
     def test_complex_info_example(self):
-        vset = IndexedVariantFileSet(
+        vset = VariantSetFromFile(
             pkg_file('genomvar.test','data/example_gnomad_1.vcf.gz'),
-            parse_info=True)
+            parse_info=True,
+            index=True)
         checked = False
         for vrt in vset.find_vrt(rgn='chr1:69090-69091'):
             if vrt.alt!='C':
@@ -229,8 +266,9 @@ class TestIndexedVariantFileCase(MyTestCase):
         self.assertTrue(checked)
 
     def test_find_vrt(self):
-        ivfs = IndexedVariantFileSet(
-            pkg_file('genomvar.test','data/example2.vcf.gz'))
+        ivfs = VariantSetFromFile(
+            pkg_file('genomvar.test','data/example2.vcf.gz'),
+            index=True)
         vs = VariantSet.from_vcf(
             pkg_file('genomvar.test','data/example2.vcf.gz'))
 
@@ -243,9 +281,9 @@ class TestIndexedVariantFileCase(MyTestCase):
             sum([v.nof_unit_vrt() for v in vs.iter_vrt()]))
         
     def test_find_vrt2(self):
-        vset = IndexedVariantFileSet(
+        vset = VariantSetFromFile(
             pkg_file('genomvar.test','data/example1.vcf.gz'),
-            reference=self.chr24)
+            reference=self.chr24, index=True)
         self.assertEqual(len(list(vset.find_vrt(rgn='chr24:1200-1210'))),2)
         v1,v2 = list(vset.find_vrt(rgn='chr24:1200-1210'))
         self.assertEqual([v1.start,v1.end],[1206,1207])
@@ -257,14 +295,14 @@ class TestIndexedVariantFileCase(MyTestCase):
         
         self.assertEqual(len(list(vset.find_vrt(rgn='chr24:20-30'))),2)
         v1,v2 = list(vset.find_vrt(rgn='chr24:20-30'))
-        self.assertEqual([v1.start,v1.end,v1.vtp],
+        self.assertEqual([v1.start,v1.end,type(v1.base)],
                          [23,24,variant.Del])
-        self.assertEqual([v2.start,v2.end,v2.vtp],
+        self.assertEqual([v2.start,v2.end,type(v2.base)],
                          [24,25,variant.Ins])
 
     def test_find_nonexistent_chrom(self):
         vcf  = pkg_file('genomvar.test','data/example_1000genomes_1.vcf.gz')
-        vset = IndexedVariantFileSet(vcf)
+        vset = VariantSetFromFile(vcf, index=True)
         self.assertEqual(list(vset.find_vrt('chr24')),[])
         
     def test_match(self):
@@ -273,8 +311,9 @@ class TestIndexedVariantFileCase(MyTestCase):
         # vs1      CCC   GG
         # vrt            CG    
         #          r1   r2,r3
-        vs1 = IndexedVariantFileSet(
-            pkg_file('genomvar.test','data/example1.vcf.gz'))
+        vs1 = VariantSetFromFile(
+            pkg_file('genomvar.test','data/example1.vcf.gz'),
+            index=True)
         vrt = factory.from_edit('chr24',2098,'TT','CG')
         self.assertEqual(len(vs1.match(vrt)),1)
 
@@ -285,23 +324,27 @@ class TestIndexedVariantFileCase(MyTestCase):
 
     def test_error_on_format(self):
         with self.assertRaises(NoIndexFoundError):
-            vset = IndexedVariantFileSet(
+            vset = VariantSetFromFile(
                 pkg_file('genomvar.test','data/example1.vcf'),
-                reference=self.chr24)
+                reference=self.chr24, index=True)
+            vset.find_vrt('chr1', 1, 100)
 
     def test_wrong_chrom_name_in_ref(self):
         ref = Reference(pkg_file(__name__,'data/chr25.fasta'))
-        vset = IndexedVariantFileSet(
+        vset = VariantSetFromFile(
             pkg_file('genomvar.test','data/example1.vcf.gz'),
-            reference=ref)
+            reference=ref, index=True)
         self.assertEqual(len(list(vset.find_vrt(rgn='chr24:1200-1210'))),2)
         ref.close()
         
 
     def test_class(self):
-        vset = IndexedVariantFileSet(
+        vset = VariantSetFromFile(
             pkg_file('genomvar.test','data/example1.vcf.gz'),
-            parse_info=True,reference=self.chr24,parse_samples='SAMP1')
+            parse_info=True,
+            reference=self.chr24,
+            parse_samples='SAMP1',
+            index=True)
 
         # Test find_vrt and returned INFO
         vrt = list(vset.find_vrt('chr24',1200,1210))
@@ -331,13 +374,14 @@ class TestIndexedVariantFileCase(MyTestCase):
         
     def test_no_index(self):
         with self.assertRaises(NoIndexFoundError):
-            vset = IndexedVariantFileSet(
-                pkg_file('genomvar.test','data/example3.vcf'))
+            vset = VariantSetFromFile(
+                pkg_file('genomvar.test','data/example3.vcf'),
+                index=True)
 
     def test_ctg_len_without_ref(self):
-        vset = IndexedVariantFileSet(
+        vset = VariantSetFromFile(
             pkg_file('genomvar.test','data/example1.vcf.gz'),
-            parse_samples='SAMP1')
+            parse_samples='SAMP1', index=True)
         self.assertEqual(vset.chroms,{'chr24'})
         
 class TestVariantFileCase(MyTestCase):
@@ -355,225 +399,25 @@ class TestVariantFileCase(MyTestCase):
             fh.writelines(header)
             fh.writelines(reversed(lines))
 
-        vs1 = VariantFileSet(pkg_file('genomvar.test','data/example1.vcf'))
-        vs2 = VariantFileSet(tf.name)
+        vs1 = VariantSetFromFile(pkg_file('genomvar.test','data/example1.vcf'))
+        vs2 = VariantSetFromFile(tf.name)
         with self.assertRaises(UnsortedVariantFileError):
             list(vs1.diff_vrt(vs2).iter_vrt())
 
-class MutableVariantSetTestCase(MyTestCase):
-    def test_sort_chroms(self):
-        vs = MutableVariantSet.from_vcf(
-            pkg_file('genomvar.test','data/example2.vcf.gz'),
-            max_ploidy=4)
-        vs.sort_chroms()
-        self.assertEqual(list(vs.get_chroms()),['chr23','chr24'])
-
-        vs.sort_chroms(key=lambda c: 1 if c=='chr24' else 2)
-        self.assertEqual(list(vs.get_chroms()),['chr24','chr23'])
-        
-        
-    def test_variant_addition(self):
-        # **Insertion deletion nearby**
-        #                        23
-        # TTCACTTAGCATAATGTCTTCAAG|ATT
-        # v1                   AA-|ATT
-        # v2                   AAGGATT
-        s1 = MutableVariantSet(reference=self.chr24)
-        vfac = s1.get_factory(normindel=True)
-        vb = vfac.from_edit('chr24',22,'AG','A')
-        v1 = s1.add_vrt(vb,GT=(1,0))
-        self.assertEqual(type(v1.base),variant.Del)
-        self.assertEqual([v1.start,v1.end,v1.ref,v1.alt],
-                         [23,24,'G',''])
-        # Adding insertion of G
-        vb = vfac.from_edit('chr24',23,'G','GG')
-        v2 = s1.add_vrt(vb,GT=(0,1))
-        self.assertEqual(type(v2.base),variant.AmbigIns)
-        self.assertEqual([v2.start,v2.end],[23,25])
-        self.assertEqual([v2.act_start,v2.act_end],[24,25])
-        self.assertEqual(len(list(s1.find_vrt('chr24',20,30))),2)
-
-    def test_nof_unit_vrt(self):
-        # REF      TGG   TT    G|
-        #          2093  2099  3200
-        # varset1  CCC   GG
-        #                CG    GG
-        #          v1   v2,v3   r4
-        variants = [0]*4
-        variants[0] = factory.from_edit('chr24',2093,'TGG','CCC')
-        variants[1] = factory.from_edit('chr24',2098,'TT','GG')
-        variants[2] = factory.from_edit('chr24',2098,'TT','CG')
-        variants[3] = factory.from_edit('chr24',3200,'G','GG')
-        s1 = MutableVariantSet(reference=self.chr24)
-        for vrt in variants:
-            try:
-                s1.add_vrt(vrt,GT=(1,0))
-            except OverlappingHaplotypeVars:
-                s1.add_vrt(vrt,GT=(0,1))
-        self.assertEqual(s1.nof_unit_vrt(),7)
-
-    def test_iter_vrt_by_chrom(self):
-        vset = MutableVariantSet.from_vcf(
-            pkg_file('genomvar.test','data/example1.vcf'),
-            reference=self.chr24,sample='SAMP1')
-
-        chroms = {}
-        for chrom,it in vset.iter_vrt_by_chrom():
-            chroms[chrom] = len(list(it))
-
-        self.assertEqual(set(chroms),{'chr24'})
-    def test_mixed_variant(self):
-        #                        23
-        # TTCACTTAGCATAATGTCTTCAAGATT
-        #                       AT-TT
-        s1 = MutableVariantSet(reference=self.chr24)
-        vb = factory.from_edit('chr24',23,'GA','T')
-        v1 = s1.add_vrt(vb,GT=(0,1),attrib={'info':{'f1':'1'}})
-        self.assertTrue(type(v1),variant.Mixed)
-        self.assertEqual([v1.start,v1.end,v1.ref,v1.alt,type(v1.base)],
-                         [23,25,'GA','T',variant.Mixed])
-        self.assertEqual(v1.attrib['info']['f1'],'1')
-    
-    def test_ovlp(self):
-        #                        23
-        # TTCACTTAGCATAATGTCTTCAAG|ATT
-        #                         G
-        #          interfering-> C C <- not interfering
-        s1 = MutableVariantSet(reference=self.chr24)
-        vfac = s1.get_factory(normindel=True)
-        s1.add_vrt(vfac.from_edit('chr24',23,'G','GG'),
-                   GT=(0,1))
-        vb = vfac.from_edit(chrom='chr24',start=24,ref='A',alt='C')
-        self.assertEqual(len(s1.ovlp(vb)),0)
-        vb2 = vfac.from_edit(chrom='chr24',start=23,ref='G',alt='C')
-        self.assertEqual(len(s1.ovlp(vb2,match_ambig=False)),0)
-        self.assertEqual(len(s1.ovlp(vb2,match_ambig=True)),1)
-
-        # Same reversed
-        s1 = MutableVariantSet(reference=self.chr24)
-        s1.add_vrt(vfac.from_edit('chr24',23,'G','C'),
-                   GT=(0,1))
-        s1.add_vrt(vfac.from_edit('chr24',24,'A','C'),
-                   GT=(0,1))
-        vb = vfac.from_edit(chrom='chr24',start=23,ref='G',alt='GG')
-        self.assertEqual(len(s1.ovlp(vb)),0)
-        self.assertEqual(len(s1.ovlp(vb,match_ambig=True)),1)
-
-        # ** Test insertion interference **
-        #                        23
-        # TTCACTTAGCATAATGTCTTCAAG|ATT
-        #                         G
-        s1 = MutableVariantSet(reference=self.chr24)
-        vb = vfac.from_edit('chr24',23,'G','GG')
-        s1.add_vrt(vb,GT=(0,1))
-        vb = vfac.from_edit(chrom='chr24',start=23,
-                                   ref='G',alt='GG')
-        self.assertEqual(len(s1.ovlp(vb,match_ambig=False)),1)
-        self.assertEqual(len(s1.ovlp(vb,match_ambig=True)),1)
-        vb2 = vfac.from_edit(chrom='chr24',start=23,ref='G',alt='GT')
-        self.assertEqual(len(s1.ovlp(vb,match_ambig=False)),1)
-        self.assertEqual(len(s1.ovlp(vb,match_ambig=True)),1)
-
-        # ** Test ambig insertion and deletion non-interference **
-        #                        23
-        # TTCACTTAGCATAATGTCTTCAAG|ATT
-        #                         G
-        #                       AG -T
-        s1 = MutableVariantSet(reference=self.chr24)
-        vb = vfac.from_edit('chr24',23,'G','GG')
-        s1.add_vrt(vb,GT=(0,1))
-        vb = vfac.from_edit(chrom='chr24',start=23,ref='GA',alt='G')
-        self.assertEqual(len(s1.ovlp(vb,match_ambig=False)),0)
-        self.assertEqual(len(s1.ovlp(vb,match_ambig=True)),0)
-
-        # ** Test insertion and deletion non-interference **
-        #                        23
-        # TTCACTTAGCATAATGTCTTCAAG|ATT
-        #                         C
-        #                       AG -T
-        s1 = MutableVariantSet(reference=self.chr24)
-        vb = vfac.from_edit('chr24',23,'G','GC')
-        s1.add_vrt(vb,GT=(0,1))
-        vb = vfac.from_edit(chrom='chr24',start=23,ref='GA',alt='G')
-        self.assertEqual(len(s1.ovlp(vb,match_ambig=False)),0)
-        self.assertEqual(len(s1.ovlp(vb,match_ambig=True)),0)
-
-        #            11
-        # TTCACTTAGCATAATGTC
-        #            T-AT
-        #              C
-        s1 = MutableVariantSet(reference=self.chr24)
-        vb = vfac.from_edit('chr24',11,'TA','T')
-        s1.add_vrt(vb,GT=(0,1))
-        vb = vfac.from_edit(chrom='chr24',start=13,ref='A',alt='C')
-        self.assertEqual(len(s1.ovlp(vb,match_ambig=False)),0)
-        self.assertEqual(len(s1.ovlp(vb,match_ambig=True)),1)
-
-    def test_match_func(self):
-        # REF      TGG   TT    G|
-        #          2093  2099  3200
-        # varset1  CCC   GG
-        #                CC    GG
-        #          r1   r2,r3   r4
-        r1 = factory.from_edit('chr24',2093,'TGG','CCC')
-        r2 = factory.from_edit('chr24',2098,'TT','GG')
-        r3 = factory.from_edit('chr24',2098,'TT','CC')
-        r4 = factory.from_edit('chr24',3200,'GG','G')
-
-        s1 = MutableVariantSet(reference=self.chr24)
-        hap1 = s1.add_hap_variants([r1,r2],GT=(0,1))
-        ccc1 = sorted(hap1.variants,key=lambda o: o.start)[0]
-        hap2 = s1.add_hap_variants([r3,r4],GT=(0,1),
-                                   allow_adjust_genotype=True)
-
-        s2 = MutableVariantSet(reference=self.chr24)
-        hap = s2.add_hap_variants([r1,r4],GT=(0,1))
-        ccc2 = sorted(hap.variants,key=lambda o: o.start)[0]
-
-        match = s1.match(hap)
-        self.assertEqual(len(match),1)
-        self.assertEqual(match,{ccc2.key:[ccc1]})
-
-    def test_copy_with_attr(self):
-        kwargs = {'vcf':pkg_file('genomvar.test','data/example1.vcf'),
-                  'reference':self.chr24,
-                  'sample':'SAMP1',
-                  'normindel':True,
-                  'parse_info':True}
-        s = MutableVariantSet.from_vcf(**kwargs)
-
-        s2 = s.copy()
-        _vrt = list(s2.find_vrt('chr24',150,160))
-        self.assertEqual(len(_vrt),1)
-        v = _vrt[0]
-        self.assertEqual(v.attrib['info']['AF'],1.0)
-
-
-        
-    def test_attributes(self):
-        vset = MutableVariantSet()
-        vb = factory.from_edit('chr24',2092,'TT','AC')
-        v = vset.add_vrt(vb,GT=(0,1),
-                         attrib={'info':{'origin':'manual'}})
-        self.assertEqual(v.attrib['info']['origin'],'manual')
-
-        
 class TestIO(MyTestCase):
     def test_from_vcf(self):
-        vset = MutableVariantSet.from_vcf(
+        vset = VariantSet.from_vcf(
             pkg_file('genomvar.test','data/example1.vcf'),
-            reference=self.chr24,sample='SAMP1',normindel=True)
+            reference=self.chr24, normindel=True)
 
         vrt = list(vset.find_vrt('chr24',1200,1210))
         self.assertEqual(len(vrt),2)
-        self.assertEqual(len({o.GT for o in vrt}),2)
 
         # Test presence of null operation
         vrt = list(vset.find_vrt('chr24',20,25))
         self.assertEqual(len(vrt),2)
-        self.assertEqual({o.GT for o in vrt},{(0,0,1),(0,1,0)})
         for _v in vrt:
-            if _v.vtp!=variant.Null:
+            if not _v.is_variant_instance(variant.Null):
                 self.assertEqual(_v.attrib['id'],'1')
 
     def test_from_vcf_problematic(self):
@@ -611,6 +455,8 @@ class TestIO(MyTestCase):
             pkg_file('genomvar.test','data/example1.vcf'),
             parse_info=True,parse_samples=True)
 
+        self.assertEqual(vs._samples, ['SAMP1'])
+
         # Test nested dtype
         recs = vs.to_records(nested=True)
         self.assertEqual(list(recs.dtype.fields),
@@ -638,8 +484,8 @@ class TestIO(MyTestCase):
     #     self.assertEqual(type(v).__name__,'Null')
 
     def test_from_vcf_with_attr(self):
-        s = MutableVariantSet.from_vcf(pkg_file('genomvar.test','data/example1.vcf'),parse_info=True,
-                                       sample='SAMP1')
+        s = VariantSet.from_vcf(
+            pkg_file('genomvar.test','data/example1.vcf'), parse_info=True)
         _vrt = list(s.find_vrt('chr24',150,160))
         self.assertEqual(len(_vrt),1)
         vrt = _vrt[0]
@@ -649,79 +495,22 @@ class TestIO(MyTestCase):
         _vrt = list(s.find_vrt('chr24',20,30))
         self.assertEqual(len(_vrt),2)
         for vrt in _vrt:
-            if not vrt.is_instance(variant.Null):
+            if not vrt.is_variant_instance(variant.Null):
                 self.assertEqual(vrt.attrib['info']['AF'],0.5)
 
         # Check None/KeyError cases (".",field absent...)
-        _vrt = list(filter(lambda o: not o.is_instance(variant.Null),
+        _vrt = list(filter(lambda o: not o.is_variant_instance(variant.Null),
                            s.find_vrt('chr24',450,460)))
         self.assertEqual(len(_vrt),1)
         vrt = _vrt[0]
-        with self.assertRaises(KeyError):
+        with self.assertRaises(ValueError):
             vrt.attrib['info']['Randomfields']
 
-        _vrt = list(filter(lambda o: not o.is_instance(variant.Null),
+        _vrt = list(filter(lambda o: not o.is_variant_instance(variant.Null),
                            s.find_vrt('chr24',4750,4760)))
         self.assertEqual(len(_vrt),1)
         vrt = _vrt[0]
         self.assertEqual(vrt.attrib['info']['STR'],True)
-
-    def test_from_vcf_no_sample_no_ref(self):
-        _vcf = pkg_file('genomvar.test','data/example1.vcf')
-        vset = MutableVariantSet.from_vcf(_vcf)
-        v1,v2 = list(vset.find_vrt('chr24',1200,1210))
-
-        self.assertTrue(True if v1.GT in [(0,1),(1,0)] else False)
-        self.assertTrue(True if v2.GT in [(0,1),(1,0)] else False)
-        self.assertNotEqual(v1,v2)
-
-    def test_wrong_sample(self):
-        with self.assertRaises(VCFSampleMismatch):
-            MutableVariantSet.from_vcf(pkg_file('genomvar.test','data/example1.vcf'),
-                     reference=self.chr24,sample='ZAMP1',normindel=True)
-
-    def test_to_vcf(self):
-        s1 = MutableVariantSet(reference=self.chr24)
-        s1.add_vrt(variant.Del("chr24",23,24),GT=(1,0))
-        s1.add_vrt(variant.SNP("chr24",1206,"C"),GT=(1,0))
-        s1.add_vrt(variant.MNP("chr24",2093,"CCC"),GT=(1,0))
-
-        # Ambigous indels
-        vf = s1.get_factory(normindel=True)
-        vb = vf.from_edit('chr24',2343,'TTTCCA','TTCCATTCCA')
-        s1.add_vrt(vb,GT=(0,1))
-        vb = vf.from_edit('chr24',9947,'TTT','T')
-        s1.add_vrt(vb,GT=(0,1))
-
-        stream = io.StringIO()
-        s1.to_vcf(stream)
-        stream.seek(0)
-
-        rows = []
-        for line in stream:
-            if line.startswith('##'):
-                continue
-            else:
-                vals = line.split('\t')
-                self.assertEqual(len(vals),8)
-
-                if vals[0]=='#CHROM':
-                    continue
-
-                rows.append(VCFRow(*vals))
-
-        row0 = rows[0]
-        self.assertEqual([row0.CHROM,row0.POS,row0.REF,row0.ALT],
-                         ['chr24',23,'AG','A'])
-        row1 = rows[1]
-        self.assertEqual([row1.CHROM,row1.POS,row1.REF,row1.ALT],
-                         ['chr24',1207,'G','C'])
-        row3 = rows[3]
-        self.assertEqual([row3.CHROM,row3.POS,row3.REF,row3.ALT],
-                         ['chr24',2344,'T','TTCCA'])
-        row4 = rows[4]
-        self.assertEqual([row4.CHROM,row4.POS,row4.REF,row4.ALT],
-                         ['chr24',9946,'CTT','C'])
 
     def test_to_vcf_no_ref(self):
         vs1 = VariantSet.from_variants(
@@ -737,55 +526,62 @@ class TestIO(MyTestCase):
         self.assertEqual(vs1.comm(vs2).nof_unit_vrt(), 2)
 
     def test_from_to_vcf(self):
-        variants1 = sorted(VCFReader(
-            pkg_file('genomvar.test','data/example1.vcf')).iter_vrt(parse_info=True),
-                        key=lambda v: v.key)
-        vs = VariantSet.from_vcf(pkg_file('genomvar.test','data/example1.vcf'),
-                                 parse_info=True)
+        fl = pkg_file('genomvar.test','data/example1.vcf')
+        variants1 = sorted(
+            VCFReader(fl).iter_vrt(parse_info=True),
+            key=lambda v: v.key)
+        vs = VariantSet.from_vcf(fl, parse_info=True)
         tf = tempfile.NamedTemporaryFile(suffix='.vcf')
         with open(tf.name,'wt') as fh:
             vs.to_vcf(fh)
 
             
         with open(tf.name,'rt') as fh:
+            fh.seek(0)
             self.assertIn(
                 '##INFO=<ID=DP4,Number=4,Type=Integer,Description="Test for multinumber field">',
                 fh.read().splitlines())
-            # with open('/home/mikpom/tmp/tmp.txt', 'wt') as ofh:
-            #     ofh.write(fh.read())
         variants2 = sorted(VCFReader(tf.name).iter_vrt(parse_info=True),
                            key=lambda v: v.key)
         self.assertEqual(len(variants1),len(variants2))
         cnt = 0
+        # print('result', open(tf.name).read())
         for v1,v2 in zip(variants1,variants2):
             self.assertTrue(v1.edit_equal(v2))
             self.assertEqual(v1.attrib['info']['NSV'], v2.attrib['info']['NSV'])
 
         
     def test_from_variants_vcf(self):
-        variants1 = sorted(VCFReader(
-            pkg_file('genomvar.test','data/example1.vcf')).iter_vrt(parse_info=True),
-                        key=lambda v: v.key)
+        vs0 = varset.VariantSet.from_vcf(
+            pkg_file('genomvar.test','data/example1.vcf'),
+            parse_info=True)
+        variants1 = sorted(
+            vs0.iter_vrt(),
+            key=lambda v: v.key)
         vs = VariantSet.from_variants(variants1)
-        tf = tempfile.NamedTemporaryFile(suffix='.vcf')
-        info_spec = [('DP4', 4, 'Integer'),
-                     ('NSV', 1, 'Integer')]
-        with open(tf.name,'wt') as fh:
-            vs.to_vcf(fh, info_spec=info_spec)
-            
-        with open(tf.name,'rt') as fh:
-            self.assertIn(
-                '##INFO=<ID=DP4,Number=4,Type=Integer,Description="">',
-                fh.read().splitlines())
-            fh.seek(0)
-            # print(fh.read())
-        variants2 = sorted(VCFReader(tf.name).iter_vrt(parse_info=True),
-                           key=lambda v: v.key)
-        self.assertEqual(len(variants1),len(variants2))
-        cnt = 0
-        for v1,v2 in zip(variants1,variants2):
-            self.assertTrue(v1.edit_equal(v2))
-            self.assertEqual(v1.attrib['info']['NSV'], v2.attrib['info']['NSV'])
+        _desc = 'Test for multinumber field'
+        info_spec_tuples = [('DP4', 4, 'Integer', _desc),
+                            ('NSV', 1, 'Integer')]
+        info_spec_dict = vs0.dtype['info']
+        for info_spec in (info_spec_tuples, info_spec_dict):
+            tf = tempfile.NamedTemporaryFile(suffix='.vcf')
+            with open(tf.name,'wt') as fh:
+                vs.to_vcf(fh, info_spec=info_spec)
+
+            with open(tf.name,'rt') as fh:
+                self.assertIn(
+                    '##INFO=<ID=DP4,Number=4,Type=Integer,Description="{}">'\
+                          .format(_desc),
+                    fh.read().splitlines())
+                fh.seek(0)
+                # print(fh.read())
+            variants2 = sorted(VCFReader(tf.name).iter_vrt(parse_info=True),
+                               key=lambda v: v.key)
+            self.assertEqual(len(variants1),len(variants2))
+            cnt = 0
+            for v1,v2 in zip(variants1,variants2):
+                self.assertTrue(v1.edit_equal(v2))
+                self.assertEqual(v1.attrib['info']['NSV'], v2.attrib['info']['NSV'])
 
     def test_from_variants_to_vcf_with_info(self):
         variants1 = sorted(VCFReader(
@@ -821,6 +617,35 @@ class TestIO(MyTestCase):
         for v1,v2 in zip(variants1,variants2):
             self.assertTrue(v1.edit_equal(v2))
             self.assertEqual(v1.attrib['info']['NSV'], v2.attrib['info']['NSV'])
+
+    def test_from_variants_to_vcf_with_sampdata(self):
+        file = pkg_file('genomvar.test', 'data/example3.vcf')
+        variants1 = sorted(
+            VCFReader(file).iter_vrt(parse_samples=True),
+            key=lambda v: v.key)
+        vs = VariantSet.from_variants(variants1)
+        tf = tempfile.NamedTemporaryFile(suffix='.vcf')
+
+        with open(tf.name,'wt') as fh:
+            vs.to_vcf(fh,
+                      format_spec=[RESERVED_FORMAT.GT,
+                                   ('AD', 'R', 'Integer', '')],
+                      samples=['SAMP1'])
+            
+        with open(tf.name,'rt') as fh:
+            fh.seek(0)
+            self.assertIn(
+                '##FORMAT=<ID=AD,Number=R,Type=Integer,'\
+                +'Description="">',
+                fh.read().splitlines())
+        variants2 = sorted(VCFReader(tf.name).iter_vrt(parse_samples=True),
+                           key=lambda v: v.key)
+        self.assertEqual(len(variants1),len(variants2))
+        cnt = 0
+        for v1, v2 in zip(variants1, variants2):
+            self.assertTrue(v1.edit_equal(v2))
+            self.assertEqual(v1.attrib['samples']['SAMP1']['AD'],
+                             v2.attrib['samples']['SAMP1']['AD'])
 
     def test_from_string_buffer(self):
         buf = io.StringIO() 

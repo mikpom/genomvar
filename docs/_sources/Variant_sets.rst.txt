@@ -50,9 +50,4 @@ to ``vs1``::
   <SNP 1:100001 G/T GT:None>
 
 This does not require any indexes because ``test.vcf`` is assumed to
-be sorted by coordinate. Using
-:class:`~genomvar.varset.IndexedVariantFileSet` would give the same
-result. The latter is actually preferred because when comparing object of
-:class:`~genomvar.varset.VariantFileSet` class on the first pass
-chromosome ordering will be evaluated and then the actual result will
-start to be processed.
+be sorted by coordinate.

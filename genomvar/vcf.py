@@ -44,12 +44,25 @@ from genomvar import Reference,SINGLETON,StructuralVariantError,\
 from genomvar.utils import rgn_from, grouper
 from genomvar.variant import GenomVariant,VariantFactory
 import genomvar
-from genomvar.vcf_utils import (VCFRow, VCFInfoSpec, VCF_info_fields,
+from genomvar.vcf_utils import (VCFRow, RESERVED_FORMAT_SPECS,
+                                RESERVED_INFO_SPECS,
+                                VCF_INFO_OR_FORMAT_SPEC,
+                                VCF_INFO_OR_FORMAT_DEF_FIELDS as DATA_DEF_FIELDS,
                                 _make_field_writer_func,
                                 header as vcf_header,
                                 dtype2string, string2dtype,
                                 field_writer_simple)
 
+class FIELDSPECS: pass
+
+RESERVED_FORMAT = FIELDSPECS()
+for spec in RESERVED_FORMAT_SPECS:
+    setattr(RESERVED_FORMAT, spec[0], spec)
+
+RESERVED_INFO = FIELDSPECS()
+for spec in RESERVED_INFO_SPECS:
+    setattr(RESERVED_INFO, spec[0], spec)
+    
 
 # data type of main variants array of VariantSet class
 dtype0 = np.dtype([('ind',np.int_),('haplotype',np.int_),('chrom','O'),
@@ -77,7 +90,9 @@ def _ensure_sorted(it):
             start,rstart,cnt,vrt = next(it)
         except StopIteration:
             break
-        if cur_end <= rstart:
+        if cur_end <= rstart: # Trick is that if in VCF notation
+                              # start is to the right of current end
+                              # then heap can be pushpopped
             sm = heapq.heappushpop(hp, (start,rstart,cnt,vrt) )
             yield sm[-1]
         else:
@@ -174,7 +189,7 @@ def _check_VCF_order(it):
             yield row
 
 gt_cache = {}
-def _parse_gt(gt,ind):
+def _parse_gt(gt, ind):
     """Function return genotype tuple given genotype string and allele index.
     For performance results are cached based on arguments"""
     try:
@@ -198,47 +213,81 @@ def validate_spec(spec):
     
 class VCFWriter(object):
     """Class for writing variant to VCF format."""
-    def __init__(self, reference=None, info_spec=None):
+    def __init__(self, reference=None, info_spec=None, format_spec=None,
+                 samples=None):
         if isinstance(reference, str):
             self.reference = Reference(reference)
         else:
             self.reference = reference
-        if not info_spec is None:
-            self.writers = {}
-            dtype = {}
-            for spec in info_spec:
-                if len(spec)<3:
+
+        self.samples = samples
+        field_specs = {
+            'info' : info_spec,
+            'format': format_spec
+        }
+
+        self.writers = {'info':{}, 'format':{}}
+        self.dtype = {'info':{}, 'format':{}}
+        for info_or_format, specs in field_specs.items():
+            if not specs is None:
+                if isinstance(specs, list):
+                    specs = specs
+                elif isinstance(specs, dict):
+                    specs = [{'name':f, **s} for f,s in specs.items()]
+                else:
                     raise ValueError(
-                        'INFO spec expected to have at '\
-                        +'least 3 fields while {} found'\
-                        .format(len(spec)))
-                _spec = VCFInfoSpec(
-                    *islice(
-                        chain.from_iterable(
-                            [spec, repeat(None)]),
-                        6))
-                self.writers[_spec.NAME] = _make_field_writer_func(
-                    _spec.TYPE, _spec.NUMBER)
-                dt = {
-                    'name' : _spec.NAME,
-                    'number' : _spec.NUMBER,
-                    'type' : _spec.TYPE,
-                    'dtype' : string2dtype[_spec.TYPE],
-                    'description' : _spec.DESCRIPTION,
-                    'source' : _spec.SOURCE,
-                    'version' : _spec.VERSION
-                }
-                dtype[_spec.NAME] = dt
-            self.dtype = dtype
+                        'Spec should be dict or list, got: '+str(specs))
+                for spec in specs:
+                    if len(spec)<3:
+                        raise ValueError(
+                            'INFO spec expected to have at '\
+                            +'least 3 fields while {} found'\
+                            .format(len(spec)))
+                    if isinstance(spec, tuple):
+                        _spec = VCF_INFO_OR_FORMAT_SPEC(
+                            *islice(
+                                chain.from_iterable(
+                                    [spec, repeat(None)]),
+                                6))
+                    elif isinstance(spec, dict):
+                        _spec = VCF_INFO_OR_FORMAT_SPEC(
+                            *[spec.get(f.lower()) for f in DATA_DEF_FIELDS])
+                    else:
+                        raise ValueError('spec should be a tuple or dict')
+
+                    if info_or_format=='format' and _spec.NAME=='GT':
+                        self.writers[info_or_format][_spec.NAME] = \
+                            lambda v: '/'.join(map(str, v)) \
+                                             if not v is None else './.'
+                    else:
+                        self.writers[info_or_format][_spec.NAME] = \
+                            _make_field_writer_func(
+                                _spec.TYPE, _spec.NUMBER, info_or_format)
+
+                    dt = {
+                        'name' : _spec.NAME,
+                        'number' : _spec.NUMBER,
+                        'type' : _spec.TYPE,
+                        'dtype' : string2dtype[_spec.TYPE],
+                        'description' : _spec.DESCRIPTION,
+                        'source' : _spec.SOURCE,
+                        'version' : _spec.VERSION
+                    }
+                    self.dtype[info_or_format][_spec.NAME] = dt
 
     def get_header(self):
         if hasattr(self, 'dtype'):
-            info = [{f.lower():p.get(f.lower(), '.') for f in VCF_info_fields} \
-                    for p in self.dtype.values()]
+            info = [{f.lower():p.get(f.lower(), '.') for f in DATA_DEF_FIELDS} \
+                    for p in self.dtype['info'].values()]
+            format = [{f.lower():p.get(f.lower(), '.') for f in DATA_DEF_FIELDS} \
+                    for p in self.dtype['format'].values()]
         else:
             info = {}
+            format = {}
         header = vcf_header.render(
             info=info,
+            format=format,
+            samples=self.samples,
             ctg_len=self.reference.ctg_len if self.reference else {})
         return header
 
@@ -262,10 +311,10 @@ class VCFWriter(object):
         vrt : Variant instance
             variant to get row for. 
 
-        kwds : VCF fields
+        kwds : VCF fields #FIXME remove kwds here
             optional. If given, these and only these parameters are 
             used to populate corresponding VCF fields: ``id``, 
-            ``qual``, ``filter``, ``info``. 
+            ``qual``, ``filter``, ``info``, ``sampdata``. 
             These parameters are taken as is and converted to string
             before returning a VCFRow. 
             If the keyword is not given corresponding field will be 
@@ -297,18 +346,32 @@ class VCFWriter(object):
                 vcf_notation=vrt.attrib.get('vcf_notation'),
                 reference=self.reference)
             dt = vrt.attrib
+
             if 'info' in kwds:
                 info = kwds['info']
             elif 'info' in dt and not dt['info'] is None:
                 info = self._format_info(dt['info'])
             else:
                 info = '.'
+
+            if 'sampdata' in kwds and not kwds['sampdata'] is None:
+                format, samples = kwds['sampdata'].split('\t', maxsplit=1)
+            elif 'samples' in dt and dt['samples']: # TODO fix samples
+                format, samples = self._format_sampdata(dt['samples'])
+            else:
+                if self.samples is None:
+                    format = None
+                    samples = None
+                else:
+                    format = '.'
+                    samples = '.'
+                
             r = VCFRow(vrt.chrom, pos,
                        kwds.get('id', dt.get('id')),
                        ref.upper(), alt.upper(),
                        kwds.get('qual', dt.get('qual')),
                        self._get_filter(kwds.get('filter', dt.get('filter'))),
-                       info)
+                       info, format, samples)
             return r
         else:
             pos, ref, alt = vrt._get_vcf_notation(reference=self.reference)
@@ -319,43 +382,34 @@ class VCFWriter(object):
 
 
     def _format_info(self, info):
-        if info is None:
-            return '.'
-
-        if isinstance(info, np.void):
-            # special case of VariantSet read-in INFO data
-            _info = [self.writers[k](k,v) for k,v in zip(info.dtype.fields, info)]
+        if hasattr(self, 'writers'):
+            _info = [w(k,info.get(k)) for k,w in \
+                     self.writers['info'].items()]
         else:
-            if hasattr(self, 'writers'):
-                _info = [w(k,info.get(k)) for k,w in \
-                         self.writers.items()]
-            else:
-                _info = [field_writer_simple(k,v) for k,v in info.items()]
+            _info = [field_writer_simple(k,v) for k,v in info.items()]
         return ';'.join(_info)
+
+    def _format_sampdata1(self, data):
+        fields = self.dtype['format']
+        ff = [self.writers['format'][f](None if data is None else data.get(f))\
+              for f in fields]
+        return ';'.join(ff)
+    
+    def _format_sampdata(self, sampdata):
+        format = ':'.join(self.dtype['format'])
+        smp = [self._format_sampdata1(sampdata.get(s)) for s in self.samples]
+        return format, '\t'.join(smp)
     
 class VCFReader(object):
     """Class to read VCF files."""
-    def __init__(self,vcf,index=False,reference=None):
+    def __init__(self, vcf, index=False, reference=None):
         if isinstance(vcf,str):
             self.fl = vcf
             if self.fl.endswith('.gz') or self.fl.endswith('.bgz'):
                 self.compressed = True
             else:
                 self.compressed = False
-            self.idx_file = None
-            if isinstance(index,bool):
-                if index:
-                    idx = self.fl+'.tbi'
-                    if os.path.isfile(idx):
-                        self.idx_file = idx
-                    else:
-                        raise NoIndexFoundError('no index for '+str(self.fl))
-            elif isinstance(index,str):
-                if os.path.isfile(index):
-                    self.idx_file = index
-                else:
-                    raise OSError('{} not found'.format(index))
-
+            self.idx_file = check_index(self.fl, index)
             if self.compressed:
                 self.openfn = gzip.open
             else:
@@ -472,10 +526,11 @@ class VCFReader(object):
         buf.seek(0)
         return RowByChromIterator(self,buf,check_order)
 
-    def _parse_vrt(self,row,factory,parse_info=False,parse_samples=False,
+    def _parse_vrt(self, row, factory, parse_info=False, parse_samples=False,
                    parse_null=False):
         """Given the row returns variant objects with alts splitted.
         INFO, SAMPLE data are correctly parsed if needed"""
+
         alts = row.ALT.split(',')
         # TODO avoid list structure, generator instead
         if parse_info: # Read INFO if necessary
@@ -483,9 +538,10 @@ class VCFReader(object):
         else:
             info = repeat(None)
         if parse_samples and row.SAMPLES:
-            sampdata = self.dataparser.get_sampdata(row, len(alts))
+            sampdata = self.dataparser.get_sampdatad(row, len(alts))
         else:
             sampdata = repeat(None)
+
 
         for ind,(_alt,_info,_sampdata) in enumerate(zip(alts,info,sampdata)):
             try:
@@ -496,14 +552,8 @@ class VCFReader(object):
                     +str(row.rnum))
                 continue
             infod = _info
-            # if parse_info:
-            #     infod = dict(zip(self._dtype['info'],_info))
-            # else:
-            #     infod = {}
-            if parse_samples:
-                sampd = {}
-                for sn,samp in enumerate(self._samples):
-                    sampd[samp] = dict(zip(self._dtype['format'],_sampdata[sn]))
+            if parse_samples and not _sampdata is None:
+                sampd = dict(zip(self._samples, _sampdata))
             else:
                 sampd = {}
             # FIXME avoid dictionaries
@@ -539,7 +589,8 @@ class VCFReader(object):
                                              'id':row.ID,'allele_num':'null'})
             yield _vrt
 
-    def get_records(self,parse_info=False,parse_samples=False,normindel=False):
+    def get_records(self, parse_info=False, parse_samples=False,
+                    normindel=False):
         """
         Returns parsed variant data as a dict of NumPy arrays with structured
         dtype.
@@ -913,6 +964,10 @@ class VCFReader(object):
     def close(self):
         if self.opened_file:
             self.buf.close()
+
+    @property
+    def samples(self):
+        return list(self.sample_ind)
     
     @property
     def chroms(self):
@@ -1024,19 +1079,23 @@ class BCFReader(VCFReader):
 
 class _DataParser(object):
     """Object for parsing INFO and SAMPLES data."""
-    def __init__(self,dtype,sample_ind):
+    def __init__(self, dtype, sample_ind):
         self.dtype = dtype
         self.converters = {'info':{},'format':{}}
         self.none = {'info':[],'format':[]}
-        for hh in ['info','format']:
-            for field,props in self.dtype[hh].items():
+        for info_or_format in ['info','format']:
+            for field,props in self.dtype[info_or_format].items():
                 tp = props['dtype']
                 sz = props['size']
                 num = props['number']
-                self.converters[hh][field] = _make_converter_func(tp,num)
-                self.none[hh].append(None if sz<=1 else [None]*sz)
-        self.converters['format']['GT'] = \
-            lambda v,a: _parse_gt(v,a)
+                if info_or_format=='format' and field=='GT':
+                    self.converters[info_or_format][field] = _parse_gt
+                else:
+                    self.converters[info_or_format][field] \
+                              = _make_converter_func(tp,num)
+                self.none[info_or_format].append(None if sz<=1 else [None]*sz)
+        # self.converters['format']['GT'] = \
+        #     lambda v,a: _parse_gt(v,a)
         self.order = {
             'info':{f:ind for ind,f in enumerate(self.dtype['info'])},
             'format':{f:ind for ind,f in enumerate(self.dtype['format'])}
@@ -1064,6 +1123,20 @@ class _DataParser(object):
                     info.append( (key, val.split(',')) )
         return info
         
+    def tokenize_sampdata(self,FORMAT,SAMPLES):
+        def _maybe_split(key,val):
+            if key in self.dtype['format'] and \
+                       not self.dtype['format'][key]['number'] in [0,1]:
+                return val.split(',')
+            else:
+                return val
+
+        fmt = FORMAT.split(':')
+        _samples = SAMPLES.split('\t')
+        sampdata = [[(k,_maybe_split(k,v)) for k,v in zip(fmt,d.split(':'))]\
+                     for d in _samples]
+        return sampdata
+
     def get_info(self,INFO,alts=1,parse_null=False):
         """Given INFO string and number of alt alleles returns a list
         of lists with data corresponding to alleles, then fields."""
@@ -1076,6 +1149,7 @@ class _DataParser(object):
                     conv = self.converters['info'][key]
                 except KeyError:
                     conv = no_converter
+
                 try:
                     v = conv(val,an)
                 except ValueError as exc:
@@ -1111,18 +1185,32 @@ class _DataParser(object):
             info2.append(info1)
         return info2
 
-    def tokenize_sampdata(self,FORMAT,SAMPLES):
-        def _maybe_split(key,val):
-            if not self.dtype['format'][key]['number'] in [0,1]:
-                return val.split(',')
-            else:
-                return val
-
-        fmt = FORMAT.split(':')
-        _samples = SAMPLES.split('\t')
-        sampdata = [[(k,_maybe_split(k,v)) for k,v in zip(fmt,d.split(':'))]\
-                     for d in _samples]
-        return sampdata
+    def get_sampdatad(self, row, alts=1):
+        """Given row and number of alt alleles returns a list
+        of dicts with data corresponding to alleles"""
+        tokenized = self.tokenize_sampdata(row.FORMAT, row.SAMPLES)
+        sampdata2 = [[None \
+                       for j in range(len(self.sample_ind))] \
+                           for i in range(alts)]
+        for an in range(alts):
+            info1 = {}
+            for sample, sn in self.sample_ind.items():
+                _sampdata1 = {}
+                for key, val in tokenized[sn]:
+                    try:
+                        conv = self.converters['format'][key]
+                    except KeyError:
+                        conv = no_converter
+                    try:
+                        v = conv(val,an)
+                    except ValueError as exc:
+                        if val=='' or val=='.':
+                            v = None
+                        else:
+                            raise exc
+                    _sampdata1[key] = v
+                sampdata2[an][sn] = _sampdata1
+        return sampdata2
 
     def get_sampdata(self,row,alts=1):
         """Given SAMPLE data string and number of alt alleles returns a list
@@ -1137,16 +1225,17 @@ class _DataParser(object):
             for sample,sn in self.sample_ind.items():
                 _sampdata = list(self.none['format'])
                 for key,val in _samples[sn]:
+                    order = self.order['format'][key]
                     v = self.converters['format'][key](val,an)
-                    _sampdata[self.order['format'][key]] = v
+                    _sampdata[order] = v
                 sampdata[an][sn] = _sampdata
         return sampdata
 
-    def get_dtype(self,hh):
-        if not hh in ('format','info'):
+    def get_dtype(self,info_or_format):
+        if not info_or_format in ('format','info'):
             raise ValueError
         dtype = []
-        for field,props in self.dtype[hh].items():
+        for field,props in self.dtype[info_or_format].items():
             if props['size']==1:
                 dtype.append( (field,props['dtype']) )
             else:
@@ -1158,13 +1247,13 @@ class _BCFDataParser(_DataParser):
         self.dtype = dtype
         self.converters = {'info':{},'format':{}}
         self.none = {'info':[],'format':[]}
-        for hh in ['info','format']:
-            for field,props in self.dtype[hh].items():
+        for info_or_format in ['info','format']:
+            for field,props in self.dtype[info_or_format].items():
                 tp = props['dtype']
                 sz = props['size']
                 num = props['number']
-                self.converters[hh][field] = _make_converter_func(tp,num,convert=False)
-                self.none[hh].append(None if sz<=1 else [None]*sz)
+                self.converters[info_or_format][field] = _make_converter_func(tp,num,convert=False)
+                self.none[info_or_format].append(None if sz<=1 else [None]*sz)
         self.converters['format']['GT'] = \
             lambda v,a: tuple([e==a for e in v])
         self.order = {
@@ -1281,8 +1370,27 @@ class VrtByChromIterator(VrtIterator):
         super().__init__(*args, **kwds)
 
         
-def _get_reader(file, reference=None):
+def _get_reader(file, index=False, reference=None):
     if isinstance(file, str) and file.endswith('.bcf'):
-        return BCFReader(file, reference)
+        return BCFReader(file, reference=reference,
+                         index=index)
     else:
-        return VCFReader(file, reference)
+        return VCFReader(file, reference=reference,
+                         index=index)
+
+def check_index(file, index):
+    if isinstance(index, bool):
+        if index:
+            idx = file+'.tbi'
+            if os.path.isfile(idx):
+                return idx
+            else:
+                raise NoIndexFoundError('no index for '+str(file))
+        else:
+            return None
+    elif isinstance(index, str):
+        if os.path.isfile(index):
+            return index
+        else:
+            raise OSError('{} not found'.format(index))
+    

@@ -2,20 +2,13 @@
 Module ``varset`` defines variant set classes which are containers of variants
 supporting set-like operations, searching variants, export to NumPy...
 
-There are several classes depending on whether all the variants are loaded
-into memory or not and whether the object is mutable:
+There are two classes depending on whether all the variants are loaded
+into memory or not:
 
-    - :class:`~genomvar.varset.VariantSet` is immutable, in-memory, random
-      access supporting class
+    - :class:`~genomvar.varset.VariantSet` in-memory
 
-    - :class:`~genomvar.varset.MutableVariantSet` mutable, in-memory, random
-      access
-
-    - :class:`~genomvar.varset.VariantFileSet` immutable, VCF file storage, no
-      random access
-
-    - :class:`~genomvar.varset.IndexedVariantFileSet` immutable, VCF file
-      storage, random access
+    - :class:`~genomvar.varset.VariantSetFromFile` can read VCF files
+      on demand, needs index for random access
 """
 import warnings
 from copy import copy
@@ -32,14 +25,15 @@ from genomvar.utils import rgn_from,zip_variants,\
 from genomvar.vcf import (_get_reader, VCFReader, VCFWriter,
                           dtype0,dtype1, )
 from genomvar.vcf_utils import (header as vcf_header,
-                                row_tmpl, _make_field_writer_func,
+                                row_tmpl, 
                                 field_writer_simple,
-                                dtype2string, string2dtype)
+                                dtype2string, string2dtype,
+                                VCF_INFO_OR_FORMAT_DEF_FIELDS)
 from genomvar import OverlappingHaplotypeVars,\
     Reference,DifferentlySortedChromsError,\
     DuplicateVariants,SINGLETON,ChromSet
 
-class VariantSetBase(object):
+class _VariantSetBase(object):
     """Base class for variant set subclasses.
 
     Attributes
@@ -57,7 +51,8 @@ class VariantSetBase(object):
     """
 
 
-    def __init__(self,variants=None,data=None,reference=None):
+    def __init__(self,variants=None,data=None,reference=None,
+                 samples=None):
         if not reference is None:
             if isinstance(reference,Reference):
                 self.reference=reference
@@ -71,7 +66,8 @@ class VariantSetBase(object):
             self.reference = None
             self.ctg_len = {}
             self._chroms = ChromSet()
-        
+
+        self._samples = samples
         self._data = data if data else {}
         self._factory = VariantFactory(reference=self.reference,
                                        normindel=False)
@@ -174,7 +170,7 @@ class VariantSetBase(object):
         """
         chrom = vrt0.chrom
         ovlp = []
-        if not match_ambig and vrt0.is_instance(variant.AmbigIndel):
+        if not match_ambig and vrt0.is_variant_instance(variant.AmbigIndel):
             start = vrt0.act_start
             end = vrt0.act_end
         else:
@@ -183,9 +179,9 @@ class VariantSetBase(object):
 
         # Insertions need special treatment due to arbitrariness of
         # position definition
-        if vrt0.is_instance(variant.Ins):
+        if vrt0.is_variant_instance(variant.Ins):
             for _vrt in self._find_vrt(chrom,start,end):
-                if _vrt.is_instance(variant.AmbigIndel) and not match_ambig:
+                if _vrt.is_variant_instance(variant.AmbigIndel) and not match_ambig:
                     _vrt_end = _vrt.act_end
                     _vrt_start = _vrt.act_start
                 else:
@@ -204,7 +200,7 @@ class VariantSetBase(object):
                 #    G
                 # but if it is insertion than can add to overlap
                 # due to identical position
-                elif end<=_vrt_start+1 and not _vrt.is_instance(variant.Ins):
+                elif end<=_vrt_start+1 and not _vrt.is_variant_instance(variant.Ins):
                     continue
                 else:
                     ovlp.append(_vrt)
@@ -220,14 +216,14 @@ class VariantSetBase(object):
         ovlp = []
         
         for _vrt in self._find_vrt(chrom,start,end):
-            if _vrt.is_instance(variant.AmbigIndel) and not match_ambig:
+            if _vrt.is_variant_instance(variant.AmbigIndel) and not match_ambig:
                 _vrt_end = _vrt.act_end
                 _vrt_start = _vrt.act_start
             else:
                 _vrt_end = _vrt.end
                 _vrt_start = _vrt.start
             # if _vrt is insertion and the search region is further
-            if _vrt.is_instance(variant.Ins) and _vrt_end<=start+1:
+            if _vrt.is_variant_instance(variant.Ins) and _vrt_end<=start+1:
                 continue
             # check maybe no overlp after ambiguity removal
             if max(_vrt_start,start)>=min(_vrt_end,end):
@@ -322,7 +318,8 @@ class VariantSetBase(object):
         return CmpSet(self,other,action,match_partial=match_partial,
                       match_ambig=match_ambig)
     
-    def to_vcf(self, out, reference=None, info_spec=None):
+    def to_vcf(self, out, reference=None, info_spec=None, format_spec=None,
+               samples=None):
         """Writes a minimal VCF with variants from the set. 
 
         INFO and SAMPLE data from source data is not preserved.
@@ -336,14 +333,31 @@ class VariantSetBase(object):
 
         reference : Reference or str, optional
            If string then it's path to reference FASTA. Otherwise
-           object of :class:`genomvar.Reference` is expected.
-           
-           This is not necessary if self was instantiated with a reference.
-           If however given, this argument takes precedence.
+           object of :class:`genomvar.Reference` is expected. Not
+           necessary if self was instantiated with a reference.
+           If given, this argument takes precedence over the ref 
+           used at instantiation.
+
+        info_spec : list of tuples containing specification of 
+            an INFO field in Order per VCF spec, i.e. `NAME`,  
+            `NUMBER`,  `TYPE`,  `DESCRIPTION`,  `SOURCE`,  `VERSION`.
+            Only the first three fiels (name, number and type) 
+            are required. If variant set was instantiated from VCF
+            file spec obtained from it will be used. Providing 
+            empty sequence will omit INFO fields in output.
+        
+        format_spec : spec of FORMAT fields, similar to info_spec
 
         Returns
         -------
         None
+
+        Examples
+        --------
+
+        >>> with open(fname, 'wt') as fh:
+        ...     vs.to_vcf(fh, info_spec=[('DP4', 4, 'Integer'),
+        ...                              ('NSV', 1, 'Integer')])
         """
         if isinstance(out, str):
             fh = open(out,'wt')
@@ -352,32 +366,49 @@ class VariantSetBase(object):
             fh = out
             opened = False
 
-        if info_spec is None:
-            if hasattr(self, 'dtype'):
-                info_spec = [(v['name'], v['number'], v['type'],
-                              v.get('description'), v.get('source'),
-                              v.get('version')) for v in self.dtype['info'].values()]
-            else:
-                info_spec = None
+        specs = {'info_spec' : info_spec,
+                 'format_spec' : format_spec}
+        FIELDS = VCF_INFO_OR_FORMAT_DEF_FIELDS
+        
+        for spec in specs:
+            if specs[spec] is None:
+                # in this case check maybe VariantSet was
+                # instantiated with dtype
+                # TODO don't use hasaatr for checks
+                key = 'info' if spec=='info_spec' else 'format'
+                if hasattr(self, 'dtype') and key in self.dtype:
+                    specs[spec] = [tuple([v.get(f.lower()) for f in FIELDS]) \
+                        for v in self.dtype[key].values()]
+
+        if not samples is None:
+            if self._samples:
+                for sample in samples:
+                    if sample not in self._samples:
+                        raise ValueError(
+                            'Sample {} not found in {}'.format(
+                                sample, self._samples))
         writer = VCFWriter(
             reference if not reference is None else self.reference,
-            info_spec=info_spec)
+            samples=samples if not samples is None else self._samples,
+            **specs)
 
         fh.write(writer.get_header())
-        
-        for vrt in self.find_vrt(expand=True):
+        self._write_variants(fh, writer)
+
+        if opened:
+            fh.close()
+
+    def _write_variants(self, fh, writer):
+        for vrt in self.iter_vrt(expand=True):
             try:
                 row = writer.get_row(vrt)
             except ValueError as exc: # TODO more specific error
-                if vrt.is_instance(variant.Haplotype) \
-                        or vrt.is_instance(variant.Asterisk):
+                if vrt.is_variant_instance(variant.Haplotype) \
+                        or vrt.is_variant_instance(variant.Asterisk):
                     continue
                 else:
                     raise exc
             fh.write(str(row)+'\n')
-
-        if opened:
-            fh.close()
 
     def get_factory(self,normindel=False):
         """Returns a VariantFactory object. It will inherit the same reference
@@ -389,7 +420,7 @@ class VariantSetBase(object):
             self._fac['norm' if normindel else 'nonorm'] = vf
             return vf
 
-class VariantSet(VariantSetBase):
+class VariantSet(_VariantSetBase):
     """
     Immutable class for storing variants in-memory.
 
@@ -410,8 +441,8 @@ class VariantSet(VariantSetBase):
         is taken from length of chromosomes in the reference.
     """
     def __init__(self,variants, attrib=None, vcf_notation=None, info=None,
-                 sampdata=None, reference=None, dtype=None):
-        super().__init__(reference=reference)
+                 sampdata=None, reference=None, dtype=None, samples=None):
+        super().__init__(reference=reference, samples=samples)
         self._variants = variants
         if not attrib is None:
             self._attrib = attrib
@@ -483,11 +514,11 @@ class VariantSet(VariantSetBase):
             else:
                 raise exc
                 
-    @lru_cache(maxsize=1000)
-    def _get_vrt(self,rnum):
-        """Constructs a variant from row number.
-        If haplotypes its subvariants will be GenomVariant instances."""
-        return self._vrt_from_row(self._variants[rnum])
+    # @lru_cache(maxsize=1000)
+    # def _get_vrt(self,rnum):
+    #     """Constructs a variant from row number.
+    #     If haplotypes its subvariants will be GenomVariant instances."""
+    #     return self._vrt_from_row(self._variants[rnum])
 
     @lru_cache(maxsize=1000)
     def _get_vrt(self,rnum):
@@ -518,7 +549,7 @@ class VariantSet(VariantSetBase):
         """Constructs tuples from variants."""
         cnt = 0
         for vrt in vrt_iter:
-            if vrt.is_instance(variant.Haplotype):
+            if vrt.is_variant_instance(variant.Haplotype):
                 ind = cnt
                 yield (ind, SINGLETON, *vrt.tolist(),
                        getattr(vrt, 'attrib', None))
@@ -559,6 +590,42 @@ class VariantSet(VariantSetBase):
             ind += 1
         return
 
+    def sample(self, size):
+        """
+        Returns a random sample of variants.
+        
+        Haplotypes (if present) maybe returned equally likely as non-haplotype
+        variants and their subvariants.
+
+        Parameters
+        ----------
+        size : int
+            size of the sample
+
+        Returns
+        -------
+        marray : list
+            List of variants.
+        """
+        return [self._get_genom_vrt(r) for r in \
+                np.random.choice(self._variants['ind'], size)]
+        
+
+    def iter_vrt(self,expand=False):
+        rows = self._rows_iter_vrt(expand=expand)
+        for rown in rows:
+            yield self._get_genom_vrt(rown)
+
+    def _rows_iter_vrt(self, expand=False):
+        """Returns indexes of rows iterating all variants"""
+        ivl = itertools.chain.from_iterable(
+                [self._data[c].iter_ivl() for c in self.chroms])
+        ind = [i[2] for i in ivl]
+        vrt = self._variants[ind]
+        idx = vrt[vrt['haplotype']==SINGLETON]['ind']
+        return idx
+            
+
     def _find_vrt(self,chrom,start=0,end=MAX_END,expand=False):
         """Uses ITree to find variants and yields them.
         Implementation is variant set class-specific."""
@@ -569,9 +636,9 @@ class VariantSet(VariantSetBase):
         for s,e,rown in intervals:
             vrt = self._get_genom_vrt(rown)
             yield vrt
-            if vrt.is_instance(variant.Haplotype) and expand:
-                for vrt in vrt.find_vrt(start,end):
-                    yield vrt
+            if vrt.is_variant_instance(variant.Haplotype) and expand:
+                for _vrt in vrt.find_vrt(start,end):
+                    yield _vrt
 
     def _find_chrom_vrt(self,chrom,expand=False):
         try:
@@ -601,6 +668,7 @@ class VariantSet(VariantSetBase):
                      sampdata={s:self._sampdata[s].copy() \
                                for s in self._sampdata} )
         return cpy
+
     def nof_unit_vrt(self):
         """Returns number of simple genomic variations in a variant set. 
 
@@ -746,11 +814,12 @@ class VariantSet(VariantSetBase):
                       info=records.get('info'),
                       sampdata=records.get('sampdata'),
                       reference=reference,
-                      dtype=reader.dataparser.dtype)
+                      dtype=reader.dataparser.dtype,
+                      samples=reader.samples)
         return vset
 
     @classmethod
-    def from_variants(cls,variants,reference=None,duplicates='ignore'):
+    def from_variants(cls, variants, reference=None):
         """
         Instantiate VariantSet from iterable of variants.
         
@@ -1128,362 +1197,103 @@ class VariantSet(VariantSetBase):
                          match_partial=match_partial,
                          match_ambig=match_ambig)
 
-class MutableVariantSet(VariantSetBase):
-    """
-    Mutable class storing variants supporting addition of variants with
-    specified genotype.
+
+    def _write_variants(self, fh, writer):
+        idx = self._rows_iter_vrt(expand=True)
+        if hasattr(writer, 'writers'):
+            infostringsgen = self._format_infostrings(writer, idx)
+        else:
+            infostringsgen = itertools.repeat('.')
+
+        if hasattr(writer, 'samples'):
+            sampdatagen = self._format_sampdata(writer, idx)
+        else:
+            sampdatagen = itertools.repeat(None)
+        variants = [self._get_genom_vrt(i) for i in idx] # generator
+        for vrt, infostring, sampdata in \
+                           zip(variants, infostringsgen, sampdatagen):
+ 
+            try:
+                row = writer.get_row(vrt, info=infostring, sampdata=sampdata)
+            except ValueError as exc: # TODO more specific error
+                if vrt.is_variant_instance(variant.Haplotype) \
+                        or vrt.is_variant_instance(variant.Asterisk):
+                    continue
+                else:
+                    raise exc
+            fh.write(str(row)+'\n')
+
+    def _format_infostrings(self, writer, idx):
+        def _use_writer(writer, field, values):
+            for v in values:
+                yield writer(field, v)
+
+        if not self._info is None: # case of NumPy array stored data
+            fwriters = writer.writers['info']
+            field_names = list(writer.writers['info'])
+            # writers = [writer.writers[f] for f in field_names]
+            fields = [_use_writer(fwriters[f], f,  self._info[idx][f]) \
+                      for f in field_names]
+            
+            records = zip(*fields)
+            
+            formatted = (';'.join(r) for r in records)
+        elif not self._attrib is None: # case for dictionary stored data
+            field_names = list(writer.writers['info']) if hasattr(writer, 'writers') \
+                else []
+            if len(field_names)==0:
+                formatted = ['.' for i in idx]
+            else:
+                
+                records = (a.get('info', {f:'' for f in field_names}) \
+                       for a in [self._attrib[i] for i in idx])
+                formatted = [';'.join(
+                    [writer.writers['info'][f](f, rec[f]) for f in field_names]) \
+                             for rec in records]
+        else:
+            formatted = ['.' for i in idx]
+
+        return formatted
+
+    def _format_sampdata(self, writer, idx):
+        def _use_writer(writer, values):
+            for v in values:
+                yield writer(v)
+
+        # FIXME make storage scheme more explicit
+        if not self._sampdata is None: # case of NumPy array stored data
+            ffields = list(writer.writers) # FIXME
+            # writers = [writer.writers[f] for f in ffields]
+            fields = [_use_writer(writer.writers[f], self._info[idx][f]) \
+                      for f in ffields]
+            records = zip(*fields)
+            formatted = (';'.join(r) for r in records)
+        elif hasattr(self, '_attrib') and not self._attrib is None: # case for dictionary stored data
+            ffields = list(writer.writers['format']) if hasattr(writer, 'writers') \
+                else []
+            
+            if len(ffields)==0:
+                formatted = itertools.repeat(None)
+            else:
+                fn = ':'.join(ffields)
+                dflt = {f:None for f in ffields}
+                fwriters = writer.writers['format']
+                by_sample_strings = []
+                for sample in writer.samples:
+                    sample_strings = []
+                    for _i in idx:
+                        dct = self._attrib[_i]['samples'].get(sample, dflt)
+                        string = ':'.join(
+                            [fwriters[f](dct.get(f)) for f in ffields])
+                        sample_strings.append(string)
+                    by_sample_strings.append(sample_strings)
+                formatted = [fn+'\t'+'\t'.join(a) \
+                             for a in zip(*by_sample_strings)]
+        else:
+            formatted = itertools.repeat(None)
+
+        return formatted
     
-    Supports random access by variant location.
-    Can be instantiated from a VCF file (see
-    :meth:`genomvar.varset.VariantSet.from_vcf`) or from iterable containing
-    variants (see :meth:`VariantSet.from_variants`).
-
-    Attributes
-    ----------
-    reference: Reference
-        Genome reference.
-    chroms: ChromSet
-        list-like representation of chromosome in the set.
-    ctg_len: dict
-        dict mapping Chromosome name to corresponding lengths.
-        
-        This keeps track of the rightmost position of variants in the set
-        if reference was not provided. If reference was given ``ctg_len`` 
-        is taken from length of chromosomes in reference.
-    """
-    def __init__(self, data=None, reference=None, max_ploidy=2):
-        super().__init__(variants=None,data=data,reference=reference)
-        self._obs = {}
-        self.max_ploidy = max_ploidy
-
-    def copy(self):
-        """Returns a copy of variant set"""
-        cpy = self.__new__(self.__class__)
-        data = {c:t.copy() for c,t in self._data.items()}
-        cpy.__init__(data,self.reference)
-        return cpy
-
-    @classmethod
-    def from_vcf(cls,vcf,reference=None,normindel=False,
-                 parse_info=False,sample=None,
-                 max_ploidy=2,parse_null=False):
-        """
-        Parse VCF variant file and return VariantSet object
-        
-        Parameters
-        ----------
-        vcf : str
-            VCF file to read data from.
-        parse_info: bool, optional
-            If ``True`` INFO fields will be parsed.
-            *Default: False*.
-        parse_samples: bool, str or list of str, optional
-            If ``True`` all sample data will be parsed.  If string, sample 
-            with this name will be parsed.  If list of string only these
-            samples will be parsed. *Default: False*
-        normindel: bool, optional
-            If ``True`` indels will be normalized. ``reference`` should also
-            be provided.  *Default: False*
-        reference: genomvar.Reference, optional
-            Reference genome. *Default: None*
-        max_ploidy: int, optional
-            Indicates how many variants can occupy a single locus 
-            (experimental). Default: 2
-        parse_null: bool, optional
-            If ``True`` null variants will also be parsed (experimental).
-            *Default: False*
-        Returns
-        -------
-        VariantSet
-        """
-        reader = _get_reader(vcf)
-        vset = cls.__new__(cls)
-        vset.__init__(reference=reference,max_ploidy=max_ploidy)
-
-        if reference is None and normindel:
-                raise ValueError('Can\'t norm indels without reference')
-
-        try:
-            for vrt in reader.iter_vrt(
-                    parse_samples=sample if sample else False,
-                    parse_info=parse_info):
-                vset.add_vrt(vrt, GT=vrt.attrib['samples'][sample]['GT'] \
-                             if sample else (1,0),
-                             allow_adjust_genotype=True,attrib=vrt.attrib)
-        finally:
-            reader.close()
-        return vset
-
-    # def _add_iv(self,chrom,start,end):
-    #     """Insert new interval with ID into ``_data``"""
-
-    def _process_gt(self,GT,ovlp,allow_adjust_genotype=False):
-        """Function takes a genotype and a list of overlapping
-        variants and returns a resulting genotype depending on genotype
-        parameter.
-        """
-
-        # other_gt is an array of
-        # genotypes from overlap
-        other_gt = np.zeros(shape=(len(ovlp),
-                    max(len(GT),*[len(o.GT) for o in ovlp])))
-        for ind,o in enumerate(ovlp):
-            other_gt[ind,0:len(o.GT)] = o.GT
-
-        s = np.sum(other_gt,axis=0)
-        # If the positions where GT has 1 others have 1 then
-        # genotypes will have to be adjust.
-        if s[np.nonzero(GT)[0]].sum()>0: # have to change GT
-            # zr holds the positions where genotypes from overlap
-            # have zeros
-            if not allow_adjust_genotype:
-                msg = 'GT {:s} not compatible with variants {:s}'\
-                    .format(str(GT),str(ovlp))
-                raise OverlappingHaplotypeVars(msg)
-            zr = np.nonzero(s==0)[0]
-            if len(zr)>0: # There is an empty spot to squeeze in new genotype
-                GT = np.zeros(other_gt.shape[1],dtype=np.int_)
-                GT[zr[0]] = 1
-                GT = tuple(GT)
-            else: # No space to squeze in GT
-                if max([len(v.GT) for v in ovlp])+1>self.max_ploidy:
-                    msg = "Can't increase ploidy more than maximum of "\
-                        +"{} when inserting around {}"\
-                        .format(self.max_ploidy,ovlp)
-                    raise OverlappingHaplotypeVars(msg)
-                for cur_vrt in ovlp:
-                    cur_vrt.GT = (0,)+cur_vrt.GT
-                GT = (1,)+(0,)*other_gt.shape[1]
-        # Genotypes are compatible as is
-        elif s[np.nonzero(GT)[0]].sum()==0:
-            pass
-        return GT
-
-
-    def _find_vrt(self,chrom,start=0,end=MAX_END,expand=False):
-        """Auxillary function invoked by ``find_vrt``"""
-        for tup in self._find_iv(chrom,start,end):
-            vrt = tup[-1] #self._variants[chrom][ivl_id]
-            yield vrt
-            if vrt.is_instance(variant.Haplotype) and expand:
-                for _vrt in vrt.find_vrt(start,end):
-                    yield _vrt
-
-    def add_hap_variants(self,variants,GT,attrib=None,
-                         allow_adjust_genotype=False):
-        """Add variants as a single haplotype defined by genotype GT
-        """
-        hap = Haplotype.from_variants(variants)
-        if attrib:
-            for v,attr in zip(hap.variants,attrib):
-                if attr:
-                    v.attrib = attr
-        vrt = self.add_vrt(
-            hap,GT=GT,allow_adjust_genotype=allow_adjust_genotype)
-        return vrt
-        
-    def nof_unit_vrt(self,collapse_homozigosity=True):
-        """
-        Returns number of simple genomic variations in a variant set. 
-        
-        SNPs and indels count as 1. MNPs as number of affected nucleotides.
-
-        Parameters
-        ----------
-        collapse_homozigosity: bool
-            If ``True`` same unit variants on different chromosomes 
-            are counted as 1. Otherwise counted separately. *Default: True*
-        Returns
-        -------
-        int
-        """
-        N = 0
-        variants = self.find_vrt(expand=True)
-        if collapse_homozigosity:
-            it1,it2,it3 = itertools.tee(variants,3)
-            mnps = filter(lambda v: v.is_instance(variant.MNP),it1)
-            insertions = filter(lambda v: v.is_instance(variant.Ins),it2)
-            deletions = filter(lambda v: v.is_instance(variant.Del),it3)
-            # for grp in no_ovlp(mnps):
-            #     if len(grp)==1:
-            #         N += grp[0].nof_unit_vrt()
-            #     else:
-            #         N += ops.nof_snp_vrt(grp)
-
-            for _,it in itertools.groupby(insertions,lambda v: (v.start,v.alt)):
-                N += 1
-            for _,it in itertools.groupby(deletions,lambda v: (v.start,v.ref)):
-                N += 1
-            for grp in no_ovlp(mnps):
-                if len(grp)==1:
-                    N += grp[0].nof_unit_vrt()
-                else:
-                    N += ops.nof_snp_vrt(grp)
-        else:
-            for vrt in filter(lambda v: not v.is_instance(variant.Haplotype),
-                              variants):
-                N += vrt.nof_unit_vrt()
-        return N
-
-    def add_vrt(self,vrt,GT,allow_adjust_genotype=False,
-                attrib=None):
-        """
-        Insert a variant into variant set.
-        
-        Parameters
-        ----------
-        vrt : VariantBase-like
-            variant to insert
-        GT : tuple
-            Genotype of the variant, e.g. (0,1)
-        allow_adjust_genotype : bool
-            If the variant will overlap by genotype with variants already
-            present in the set, setting to ``True`` will allow new 
-            variant to fit.
-        attrib : dict, optional
-            Dictionary with attributes to attached to return
-        Returns
-        -------
-        variant.GenomVariant
-        """
-        ovlp = self.ovlp(vrt,match_ambig=False)
-
-        if ovlp:
-            GT2 = self._process_gt(GT,ovlp,
-                                   allow_adjust_genotype=allow_adjust_genotype)
-        else:
-            GT2 = GT
-
-        # Initializing GenomVariant object with the VariantBase
-        ret = GenomVariant(base=vrt if isinstance(vrt,VariantBase) \
-                           else vrt.base,GT=GT2,attrib=attrib)
-
-        # Add variant to interval tree and variant dict
-        t = self._data.setdefault(ret.chrom, ITree())
-        t.insert(ret.start, ret.end, value=ret)
-        self.ctg_len[ret.chrom] = max(
-            ret.end,self.ctg_len.get(ret.chrom,0))
-        self._chroms.add(ret.chrom)
-        return ret
-
-    def sort_chroms(self,key=None):
-        self._chroms = ChromSet(sorted(self._chroms,key=key))
-
-    @property
-    def chroms(self):
-        """Chromosome set"""
-        return self._chroms
-
-    def _cmp(self,other,action,match_partial=True,match_ambig=False):
-        """Returns a new variation set depending on operation
-        specified.
-        """
-        rt = self.__new__(self.__class__)
-        rt.__init__(reference=self.reference)
-
-        for chrom in self.chroms:
-            for vrt_self in self.find_vrt(chrom):
-                # TODO handle null vrt
-                if vrt_self.is_instance(variant.Null):
-                    continue
-                match = other.match(vrt_self,match_partial=match_partial,
-                                    match_ambig=match_ambig)
-                vrt2add = ops.cmpv(vrt_self,match,action=action)
-                if not vrt2add:
-                    continue
-                if vrt_self.is_instance(variant.Haplotype):
-                    rt.add_hap_variants(vrt2add,GT=vrt_self.GT,
-                                        allow_adjust_genotype=True,
-                                        attrib = [vrt_self.attrib]*len(vrt2add))
-                else:
-                    for _vrt in vrt2add:
-                        nop = rt.add_vrt(_vrt, GT=vrt_self.GT,
-                                         allow_adjust_genotype=True,
-                                         attrib=vrt_self.attrib)
-        return rt
-
-    def diff(self,other,match_partial=True,
-             match_ambig=False):
-        """
-        Returns a new variant set object which has variants
-        present in ``self`` but absent in the ``other``.
-
-        Parameters
-        ----------
-
-        match_partial: bool
-            If ``False`` common positions won't be searched in non-identical
-            MNPs. *Default: True*
-        match_ambig: bool
-            If ``False`` ambigous indels will be treated as regular indels.
-            *Default: False*
-
-        Returns
-        -------
-        diff : MutableVariantSet
-            Different variants.
-
-        Notes
-        -----
-        Here is an example of ``diff`` operation on two variant sets s1 and s2.
-        Positions identical to REF are empty::
-
-          REF         GATTGGTAC
-          ---------------------
-          s1          C  CCC  T
-                         CCC  G
-          ---------------------
-          s2                  T
-                        AC    T
-          =====================
-          s1.diff(s2) C   CC
-                          CC  G
-          ---------------------
-          s2.diff(s1)   A
-
-        """
-        return self._cmp(other,'diff',match_partial=match_partial,
-                         match_ambig=match_ambig)
-
-    def comm(self,other,match_partial=True,match_ambig=False):
-        """
-        Returns a new variant set object which has variants
-        present both ``self`` and ``other``.
-
-        Parameters
-        ----------
-        match_partial: bool
-            If ``False`` common positions won't be searched in non-identical
-            MNPs. *Default: True*
-        match_ambig: bool
-            If ``False`` ambigous indels will be treated as regular indels.
-            *Default: False*
-
-        Returns
-        -------
-        comm : MutableVariantSet
-            Common variants
-
-        Notes
-        -----
-        Here is an example of ``diff`` operation on two variant sets s1 and s2.
-        Positions identical to REF are empty::
-
-          REF         GATTGGTAC
-          ---------------------
-          s1          C  CCC  T
-                         CCC  G
-          ---------------------
-          s2                  T
-                        AC    T
-          =====================
-          s1.comm(s2)    C    T
-                         C
-        """
-        return self._cmp(other,'comm',
-                         match_partial=match_partial,
-                         match_ambig=match_ambig)
-
 class CmpSet(object):
     """
     Class ``CmpSet`` is a lazy implementation of variant set comparison which is
@@ -1496,10 +1306,6 @@ class CmpSet(object):
         self.right = right
         self.action = op
         self.match_partial = match_partial
-        if (isinstance(self.left,VariantFileSet) \
-                 or isinstance(self.right,VariantFileSet)) and match_ambig:
-            raise ValueError('Cant match ambigous indels on VariantFileSet'\
-                             +' subclasses')
         self.match_ambig = match_ambig
 
     def _ordered_chroms(self,check_consistency=True):
@@ -1573,8 +1379,7 @@ class CmpSet(object):
         kwds = {'chrom':chrom,'start':start,'end':end,
                   'check_order':True,}
         for vs in (self.left,self.right):
-            if not isinstance(vs,IndexedVariantFileSet) \
-                              and not isinstance(vs,MutableVariantSet) \
+            if not isinstance(vs,VariantSetFromFile) \
                               and not isinstance(vs,VariantSet):
                 raise ValueError('{} does not support region access'\
                                  .format(repr(vs)))
@@ -1690,7 +1495,7 @@ class CmpSet(object):
                     for op in _compare(vrt,mt,'comm'):
                         yield (2,op)
                 
-class VariantFileSet(VariantSetBase):
+class VariantSetFromFile(_VariantSetBase):
     """
     Variant set representing variants contained in underlying VCF file specified
     on initialization.
@@ -1706,12 +1511,14 @@ class VariantFileSet(VariantSetBase):
     diff = None
     _find_vrt = None
 
-    def __init__(self,file,reference=None,parse_info=False,
+    def __init__(self, file, reference=None, index=False, parse_info=False,
                  parse_samples=False):
-        self._reader=_get_reader(file)
+        self.vcfreader=_get_reader(file, index)
         self.parse_info = parse_info
         self.parse_samples = parse_samples
         super().__init__(reference=reference)
+        if index:
+            self._chroms = set(self.vcfreader.chroms)
 
     def get_factory(self):
         """Returns a VariantFactory object. It will inherit the same reference
@@ -1720,7 +1527,7 @@ class VariantFileSet(VariantSetBase):
 
     def iter_vrt_by_chrom(self,check_order=False):
         """Iterates variants grouped by chromosome."""
-        return self._reader.iter_vrt_by_chrom(
+        return self.vcfreader.iter_vrt_by_chrom(
                 parse_info=self.parse_info,
                 parse_samples=self.parse_samples,
                 check_order=check_order)
@@ -1738,7 +1545,7 @@ class VariantFileSet(VariantSetBase):
         -------
         variant : :class:`genomvar.variant.GenomVariant`
         """
-        return self._reader.iter_vrt(
+        return self.vcfreader.iter_vrt(
             parse_info=self.parse_info,
             parse_samples=self.parse_samples)
 
@@ -1756,30 +1563,17 @@ class VariantFileSet(VariantSetBase):
         # """
         N = 0
         variants = self.find_vrt(expand=True)
-        for vrt in filter(lambda v: not v.is_instance(variant.Haplotype),
+        for vrt in filter(lambda v: not v.is_variant_instance(variant.Haplotype),
                           variants):
             N += vrt.nof_unit_vrt()
         return N
 
     def get_chroms(self):
-        return self._reader.get_chroms(allow_no_index=True)
+        return self.vcfreader.get_chroms(allow_no_index=True)
 
-class IndexedVariantFileSet(VariantFileSet):
-    """
-    Variant set representing variants contained in underlying VCF file specified
-    on initialization. By default it searches for Tabix index and uses it 
-    for random access of variants.
-    """
-    def __init__(self,file,index=None,parse_info=False,parse_samples=False,
-                 reference=None):
-        super().__init__(file,reference=reference,parse_info=parse_info,
-                         parse_samples=parse_samples)
-        self._reader=VCFReader(file,index=True)
-        self._chroms = set(self._reader.chroms)
-        
     def _find_vrt(self,chrom,start,end,expand=False):
         """Auxillary function for ``find_vrt``"""
-        for vrt in self._reader.find_vrt(
+        for vrt in self.vcfreader.find_vrt(
                 chrom,start,end,parse_info=self.parse_info,
                 parse_samples=self.parse_samples):
             yield vrt
@@ -1788,3 +1582,17 @@ class IndexedVariantFileSet(VariantFileSet):
     def chroms(self):
         """Chromosome set"""
         return self._chroms
+
+# class VariantSetFromFile(VariantSetFromFile):
+#     """
+#     Variant set representing variants contained in underlying VCF file specified
+#     on initialization. By default it searches for Tabix index and uses it 
+#     for random access of variants.
+#     """
+#     def __init__(self,file,index=None,parse_info=False,parse_samples=False,
+#                  reference=None):
+#         super().__init__(file,reference=reference,parse_info=parse_info,
+#                          parse_samples=parse_samples)
+#         self._reader=VCFReader(file,index=True)
+#         self._chroms = set(self._reader.chroms)
+        

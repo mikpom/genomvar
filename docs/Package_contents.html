@@ -60,7 +60,7 @@ alterations.</p>
 <p>All variants have <code class="docutils literal notranslate"><span class="pre">start</span></code> and <code class="docutils literal notranslate"><span class="pre">end</span></code> attributes defining a range they
 act on and can be searched overlap for.</p>
 <p>To test whether a variant is instance of some type
-<a class="reference internal" href="#genomvar.variant.VariantBase.is_instance" title="genomvar.variant.VariantBase.is_instance"><code class="xref py py-meth docutils literal notranslate"><span class="pre">is_instance()</span></code></a> method can be used.  Variant equality
+<a class="reference internal" href="#genomvar.variant.VariantBase.is_variant_instance" title="genomvar.variant.VariantBase.is_variant_instance"><code class="xref py py-meth docutils literal notranslate"><span class="pre">is_variant_instance()</span></code></a> method can be used.  Variant equality
 can be tested using <a class="reference internal" href="#genomvar.variant.VariantBase.edit_equal" title="genomvar.variant.VariantBase.edit_equal"><code class="xref py py-meth docutils literal notranslate"><span class="pre">edit_equal()</span></code></a>.</p>
 <p>Objects can be instantiated directly, e.g.:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">vrt</span> <span class="o">=</span> <span class="n">variant</span><span class="o">.</span><span class="n">MNP</span><span class="p">(</span><span class="s1">&#39;chr1&#39;</span><span class="p">,</span><span class="mi">154678</span><span class="p">,</span><span class="s1">&#39;GT&#39;</span><span class="p">)</span>
@@ -111,8 +111,8 @@ etc.).</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="genomvar.variant.VariantBase.is_instance">
-<code class="sig-name descname">is_instance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cls</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.VariantBase.is_instance" title="Permalink to this definition">¶</a></dt>
+<dt id="genomvar.variant.VariantBase.is_variant_instance">
+<code class="sig-name descname">is_variant_instance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cls</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.VariantBase.is_variant_instance" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns True if object’s variant class is subclass of
 <code class="docutils literal notranslate"><span class="pre">cls</span></code>.  See module <a class="reference internal" href="#module-genomvar.variant" title="genomvar.variant"><code class="xref py py-mod docutils literal notranslate"><span class="pre">genomvar.variant</span></code></a> documentation for
 class hierarchy.</p>
@@ -152,18 +152,18 @@ alternative sequence. <code class="docutils literal notranslate"><span class="pr
 </dd></dl>
 
 <dl class="py method">
-<dt id="genomvar.variant.MNP.is_instance">
-<code class="sig-name descname">is_instance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cls</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.MNP.is_instance" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns True if object’s variant class is subclass of
-<code class="docutils literal notranslate"><span class="pre">cls</span></code>.  See module <a class="reference internal" href="#module-genomvar.variant" title="genomvar.variant"><code class="xref py py-mod docutils literal notranslate"><span class="pre">genomvar.variant</span></code></a> documentation for
-class hierarchy.</p>
-</dd></dl>
-
-<dl class="py method">
 <dt id="genomvar.variant.MNP.is_subclass">
 <em class="property">classmethod </em><code class="sig-name descname">is_subclass</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.MNP.is_subclass" title="Permalink to this definition">¶</a></dt>
 <dd><p>Checks is variant class is subclass of <code class="docutils literal notranslate"><span class="pre">other</span></code>.  See module
 <a class="reference internal" href="#module-genomvar.variant" title="genomvar.variant"><code class="xref py py-mod docutils literal notranslate"><span class="pre">genomvar.variant</span></code></a> documentaion for class hierarchy.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="genomvar.variant.MNP.is_variant_instance">
+<code class="sig-name descname">is_variant_instance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cls</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.MNP.is_variant_instance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if object’s variant class is subclass of
+<code class="docutils literal notranslate"><span class="pre">cls</span></code>.  See module <a class="reference internal" href="#module-genomvar.variant" title="genomvar.variant"><code class="xref py py-mod docutils literal notranslate"><span class="pre">genomvar.variant</span></code></a> documentation for
+class hierarchy.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -198,18 +198,18 @@ alternative sequence.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="genomvar.variant.SNP.is_instance">
-<code class="sig-name descname">is_instance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cls</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.SNP.is_instance" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns True if object’s variant class is subclass of
-<code class="docutils literal notranslate"><span class="pre">cls</span></code>.  See module <a class="reference internal" href="#module-genomvar.variant" title="genomvar.variant"><code class="xref py py-mod docutils literal notranslate"><span class="pre">genomvar.variant</span></code></a> documentation for
-class hierarchy.</p>
-</dd></dl>
-
-<dl class="py method">
 <dt id="genomvar.variant.SNP.is_subclass">
 <em class="property">classmethod </em><code class="sig-name descname">is_subclass</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.SNP.is_subclass" title="Permalink to this definition">¶</a></dt>
 <dd><p>Checks is variant class is subclass of <code class="docutils literal notranslate"><span class="pre">other</span></code>.  See module
 <a class="reference internal" href="#module-genomvar.variant" title="genomvar.variant"><code class="xref py py-mod docutils literal notranslate"><span class="pre">genomvar.variant</span></code></a> documentaion for class hierarchy.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="genomvar.variant.SNP.is_variant_instance">
+<code class="sig-name descname">is_variant_instance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cls</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.SNP.is_variant_instance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if object’s variant class is subclass of
+<code class="docutils literal notranslate"><span class="pre">cls</span></code>.  See module <a class="reference internal" href="#module-genomvar.variant" title="genomvar.variant"><code class="xref py py-mod docutils literal notranslate"><span class="pre">genomvar.variant</span></code></a> documentation for
+class hierarchy.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -243,18 +243,18 @@ class hierarchy.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="genomvar.variant.Indel.is_instance">
-<code class="sig-name descname">is_instance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cls</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.Indel.is_instance" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns True if object’s variant class is subclass of
-<code class="docutils literal notranslate"><span class="pre">cls</span></code>.  See module <a class="reference internal" href="#module-genomvar.variant" title="genomvar.variant"><code class="xref py py-mod docutils literal notranslate"><span class="pre">genomvar.variant</span></code></a> documentation for
-class hierarchy.</p>
-</dd></dl>
-
-<dl class="py method">
 <dt id="genomvar.variant.Indel.is_subclass">
 <em class="property">classmethod </em><code class="sig-name descname">is_subclass</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.Indel.is_subclass" title="Permalink to this definition">¶</a></dt>
 <dd><p>Checks is variant class is subclass of <code class="docutils literal notranslate"><span class="pre">other</span></code>.  See module
 <a class="reference internal" href="#module-genomvar.variant" title="genomvar.variant"><code class="xref py py-mod docutils literal notranslate"><span class="pre">genomvar.variant</span></code></a> documentaion for class hierarchy.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="genomvar.variant.Indel.is_variant_instance">
+<code class="sig-name descname">is_variant_instance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cls</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.Indel.is_variant_instance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if object’s variant class is subclass of
+<code class="docutils literal notranslate"><span class="pre">cls</span></code>.  See module <a class="reference internal" href="#module-genomvar.variant" title="genomvar.variant"><code class="xref py py-mod docutils literal notranslate"><span class="pre">genomvar.variant</span></code></a> documentation for
+class hierarchy.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -299,18 +299,18 @@ i.e. <code class="docutils literal notranslate"><span class="pre">start</span></
 </dd></dl>
 
 <dl class="py method">
-<dt id="genomvar.variant.Ins.is_instance">
-<code class="sig-name descname">is_instance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cls</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.Ins.is_instance" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns True if object’s variant class is subclass of
-<code class="docutils literal notranslate"><span class="pre">cls</span></code>.  See module <a class="reference internal" href="#module-genomvar.variant" title="genomvar.variant"><code class="xref py py-mod docutils literal notranslate"><span class="pre">genomvar.variant</span></code></a> documentation for
-class hierarchy.</p>
-</dd></dl>
-
-<dl class="py method">
 <dt id="genomvar.variant.Ins.is_subclass">
 <em class="property">classmethod </em><code class="sig-name descname">is_subclass</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.Ins.is_subclass" title="Permalink to this definition">¶</a></dt>
 <dd><p>Checks is variant class is subclass of <code class="docutils literal notranslate"><span class="pre">other</span></code>.  See module
 <a class="reference internal" href="#module-genomvar.variant" title="genomvar.variant"><code class="xref py py-mod docutils literal notranslate"><span class="pre">genomvar.variant</span></code></a> documentaion for class hierarchy.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="genomvar.variant.Ins.is_variant_instance">
+<code class="sig-name descname">is_variant_instance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cls</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.Ins.is_variant_instance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if object’s variant class is subclass of
+<code class="docutils literal notranslate"><span class="pre">cls</span></code>.  See module <a class="reference internal" href="#module-genomvar.variant" title="genomvar.variant"><code class="xref py py-mod docutils literal notranslate"><span class="pre">genomvar.variant</span></code></a> documentation for
+class hierarchy.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -352,18 +352,18 @@ and <code class="docutils literal notranslate"><span class="pre">end</span></cod
 </dd></dl>
 
 <dl class="py method">
-<dt id="genomvar.variant.Del.is_instance">
-<code class="sig-name descname">is_instance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cls</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.Del.is_instance" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns True if object’s variant class is subclass of
-<code class="docutils literal notranslate"><span class="pre">cls</span></code>.  See module <a class="reference internal" href="#module-genomvar.variant" title="genomvar.variant"><code class="xref py py-mod docutils literal notranslate"><span class="pre">genomvar.variant</span></code></a> documentation for
-class hierarchy.</p>
-</dd></dl>
-
-<dl class="py method">
 <dt id="genomvar.variant.Del.is_subclass">
 <em class="property">classmethod </em><code class="sig-name descname">is_subclass</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.Del.is_subclass" title="Permalink to this definition">¶</a></dt>
 <dd><p>Checks is variant class is subclass of <code class="docutils literal notranslate"><span class="pre">other</span></code>.  See module
 <a class="reference internal" href="#module-genomvar.variant" title="genomvar.variant"><code class="xref py py-mod docutils literal notranslate"><span class="pre">genomvar.variant</span></code></a> documentaion for class hierarchy.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="genomvar.variant.Del.is_variant_instance">
+<code class="sig-name descname">is_variant_instance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cls</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.Del.is_variant_instance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if object’s variant class is subclass of
+<code class="docutils literal notranslate"><span class="pre">cls</span></code>.  See module <a class="reference internal" href="#module-genomvar.variant" title="genomvar.variant"><code class="xref py py-mod docutils literal notranslate"><span class="pre">genomvar.variant</span></code></a> documentation for
+class hierarchy.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -399,18 +399,18 @@ alternative sequence.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="genomvar.variant.AmbigIndel.is_instance">
-<code class="sig-name descname">is_instance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cls</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.AmbigIndel.is_instance" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns True if object’s variant class is subclass of
-<code class="docutils literal notranslate"><span class="pre">cls</span></code>.  See module <a class="reference internal" href="#module-genomvar.variant" title="genomvar.variant"><code class="xref py py-mod docutils literal notranslate"><span class="pre">genomvar.variant</span></code></a> documentation for
-class hierarchy.</p>
-</dd></dl>
-
-<dl class="py method">
 <dt id="genomvar.variant.AmbigIndel.is_subclass">
 <em class="property">classmethod </em><code class="sig-name descname">is_subclass</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.AmbigIndel.is_subclass" title="Permalink to this definition">¶</a></dt>
 <dd><p>Checks is variant class is subclass of <code class="docutils literal notranslate"><span class="pre">other</span></code>.  See module
 <a class="reference internal" href="#module-genomvar.variant" title="genomvar.variant"><code class="xref py py-mod docutils literal notranslate"><span class="pre">genomvar.variant</span></code></a> documentaion for class hierarchy.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="genomvar.variant.AmbigIndel.is_variant_instance">
+<code class="sig-name descname">is_variant_instance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cls</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.AmbigIndel.is_variant_instance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if object’s variant class is subclass of
+<code class="docutils literal notranslate"><span class="pre">cls</span></code>.  See module <a class="reference internal" href="#module-genomvar.variant" title="genomvar.variant"><code class="xref py py-mod docutils literal notranslate"><span class="pre">genomvar.variant</span></code></a> documentation for
+class hierarchy.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -453,6 +453,12 @@ is inserted before nucleotide located 1-2.
 Positions 0-4 indicate that start and end can be extended to
 these values resulting in the same alteration.</p>
 <dl class="py method">
+<dt id="genomvar.variant.AmbigIns.seq">
+<em class="property">property </em><code class="sig-name descname">seq</code><a class="headerlink" href="#genomvar.variant.AmbigIns.seq" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inserted sequence.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt id="genomvar.variant.AmbigIns.ambig_equal">
 <code class="sig-name descname">ambig_equal</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.AmbigIns.ambig_equal" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns true if two variants are equal up to indel ambiguity.</p>
@@ -465,18 +471,18 @@ these values resulting in the same alteration.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="genomvar.variant.AmbigIns.is_instance">
-<code class="sig-name descname">is_instance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cls</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.AmbigIns.is_instance" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns True if object’s variant class is subclass of
-<code class="docutils literal notranslate"><span class="pre">cls</span></code>.  See module <a class="reference internal" href="#module-genomvar.variant" title="genomvar.variant"><code class="xref py py-mod docutils literal notranslate"><span class="pre">genomvar.variant</span></code></a> documentation for
-class hierarchy.</p>
-</dd></dl>
-
-<dl class="py method">
 <dt id="genomvar.variant.AmbigIns.is_subclass">
 <em class="property">classmethod </em><code class="sig-name descname">is_subclass</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.AmbigIns.is_subclass" title="Permalink to this definition">¶</a></dt>
 <dd><p>Checks is variant class is subclass of <code class="docutils literal notranslate"><span class="pre">other</span></code>.  See module
 <a class="reference internal" href="#module-genomvar.variant" title="genomvar.variant"><code class="xref py py-mod docutils literal notranslate"><span class="pre">genomvar.variant</span></code></a> documentaion for class hierarchy.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="genomvar.variant.AmbigIns.is_variant_instance">
+<code class="sig-name descname">is_variant_instance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cls</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.AmbigIns.is_variant_instance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if object’s variant class is subclass of
+<code class="docutils literal notranslate"><span class="pre">cls</span></code>.  See module <a class="reference internal" href="#module-genomvar.variant" title="genomvar.variant"><code class="xref py py-mod docutils literal notranslate"><span class="pre">genomvar.variant</span></code></a> documentation for
+class hierarchy.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -514,6 +520,12 @@ resulting in the same aternative sequence.</p>
 end can be extended to these values resulting in the same
 alteration.</p>
 <dl class="py method">
+<dt id="genomvar.variant.AmbigDel.seq">
+<em class="property">property </em><code class="sig-name descname">seq</code><a class="headerlink" href="#genomvar.variant.AmbigDel.seq" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deleted sequence.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt id="genomvar.variant.AmbigDel.ambig_equal">
 <code class="sig-name descname">ambig_equal</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.AmbigDel.ambig_equal" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns true if two variants are equal up to indel ambiguity.</p>
@@ -526,18 +538,18 @@ alteration.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="genomvar.variant.AmbigDel.is_instance">
-<code class="sig-name descname">is_instance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cls</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.AmbigDel.is_instance" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns True if object’s variant class is subclass of
-<code class="docutils literal notranslate"><span class="pre">cls</span></code>.  See module <a class="reference internal" href="#module-genomvar.variant" title="genomvar.variant"><code class="xref py py-mod docutils literal notranslate"><span class="pre">genomvar.variant</span></code></a> documentation for
-class hierarchy.</p>
-</dd></dl>
-
-<dl class="py method">
 <dt id="genomvar.variant.AmbigDel.is_subclass">
 <em class="property">classmethod </em><code class="sig-name descname">is_subclass</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.AmbigDel.is_subclass" title="Permalink to this definition">¶</a></dt>
 <dd><p>Checks is variant class is subclass of <code class="docutils literal notranslate"><span class="pre">other</span></code>.  See module
 <a class="reference internal" href="#module-genomvar.variant" title="genomvar.variant"><code class="xref py py-mod docutils literal notranslate"><span class="pre">genomvar.variant</span></code></a> documentaion for class hierarchy.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="genomvar.variant.AmbigDel.is_variant_instance">
+<code class="sig-name descname">is_variant_instance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cls</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.AmbigDel.is_variant_instance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if object’s variant class is subclass of
+<code class="docutils literal notranslate"><span class="pre">cls</span></code>.  See module <a class="reference internal" href="#module-genomvar.variant" title="genomvar.variant"><code class="xref py py-mod docutils literal notranslate"><span class="pre">genomvar.variant</span></code></a> documentation for
+class hierarchy.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -566,18 +578,18 @@ and exists for compatibility.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="genomvar.variant.Mixed.is_instance">
-<code class="sig-name descname">is_instance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cls</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.Mixed.is_instance" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns True if object’s variant class is subclass of
-<code class="docutils literal notranslate"><span class="pre">cls</span></code>.  See module <a class="reference internal" href="#module-genomvar.variant" title="genomvar.variant"><code class="xref py py-mod docutils literal notranslate"><span class="pre">genomvar.variant</span></code></a> documentation for
-class hierarchy.</p>
-</dd></dl>
-
-<dl class="py method">
 <dt id="genomvar.variant.Mixed.is_subclass">
 <em class="property">classmethod </em><code class="sig-name descname">is_subclass</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.Mixed.is_subclass" title="Permalink to this definition">¶</a></dt>
 <dd><p>Checks is variant class is subclass of <code class="docutils literal notranslate"><span class="pre">other</span></code>.  See module
 <a class="reference internal" href="#module-genomvar.variant" title="genomvar.variant"><code class="xref py py-mod docutils literal notranslate"><span class="pre">genomvar.variant</span></code></a> documentaion for class hierarchy.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="genomvar.variant.Mixed.is_variant_instance">
+<code class="sig-name descname">is_variant_instance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cls</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.Mixed.is_variant_instance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if object’s variant class is subclass of
+<code class="docutils literal notranslate"><span class="pre">cls</span></code>.  See module <a class="reference internal" href="#module-genomvar.variant" title="genomvar.variant"><code class="xref py py-mod docutils literal notranslate"><span class="pre">genomvar.variant</span></code></a> documentation for
+class hierarchy.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -642,18 +654,18 @@ same chromosome (or contig).</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="genomvar.variant.Haplotype.is_instance">
-<code class="sig-name descname">is_instance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cls</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.Haplotype.is_instance" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns True if object’s variant class is subclass of
-<code class="docutils literal notranslate"><span class="pre">cls</span></code>.  See module <a class="reference internal" href="#module-genomvar.variant" title="genomvar.variant"><code class="xref py py-mod docutils literal notranslate"><span class="pre">genomvar.variant</span></code></a> documentation for
-class hierarchy.</p>
-</dd></dl>
-
-<dl class="py method">
 <dt id="genomvar.variant.Haplotype.is_subclass">
 <em class="property">classmethod </em><code class="sig-name descname">is_subclass</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.Haplotype.is_subclass" title="Permalink to this definition">¶</a></dt>
 <dd><p>Checks is variant class is subclass of <code class="docutils literal notranslate"><span class="pre">other</span></code>.  See module
 <a class="reference internal" href="#module-genomvar.variant" title="genomvar.variant"><code class="xref py py-mod docutils literal notranslate"><span class="pre">genomvar.variant</span></code></a> documentaion for class hierarchy.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="genomvar.variant.Haplotype.is_variant_instance">
+<code class="sig-name descname">is_variant_instance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cls</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.Haplotype.is_variant_instance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if object’s variant class is subclass of
+<code class="docutils literal notranslate"><span class="pre">cls</span></code>.  See module <a class="reference internal" href="#module-genomvar.variant" title="genomvar.variant"><code class="xref py py-mod docutils literal notranslate"><span class="pre">genomvar.variant</span></code></a> documentation for
+class hierarchy.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -680,18 +692,18 @@ class hierarchy.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="genomvar.variant.Null.is_instance">
-<code class="sig-name descname">is_instance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cls</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.Null.is_instance" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns True if object’s variant class is subclass of
-<code class="docutils literal notranslate"><span class="pre">cls</span></code>.  See module <a class="reference internal" href="#module-genomvar.variant" title="genomvar.variant"><code class="xref py py-mod docutils literal notranslate"><span class="pre">genomvar.variant</span></code></a> documentation for
-class hierarchy.</p>
-</dd></dl>
-
-<dl class="py method">
 <dt id="genomvar.variant.Null.is_subclass">
 <em class="property">classmethod </em><code class="sig-name descname">is_subclass</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.Null.is_subclass" title="Permalink to this definition">¶</a></dt>
 <dd><p>Checks is variant class is subclass of <code class="docutils literal notranslate"><span class="pre">other</span></code>.  See module
 <a class="reference internal" href="#module-genomvar.variant" title="genomvar.variant"><code class="xref py py-mod docutils literal notranslate"><span class="pre">genomvar.variant</span></code></a> documentaion for class hierarchy.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="genomvar.variant.Null.is_variant_instance">
+<code class="sig-name descname">is_variant_instance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cls</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.Null.is_variant_instance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if object’s variant class is subclass of
+<code class="docutils literal notranslate"><span class="pre">cls</span></code>.  See module <a class="reference internal" href="#module-genomvar.variant" title="genomvar.variant"><code class="xref py py-mod docutils literal notranslate"><span class="pre">genomvar.variant</span></code></a> documentation for
+class hierarchy.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -718,18 +730,18 @@ class hierarchy.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="genomvar.variant.Asterisk.is_instance">
-<code class="sig-name descname">is_instance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cls</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.Asterisk.is_instance" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns True if object’s variant class is subclass of
-<code class="docutils literal notranslate"><span class="pre">cls</span></code>.  See module <a class="reference internal" href="#module-genomvar.variant" title="genomvar.variant"><code class="xref py py-mod docutils literal notranslate"><span class="pre">genomvar.variant</span></code></a> documentation for
-class hierarchy.</p>
-</dd></dl>
-
-<dl class="py method">
 <dt id="genomvar.variant.Asterisk.is_subclass">
 <em class="property">classmethod </em><code class="sig-name descname">is_subclass</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.Asterisk.is_subclass" title="Permalink to this definition">¶</a></dt>
 <dd><p>Checks is variant class is subclass of <code class="docutils literal notranslate"><span class="pre">other</span></code>.  See module
 <a class="reference internal" href="#module-genomvar.variant" title="genomvar.variant"><code class="xref py py-mod docutils literal notranslate"><span class="pre">genomvar.variant</span></code></a> documentaion for class hierarchy.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="genomvar.variant.Asterisk.is_variant_instance">
+<code class="sig-name descname">is_variant_instance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cls</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.Asterisk.is_variant_instance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if object’s variant class is subclass of
+<code class="docutils literal notranslate"><span class="pre">cls</span></code>.  See module <a class="reference internal" href="#module-genomvar.variant" title="genomvar.variant"><code class="xref py py-mod docutils literal notranslate"><span class="pre">genomvar.variant</span></code></a> documentation for
+class hierarchy.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -748,7 +760,7 @@ class hierarchy.</p>
 
 <dl class="py class">
 <dt id="genomvar.variant.GenomVariant">
-<em class="property">class </em><code class="sig-prename descclassname">genomvar.variant.</code><code class="sig-name descname">GenomVariant</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">GT</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">attrib</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.GenomVariant" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">genomvar.variant.</code><code class="sig-name descname">GenomVariant</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">attrib</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.variant.GenomVariant" title="Permalink to this definition">¶</a></dt>
 <dd><p>This is a variant class holding gemomic alteration
 (a VariantBase subclass object)
 and extra attributes. Underlying variant is accessible as <code class="docutils literal notranslate"><span class="pre">base</span></code> attribute.
@@ -836,23 +848,18 @@ but start is 0-based) and returns a variant object.</p>
 <span id="module-varset-py"></span><h2>Module varset.py<a class="headerlink" href="#module-genomvar.varset" title="Permalink to this headline">¶</a></h2>
 <p>Module <code class="docutils literal notranslate"><span class="pre">varset</span></code> defines variant set classes which are containers of variants
 supporting set-like operations, searching variants, export to NumPy…</p>
-<p>There are several classes depending on whether all the variants are loaded
-into memory or not and whether the object is mutable:</p>
+<p>There are two classes depending on whether all the variants are loaded
+into memory or not:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p><a class="reference internal" href="#genomvar.varset.VariantSet" title="genomvar.varset.VariantSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">VariantSet</span></code></a> is immutable, in-memory, random
-access supporting class</p></li>
-<li><p><a class="reference internal" href="#genomvar.varset.MutableVariantSet" title="genomvar.varset.MutableVariantSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">MutableVariantSet</span></code></a> mutable, in-memory, random
-access</p></li>
-<li><p><a class="reference internal" href="#genomvar.varset.VariantFileSet" title="genomvar.varset.VariantFileSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">VariantFileSet</span></code></a> immutable, VCF file storage, no
-random access</p></li>
-<li><p><a class="reference internal" href="#genomvar.varset.IndexedVariantFileSet" title="genomvar.varset.IndexedVariantFileSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">IndexedVariantFileSet</span></code></a> immutable, VCF file
-storage, random access</p></li>
+<li><p><a class="reference internal" href="#genomvar.varset.VariantSet" title="genomvar.varset.VariantSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">VariantSet</span></code></a> in-memory</p></li>
+<li><p><a class="reference internal" href="#genomvar.varset.VariantSetFromFile" title="genomvar.varset.VariantSetFromFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">VariantSetFromFile</span></code></a> can read VCF files
+on demand, needs index for random access</p></li>
 </ul>
 </div></blockquote>
 <dl class="py class">
 <dt id="genomvar.varset.VariantSet">
-<em class="property">class </em><code class="sig-prename descclassname">genomvar.varset.</code><code class="sig-name descname">VariantSet</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">variants</span></em>, <em class="sig-param"><span class="n">attrib</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">vcf_notation</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">info</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sampdata</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">reference</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dtype</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.VariantSet" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">genomvar.varset.</code><code class="sig-name descname">VariantSet</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">variants</span></em>, <em class="sig-param"><span class="n">attrib</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">vcf_notation</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">info</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sampdata</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">reference</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dtype</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">samples</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.VariantSet" title="Permalink to this definition">¶</a></dt>
 <dd><p>Immutable class for storing variants in-memory.</p>
 <p>Supports random access by variant location.
 Can be instantiated from a VCF file (see
@@ -879,6 +886,40 @@ is taken from length of chromosomes in the reference.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="genomvar.varset.VariantSet.sample">
+<code class="sig-name descname">sample</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">size</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.VariantSet.sample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a random sample of variants.</p>
+<p>Haplotypes (if present) maybe returned equally likely as non-haplotype
+variants and their subvariants.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>size</strong> (<em>int</em>) – size of the sample</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>marray</strong> – List of variants.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="genomvar.varset.VariantSet.iter_vrt">
+<code class="sig-name descname">iter_vrt</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">expand</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.VariantSet.iter_vrt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterate over all variants in the set.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>expand</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code> variants in encountered haplotypes are yielded.
+<em>Default: False</em></p>
+</dd>
+<dt class="field-even">Yields</dt>
+<dd class="field-even"><p><a class="reference internal" href="#genomvar.variant.GenomVariant" title="genomvar.variant.GenomVariant"><code class="xref py py-class docutils literal notranslate"><span class="pre">genomvar.variant.GenomVariant</span></code></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -951,7 +992,7 @@ do not check for duplicates</em>.</p></li>
 
 <dl class="py method">
 <dt id="genomvar.varset.VariantSet.from_variants">
-<em class="property">classmethod </em><code class="sig-name descname">from_variants</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">variants</span></em>, <em class="sig-param"><span class="n">reference</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">duplicates</span><span class="o">=</span><span class="default_value">'ignore'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.VariantSet.from_variants" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><code class="sig-name descname">from_variants</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">variants</span></em>, <em class="sig-param"><span class="n">reference</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.VariantSet.from_variants" title="Permalink to this definition">¶</a></dt>
 <dd><p>Instantiate VariantSet from iterable of variants.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1180,21 +1221,6 @@ as was used for instantiation of <code class="docutils literal notranslate"><spa
 </dd></dl>
 
 <dl class="py method">
-<dt id="genomvar.varset.VariantSet.iter_vrt">
-<code class="sig-name descname">iter_vrt</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">expand</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.VariantSet.iter_vrt" title="Permalink to this definition">¶</a></dt>
-<dd><p>Iterate over all variants in the set.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>expand</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code> variants in encountered haplotypes are yielded.
-<em>Default: False</em></p>
-</dd>
-<dt class="field-even">Yields</dt>
-<dd class="field-even"><p><a class="reference internal" href="#genomvar.variant.GenomVariant" title="genomvar.variant.GenomVariant"><code class="xref py py-class docutils literal notranslate"><span class="pre">genomvar.variant.GenomVariant</span></code></a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt id="genomvar.varset.VariantSet.iter_vrt_by_chrom">
 <code class="sig-name descname">iter_vrt_by_chrom</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwds</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.VariantSet.iter_vrt_by_chrom" title="Permalink to this definition">¶</a></dt>
 <dd><p>Iterates variants grouped by chromosome.</p>
@@ -1249,7 +1275,7 @@ these). <em>Default: True</em></p></li>
 
 <dl class="py method">
 <dt id="genomvar.varset.VariantSet.to_vcf">
-<code class="sig-name descname">to_vcf</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">out</span></em>, <em class="sig-param"><span class="n">reference</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">info_spec</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.VariantSet.to_vcf" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">to_vcf</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">out</span></em>, <em class="sig-param"><span class="n">reference</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">info_spec</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">format_spec</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">samples</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.VariantSet.to_vcf" title="Permalink to this definition">¶</a></dt>
 <dd><p>Writes a minimal VCF with variants from the set.</p>
 <p>INFO and SAMPLE data from source data is not preserved.</p>
 <dl class="field-list simple">
@@ -1257,11 +1283,18 @@ these). <em>Default: True</em></p></li>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>out</strong> (<em>handle</em><em> or </em><em>str</em>) – If string then it’s path to file, otherwise a handle
 to write variants.</p></li>
-<li><p><strong>reference</strong> (<em>Reference</em><em> or </em><em>str</em><em>, </em><em>optional</em>) – <p>If string then it’s path to reference FASTA. Otherwise
-object of <code class="xref py py-class docutils literal notranslate"><span class="pre">genomvar.Reference</span></code> is expected.</p>
-<p>This is not necessary if self was instantiated with a reference.
-If however given, this argument takes precedence.</p>
-</p></li>
+<li><p><strong>reference</strong> (<em>Reference</em><em> or </em><em>str</em><em>, </em><em>optional</em>) – If string then it’s path to reference FASTA. Otherwise
+object of <code class="xref py py-class docutils literal notranslate"><span class="pre">genomvar.Reference</span></code> is expected. Not
+necessary if self was instantiated with a reference.
+If given, this argument takes precedence over the ref
+used at instantiation.</p></li>
+<li><p><strong>info_spec</strong> (<em>list of tuples containing specification of</em>) – an INFO field in Order per VCF spec, i.e. <cite>NAME</cite>,
+<cite>NUMBER</cite>,  <cite>TYPE</cite>,  <cite>DESCRIPTION</cite>,  <cite>SOURCE</cite>,  <cite>VERSION</cite>.
+Only the first three fiels (name, number and type)
+are required. If variant set was instantiated from VCF
+file spec obtained from it will be used. Providing
+empty sequence will omit INFO fields in output.</p></li>
+<li><p><strong>format_spec</strong> (<em>spec of FORMAT fields</em><em>, </em><em>similar to info_spec</em>) – </p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1271,403 +1304,12 @@ If however given, this argument takes precedence.</p>
 <dd class="field-odd"><p>None</p>
 </dd>
 </dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt id="genomvar.varset.MutableVariantSet">
-<em class="property">class </em><code class="sig-prename descclassname">genomvar.varset.</code><code class="sig-name descname">MutableVariantSet</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">reference</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">max_ploidy</span><span class="o">=</span><span class="default_value">2</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.MutableVariantSet" title="Permalink to this definition">¶</a></dt>
-<dd><p>Mutable class storing variants supporting addition of variants with
-specified genotype.</p>
-<p>Supports random access by variant location.
-Can be instantiated from a VCF file (see
-<a class="reference internal" href="#genomvar.varset.VariantSet.from_vcf" title="genomvar.varset.VariantSet.from_vcf"><code class="xref py py-meth docutils literal notranslate"><span class="pre">genomvar.varset.VariantSet.from_vcf()</span></code></a>) or from iterable containing
-variants (see <a class="reference internal" href="#genomvar.varset.VariantSet.from_variants" title="genomvar.varset.VariantSet.from_variants"><code class="xref py py-meth docutils literal notranslate"><span class="pre">VariantSet.from_variants()</span></code></a>).</p>
-<dl class="py attribute">
-<dt id="genomvar.varset.MutableVariantSet.reference">
-<code class="sig-name descname">reference</code><a class="headerlink" href="#genomvar.varset.MutableVariantSet.reference" title="Permalink to this definition">¶</a></dt>
-<dd><p>Genome reference.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>Reference</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt id="genomvar.varset.MutableVariantSet.chroms">
-<code class="sig-name descname">chroms</code><a class="headerlink" href="#genomvar.varset.MutableVariantSet.chroms" title="Permalink to this definition">¶</a></dt>
-<dd><p>list-like representation of chromosome in the set.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>ChromSet</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt id="genomvar.varset.MutableVariantSet.ctg_len">
-<code class="sig-name descname">ctg_len</code><a class="headerlink" href="#genomvar.varset.MutableVariantSet.ctg_len" title="Permalink to this definition">¶</a></dt>
-<dd><p>dict mapping Chromosome name to corresponding lengths.</p>
-<p>This keeps track of the rightmost position of variants in the set
-if reference was not provided. If reference was given <code class="docutils literal notranslate"><span class="pre">ctg_len</span></code>
-is taken from length of chromosomes in reference.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>dict</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="genomvar.varset.MutableVariantSet.copy">
-<code class="sig-name descname">copy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.MutableVariantSet.copy" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a copy of variant set</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="genomvar.varset.MutableVariantSet.from_vcf">
-<em class="property">classmethod </em><code class="sig-name descname">from_vcf</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vcf</span></em>, <em class="sig-param"><span class="n">reference</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">normindel</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">parse_info</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">sample</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">max_ploidy</span><span class="o">=</span><span class="default_value">2</span></em>, <em class="sig-param"><span class="n">parse_null</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.MutableVariantSet.from_vcf" title="Permalink to this definition">¶</a></dt>
-<dd><p>Parse VCF variant file and return VariantSet object</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>vcf</strong> (<em>str</em>) – VCF file to read data from.</p></li>
-<li><p><strong>parse_info</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code> INFO fields will be parsed.
-<em>Default: False</em>.</p></li>
-<li><p><strong>parse_samples</strong> (<em>bool</em><em>, </em><em>str</em><em> or </em><em>list of str</em><em>, </em><em>optional</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code> all sample data will be parsed.  If string, sample
-with this name will be parsed.  If list of string only these
-samples will be parsed. <em>Default: False</em></p></li>
-<li><p><strong>normindel</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code> indels will be normalized. <code class="docutils literal notranslate"><span class="pre">reference</span></code> should also
-be provided.  <em>Default: False</em></p></li>
-<li><p><strong>reference</strong> (<em>genomvar.Reference</em><em>, </em><em>optional</em>) – Reference genome. <em>Default: None</em></p></li>
-<li><p><strong>max_ploidy</strong> (<em>int</em><em>, </em><em>optional</em>) – Indicates how many variants can occupy a single locus
-(experimental). Default: 2</p></li>
-<li><p><strong>parse_null</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code> null variants will also be parsed (experimental).
-<em>Default: False</em></p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="#genomvar.varset.VariantSet" title="genomvar.varset.VariantSet">VariantSet</a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="genomvar.varset.MutableVariantSet.add_hap_variants">
-<code class="sig-name descname">add_hap_variants</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">variants</span></em>, <em class="sig-param"><span class="n">GT</span></em>, <em class="sig-param"><span class="n">attrib</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">allow_adjust_genotype</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.MutableVariantSet.add_hap_variants" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add variants as a single haplotype defined by genotype GT</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="genomvar.varset.MutableVariantSet.nof_unit_vrt">
-<code class="sig-name descname">nof_unit_vrt</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">collapse_homozigosity</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.MutableVariantSet.nof_unit_vrt" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns number of simple genomic variations in a variant set.</p>
-<p>SNPs and indels count as 1. MNPs as number of affected nucleotides.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>collapse_homozigosity</strong> (<em>bool</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code> same unit variants on different chromosomes
-are counted as 1. Otherwise counted separately. <em>Default: True</em></p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>int</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="genomvar.varset.MutableVariantSet.add_vrt">
-<code class="sig-name descname">add_vrt</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vrt</span></em>, <em class="sig-param"><span class="n">GT</span></em>, <em class="sig-param"><span class="n">allow_adjust_genotype</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">attrib</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.MutableVariantSet.add_vrt" title="Permalink to this definition">¶</a></dt>
-<dd><p>Insert a variant into variant set.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>vrt</strong> (<em>VariantBase-like</em>) – variant to insert</p></li>
-<li><p><strong>GT</strong> (<em>tuple</em>) – Genotype of the variant, e.g. (0,1)</p></li>
-<li><p><strong>allow_adjust_genotype</strong> (<em>bool</em>) – If the variant will overlap by genotype with variants already
-present in the set, setting to <code class="docutils literal notranslate"><span class="pre">True</span></code> will allow new
-variant to fit.</p></li>
-<li><p><strong>attrib</strong> (<em>dict</em><em>, </em><em>optional</em>) – Dictionary with attributes to attached to return</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="#genomvar.variant.GenomVariant" title="genomvar.variant.GenomVariant">variant.GenomVariant</a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="id0">
-<em class="property">property </em><code class="sig-name descname">chroms</code><a class="headerlink" href="#id0" title="Permalink to this definition">¶</a></dt>
-<dd><p>Chromosome set</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="genomvar.varset.MutableVariantSet.diff">
-<code class="sig-name descname">diff</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span></em>, <em class="sig-param"><span class="n">match_partial</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">match_ambig</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.MutableVariantSet.diff" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a new variant set object which has variants
-present in <code class="docutils literal notranslate"><span class="pre">self</span></code> but absent in the <code class="docutils literal notranslate"><span class="pre">other</span></code>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>match_partial</strong> (<em>bool</em>) – If <code class="docutils literal notranslate"><span class="pre">False</span></code> common positions won’t be searched in non-identical
-MNPs. <em>Default: True</em></p></li>
-<li><p><strong>match_ambig</strong> (<em>bool</em>) – If <code class="docutils literal notranslate"><span class="pre">False</span></code> ambigous indels will be treated as regular indels.
-<em>Default: False</em></p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>diff</strong> – Different variants.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="#genomvar.varset.MutableVariantSet" title="genomvar.varset.MutableVariantSet">MutableVariantSet</a></p>
-</dd>
-</dl>
-<p class="rubric">Notes</p>
-<p>Here is an example of <code class="docutils literal notranslate"><span class="pre">diff</span></code> operation on two variant sets s1 and s2.
-Positions identical to REF are empty:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">REF</span>         <span class="n">GATTGGTAC</span>
-<span class="o">---------------------</span>
-<span class="n">s1</span>          <span class="n">C</span>  <span class="n">CCC</span>  <span class="n">T</span>
-               <span class="n">CCC</span>  <span class="n">G</span>
-<span class="o">---------------------</span>
-<span class="n">s2</span>                  <span class="n">T</span>
-              <span class="n">AC</span>    <span class="n">T</span>
-<span class="o">=====================</span>
-<span class="n">s1</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">s2</span><span class="p">)</span> <span class="n">C</span>   <span class="n">CC</span>
-                <span class="n">CC</span>  <span class="n">G</span>
-<span class="o">---------------------</span>
-<span class="n">s2</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">s1</span><span class="p">)</span>   <span class="n">A</span>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s1">&#39;wt&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">vs</span><span class="o">.</span><span class="n">to_vcf</span><span class="p">(</span><span class="n">fh</span><span class="p">,</span> <span class="n">info_spec</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;DP4&#39;</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="s1">&#39;Integer&#39;</span><span class="p">),</span>
+<span class="gp">... </span>                             <span class="p">(</span><span class="s1">&#39;NSV&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;Integer&#39;</span><span class="p">)])</span>
 </pre></div>
 </div>
-</dd></dl>
-
-<dl class="py method">
-<dt id="genomvar.varset.MutableVariantSet.comm">
-<code class="sig-name descname">comm</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span></em>, <em class="sig-param"><span class="n">match_partial</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">match_ambig</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.MutableVariantSet.comm" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a new variant set object which has variants
-present both <code class="docutils literal notranslate"><span class="pre">self</span></code> and <code class="docutils literal notranslate"><span class="pre">other</span></code>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>match_partial</strong> (<em>bool</em>) – If <code class="docutils literal notranslate"><span class="pre">False</span></code> common positions won’t be searched in non-identical
-MNPs. <em>Default: True</em></p></li>
-<li><p><strong>match_ambig</strong> (<em>bool</em>) – If <code class="docutils literal notranslate"><span class="pre">False</span></code> ambigous indels will be treated as regular indels.
-<em>Default: False</em></p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>comm</strong> – Common variants</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="#genomvar.varset.MutableVariantSet" title="genomvar.varset.MutableVariantSet">MutableVariantSet</a></p>
-</dd>
-</dl>
-<p class="rubric">Notes</p>
-<p>Here is an example of <code class="docutils literal notranslate"><span class="pre">diff</span></code> operation on two variant sets s1 and s2.
-Positions identical to REF are empty:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">REF</span>         <span class="n">GATTGGTAC</span>
-<span class="o">---------------------</span>
-<span class="n">s1</span>          <span class="n">C</span>  <span class="n">CCC</span>  <span class="n">T</span>
-               <span class="n">CCC</span>  <span class="n">G</span>
-<span class="o">---------------------</span>
-<span class="n">s2</span>                  <span class="n">T</span>
-              <span class="n">AC</span>    <span class="n">T</span>
-<span class="o">=====================</span>
-<span class="n">s1</span><span class="o">.</span><span class="n">comm</span><span class="p">(</span><span class="n">s2</span><span class="p">)</span>    <span class="n">C</span>    <span class="n">T</span>
-               <span class="n">C</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="py method">
-<dt id="genomvar.varset.MutableVariantSet.comm_vrt">
-<code class="sig-name descname">comm_vrt</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span></em>, <em class="sig-param"><span class="n">match_partial</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">match_ambig</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.MutableVariantSet.comm_vrt" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generate variants common between <code class="docutils literal notranslate"><span class="pre">self</span></code> and <code class="docutils literal notranslate"><span class="pre">other</span></code>.</p>
-<p>This creates a lazily evaluated object of class <a class="reference internal" href="#genomvar.varset.CmpSet" title="genomvar.varset.CmpSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmpSet</span></code></a>. This
-object can be further inspected with <code class="docutils literal notranslate"><span class="pre">.iter_vrt()</span></code> or <code class="docutils literal notranslate"><span class="pre">.region()</span></code></p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>other</strong> (<em>variant set</em>) – Variant set to compare against <code class="docutils literal notranslate"><span class="pre">self</span></code></p></li>
-<li><p><strong>match_partial</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <code class="docutils literal notranslate"><span class="pre">False</span></code> common positions won’t be searched in non-identical
-MNPs. <em>Default: True</em></p></li>
-<li><p><strong>match_ambig</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <code class="docutils literal notranslate"><span class="pre">False</span></code> ambigous indels will be treated as regular indels.
-<em>Default: False</em></p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Transient comparison set</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="#genomvar.varset.CmpSet" title="genomvar.varset.CmpSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmpSet</span></code></a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="genomvar.varset.MutableVariantSet.diff_vrt">
-<code class="sig-name descname">diff_vrt</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span></em>, <em class="sig-param"><span class="n">match_partial</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">match_ambig</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.MutableVariantSet.diff_vrt" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generate variants different between <code class="docutils literal notranslate"><span class="pre">self</span></code> and <code class="docutils literal notranslate"><span class="pre">other</span></code>.</p>
-<p>This creates a lazily evaluated object of class <a class="reference internal" href="#genomvar.varset.CmpSet" title="genomvar.varset.CmpSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmpSet</span></code></a>. This
-object can be further inspected with <code class="docutils literal notranslate"><span class="pre">.iter_vrt()</span></code> or <code class="docutils literal notranslate"><span class="pre">.region()</span></code></p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>other</strong> (<em>variant set</em>) – Variant set to compare against <code class="docutils literal notranslate"><span class="pre">self</span></code></p></li>
-<li><p><strong>match_partial</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <code class="docutils literal notranslate"><span class="pre">False</span></code> common positions won’t be searched in non-identical
-MNPs. <em>Default: True</em></p></li>
-<li><p><strong>match_ambig</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <code class="docutils literal notranslate"><span class="pre">False</span></code> ambigous indels will be treated as regular indels.
-<em>Default: False</em></p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Transient comparison set</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="#genomvar.varset.CmpSet" title="genomvar.varset.CmpSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmpSet</span></code></a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="genomvar.varset.MutableVariantSet.find_vrt">
-<code class="sig-name descname">find_vrt</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">chrom</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">start</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">end</span><span class="o">=</span><span class="default_value">2147483647</span></em>, <em class="sig-param"><span class="n">rgn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">expand</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">check_order</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.MutableVariantSet.find_vrt" title="Permalink to this definition">¶</a></dt>
-<dd><p>Finds variants in specified region.</p>
-<p>If not <code class="docutils literal notranslate"><span class="pre">chrom</span></code> nor <code class="docutils literal notranslate"><span class="pre">rgn</span></code> parameters are given it
-traverses all variants.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>chrom</strong> (<em>str</em><em>, </em><em>optional</em>) – Chromosome to search variants on. If not given, all chroms
-are traversed and <code class="docutils literal notranslate"><span class="pre">start</span></code> and <code class="docutils literal notranslate"><span class="pre">end</span></code> parameters ignored.</p></li>
-<li><p><strong>start</strong> (<em>int</em><em>, </em><em>optional</em>) – Start of search region (0-based). <em>Default: 0</em></p></li>
-<li><p><strong>end</strong> (<em>int</em><em>, </em><em>optional</em>) – End of search region (position <code class="docutils literal notranslate"><span class="pre">end</span></code> is excluded). <em>Default:
-max chrom length</em></p></li>
-<li><p><strong>rgn</strong> (<em>str</em><em>, </em><em>optional</em>) – If given chrom, start and end parameters are
-ignored.  A string specifying search region, e.g.
-<code class="docutils literal notranslate"><span class="pre">chr15:365,008-365,958</span></code>.</p></li>
-<li><p><strong>expand</strong> (<em>bool</em><em>, </em><em>optional</em>) – Indicates whether to traverse haplotypes. <em>Default: False</em></p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>List of <a class="reference internal" href="#genomvar.variant.VariantBase" title="genomvar.variant.VariantBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">genomvar.variant.VariantBase</span></code></a> subclass objects</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="genomvar.varset.MutableVariantSet.get_factory">
-<code class="sig-name descname">get_factory</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">normindel</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.MutableVariantSet.get_factory" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a VariantFactory object. It will inherit the same reference
-as was used for instantiation of <code class="docutils literal notranslate"><span class="pre">self</span></code></p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="genomvar.varset.MutableVariantSet.iter_vrt">
-<code class="sig-name descname">iter_vrt</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">expand</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.MutableVariantSet.iter_vrt" title="Permalink to this definition">¶</a></dt>
-<dd><p>Iterate over all variants in the set.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>expand</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code> variants in encountered haplotypes are yielded.
-<em>Default: False</em></p>
-</dd>
-<dt class="field-even">Yields</dt>
-<dd class="field-even"><p><a class="reference internal" href="#genomvar.variant.GenomVariant" title="genomvar.variant.GenomVariant"><code class="xref py py-class docutils literal notranslate"><span class="pre">genomvar.variant.GenomVariant</span></code></a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="genomvar.varset.MutableVariantSet.iter_vrt_by_chrom">
-<code class="sig-name descname">iter_vrt_by_chrom</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwds</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.MutableVariantSet.iter_vrt_by_chrom" title="Permalink to this definition">¶</a></dt>
-<dd><p>Iterates variants grouped by chromosome.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="genomvar.varset.MutableVariantSet.match">
-<code class="sig-name descname">match</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vrt</span></em>, <em class="sig-param"><span class="n">match_partial</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">match_ambig</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.MutableVariantSet.match" title="Permalink to this definition">¶</a></dt>
-<dd><p>Find variants mathing vrt.</p>
-<p>The method checks whether variant <code class="docutils literal notranslate"><span class="pre">vrt</span></code>
-is present in the set.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>vrt</strong> (<em>VariantBase-like</em>) – Variant to search match for.</p></li>
-<li><p><strong>match_partial</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <code class="docutils literal notranslate"><span class="pre">False</span></code> common positions won’t be searched in non-identical
-MNPs (relevant if <code class="docutils literal notranslate"><span class="pre">vrt</span></code> is MNP or SNP or haplotype, containing
-these). <em>Default: True</em></p></li>
-<li><p><strong>match_ambig</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <code class="docutils literal notranslate"><span class="pre">False</span></code> ambigous indels will be treated as regular indels
-(relevant if <code class="docutils literal notranslate"><span class="pre">vrt</span></code> is Ambigindel or haplotype, containing ones).
-<em>Default: False</em></p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>dict is returned only of <code class="docutils literal notranslate"><span class="pre">vrt</span></code> is a Haplotype</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>list or dict with matching variants</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="genomvar.varset.MutableVariantSet.ovlp">
-<code class="sig-name descname">ovlp</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vrt0</span></em>, <em class="sig-param"><span class="n">match_ambig</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.MutableVariantSet.ovlp" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns variants altering the same positions as <code class="docutils literal notranslate"><span class="pre">vrt0</span></code>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>vrt0</strong> (<em>VariantBase-like</em>) – Variant to search overlap with.</p></li>
-<li><p><strong>match_ambig</strong> (<em>bool</em>) – If False ambigous indels treated as regular indels. <em>Default: False</em></p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>list of variants</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="genomvar.varset.MutableVariantSet.to_vcf">
-<code class="sig-name descname">to_vcf</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">out</span></em>, <em class="sig-param"><span class="n">reference</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">info_spec</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.MutableVariantSet.to_vcf" title="Permalink to this definition">¶</a></dt>
-<dd><p>Writes a minimal VCF with variants from the set.</p>
-<p>INFO and SAMPLE data from source data is not preserved.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>out</strong> (<em>handle</em><em> or </em><em>str</em>) – If string then it’s path to file, otherwise a handle
-to write variants.</p></li>
-<li><p><strong>reference</strong> (<em>Reference</em><em> or </em><em>str</em><em>, </em><em>optional</em>) – <p>If string then it’s path to reference FASTA. Otherwise
-object of <code class="xref py py-class docutils literal notranslate"><span class="pre">genomvar.Reference</span></code> is expected.</p>
-<p>This is not necessary if self was instantiated with a reference.
-If however given, this argument takes precedence.</p>
-</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>None</p>
-</dd>
-</dl>
 </dd></dl>
 
 </dd></dl>
@@ -1722,13 +1364,13 @@ in first set; 1 if in second; 2 if in both.</p>
 </dd></dl>
 
 <dl class="py class">
-<dt id="genomvar.varset.VariantFileSet">
-<em class="property">class </em><code class="sig-prename descclassname">genomvar.varset.</code><code class="sig-name descname">VariantFileSet</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file</span></em>, <em class="sig-param"><span class="n">reference</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">parse_info</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">parse_samples</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.VariantFileSet" title="Permalink to this definition">¶</a></dt>
+<dt id="genomvar.varset.VariantSetFromFile">
+<em class="property">class </em><code class="sig-prename descclassname">genomvar.varset.</code><code class="sig-name descname">VariantSetFromFile</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file</span></em>, <em class="sig-param"><span class="n">reference</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">index</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">parse_info</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">parse_samples</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.VariantSetFromFile" title="Permalink to this definition">¶</a></dt>
 <dd><p>Variant set representing variants contained in underlying VCF file specified
 on initialization.</p>
 <dl class="py attribute">
-<dt id="genomvar.varset.VariantFileSet.file">
-<code class="sig-name descname">file</code><a class="headerlink" href="#genomvar.varset.VariantFileSet.file" title="Permalink to this definition">¶</a></dt>
+<dt id="genomvar.varset.VariantSetFromFile.file">
+<code class="sig-name descname">file</code><a class="headerlink" href="#genomvar.varset.VariantSetFromFile.file" title="Permalink to this definition">¶</a></dt>
 <dd><p>Variant file storing variants.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -1738,36 +1380,21 @@ on initialization.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="genomvar.varset.VariantFileSet.get_factory">
-<code class="sig-name descname">get_factory</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.VariantFileSet.get_factory" title="Permalink to this definition">¶</a></dt>
+<dt id="genomvar.varset.VariantSetFromFile.get_factory">
+<code class="sig-name descname">get_factory</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.VariantSetFromFile.get_factory" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a VariantFactory object. It will inherit the same reference
 as was used for instantiation of <code class="docutils literal notranslate"><span class="pre">self</span></code></p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="genomvar.varset.VariantFileSet.iter_vrt_by_chrom">
-<code class="sig-name descname">iter_vrt_by_chrom</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">check_order</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.VariantFileSet.iter_vrt_by_chrom" title="Permalink to this definition">¶</a></dt>
+<dt id="genomvar.varset.VariantSetFromFile.iter_vrt_by_chrom">
+<code class="sig-name descname">iter_vrt_by_chrom</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">check_order</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.VariantSetFromFile.iter_vrt_by_chrom" title="Permalink to this definition">¶</a></dt>
 <dd><p>Iterates variants grouped by chromosome.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="genomvar.varset.VariantFileSet.iter_vrt">
-<code class="sig-name descname">iter_vrt</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">expand</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.VariantFileSet.iter_vrt" title="Permalink to this definition">¶</a></dt>
-<dd><p>Iterate over all variants in underlying VCF.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>expand</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code> variants in encountered haplotypes are yielded.
-<em>Default: False</em></p>
-</dd>
-<dt class="field-even">Yields</dt>
-<dd class="field-even"><p><strong>variant</strong> (<a class="reference internal" href="#genomvar.variant.GenomVariant" title="genomvar.variant.GenomVariant"><code class="xref py py-class docutils literal notranslate"><span class="pre">genomvar.variant.GenomVariant</span></code></a>)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="genomvar.varset.VariantFileSet.comm_vrt">
-<code class="sig-name descname">comm_vrt</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span></em>, <em class="sig-param"><span class="n">match_partial</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">match_ambig</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.VariantFileSet.comm_vrt" title="Permalink to this definition">¶</a></dt>
+<dt id="genomvar.varset.VariantSetFromFile.comm_vrt">
+<code class="sig-name descname">comm_vrt</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span></em>, <em class="sig-param"><span class="n">match_partial</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">match_ambig</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.VariantSetFromFile.comm_vrt" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate variants common between <code class="docutils literal notranslate"><span class="pre">self</span></code> and <code class="docutils literal notranslate"><span class="pre">other</span></code>.</p>
 <p>This creates a lazily evaluated object of class <a class="reference internal" href="#genomvar.varset.CmpSet" title="genomvar.varset.CmpSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmpSet</span></code></a>. This
 object can be further inspected with <code class="docutils literal notranslate"><span class="pre">.iter_vrt()</span></code> or <code class="docutils literal notranslate"><span class="pre">.region()</span></code></p>
@@ -1791,8 +1418,8 @@ MNPs. <em>Default: True</em></p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt id="genomvar.varset.VariantFileSet.diff_vrt">
-<code class="sig-name descname">diff_vrt</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span></em>, <em class="sig-param"><span class="n">match_partial</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">match_ambig</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.VariantFileSet.diff_vrt" title="Permalink to this definition">¶</a></dt>
+<dt id="genomvar.varset.VariantSetFromFile.diff_vrt">
+<code class="sig-name descname">diff_vrt</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span></em>, <em class="sig-param"><span class="n">match_partial</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">match_ambig</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.VariantSetFromFile.diff_vrt" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate variants different between <code class="docutils literal notranslate"><span class="pre">self</span></code> and <code class="docutils literal notranslate"><span class="pre">other</span></code>.</p>
 <p>This creates a lazily evaluated object of class <a class="reference internal" href="#genomvar.varset.CmpSet" title="genomvar.varset.CmpSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmpSet</span></code></a>. This
 object can be further inspected with <code class="docutils literal notranslate"><span class="pre">.iter_vrt()</span></code> or <code class="docutils literal notranslate"><span class="pre">.region()</span></code></p>
@@ -1816,8 +1443,8 @@ MNPs. <em>Default: True</em></p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt id="genomvar.varset.VariantFileSet.find_vrt">
-<code class="sig-name descname">find_vrt</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">chrom</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">start</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">end</span><span class="o">=</span><span class="default_value">2147483647</span></em>, <em class="sig-param"><span class="n">rgn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">expand</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">check_order</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.VariantFileSet.find_vrt" title="Permalink to this definition">¶</a></dt>
+<dt id="genomvar.varset.VariantSetFromFile.find_vrt">
+<code class="sig-name descname">find_vrt</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">chrom</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">start</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">end</span><span class="o">=</span><span class="default_value">2147483647</span></em>, <em class="sig-param"><span class="n">rgn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">expand</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">check_order</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.VariantSetFromFile.find_vrt" title="Permalink to this definition">¶</a></dt>
 <dd><p>Finds variants in specified region.</p>
 <p>If not <code class="docutils literal notranslate"><span class="pre">chrom</span></code> nor <code class="docutils literal notranslate"><span class="pre">rgn</span></code> parameters are given it
 traverses all variants.</p>
@@ -1845,175 +1472,8 @@ ignored.  A string specifying search region, e.g.
 </dd></dl>
 
 <dl class="py method">
-<dt id="genomvar.varset.VariantFileSet.match">
-<code class="sig-name descname">match</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vrt</span></em>, <em class="sig-param"><span class="n">match_partial</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">match_ambig</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.VariantFileSet.match" title="Permalink to this definition">¶</a></dt>
-<dd><p>Find variants mathing vrt.</p>
-<p>The method checks whether variant <code class="docutils literal notranslate"><span class="pre">vrt</span></code>
-is present in the set.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>vrt</strong> (<em>VariantBase-like</em>) – Variant to search match for.</p></li>
-<li><p><strong>match_partial</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <code class="docutils literal notranslate"><span class="pre">False</span></code> common positions won’t be searched in non-identical
-MNPs (relevant if <code class="docutils literal notranslate"><span class="pre">vrt</span></code> is MNP or SNP or haplotype, containing
-these). <em>Default: True</em></p></li>
-<li><p><strong>match_ambig</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <code class="docutils literal notranslate"><span class="pre">False</span></code> ambigous indels will be treated as regular indels
-(relevant if <code class="docutils literal notranslate"><span class="pre">vrt</span></code> is Ambigindel or haplotype, containing ones).
-<em>Default: False</em></p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>dict is returned only of <code class="docutils literal notranslate"><span class="pre">vrt</span></code> is a Haplotype</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>list or dict with matching variants</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="genomvar.varset.VariantFileSet.ovlp">
-<code class="sig-name descname">ovlp</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vrt0</span></em>, <em class="sig-param"><span class="n">match_ambig</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.VariantFileSet.ovlp" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns variants altering the same positions as <code class="docutils literal notranslate"><span class="pre">vrt0</span></code>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>vrt0</strong> (<em>VariantBase-like</em>) – Variant to search overlap with.</p></li>
-<li><p><strong>match_ambig</strong> (<em>bool</em>) – If False ambigous indels treated as regular indels. <em>Default: False</em></p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>list of variants</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="genomvar.varset.VariantFileSet.to_vcf">
-<code class="sig-name descname">to_vcf</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">out</span></em>, <em class="sig-param"><span class="n">reference</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">info_spec</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.VariantFileSet.to_vcf" title="Permalink to this definition">¶</a></dt>
-<dd><p>Writes a minimal VCF with variants from the set.</p>
-<p>INFO and SAMPLE data from source data is not preserved.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>out</strong> (<em>handle</em><em> or </em><em>str</em>) – If string then it’s path to file, otherwise a handle
-to write variants.</p></li>
-<li><p><strong>reference</strong> (<em>Reference</em><em> or </em><em>str</em><em>, </em><em>optional</em>) – <p>If string then it’s path to reference FASTA. Otherwise
-object of <code class="xref py py-class docutils literal notranslate"><span class="pre">genomvar.Reference</span></code> is expected.</p>
-<p>This is not necessary if self was instantiated with a reference.
-If however given, this argument takes precedence.</p>
-</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt id="genomvar.varset.IndexedVariantFileSet">
-<em class="property">class </em><code class="sig-prename descclassname">genomvar.varset.</code><code class="sig-name descname">IndexedVariantFileSet</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file</span></em>, <em class="sig-param"><span class="n">index</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">parse_info</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">parse_samples</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">reference</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.IndexedVariantFileSet" title="Permalink to this definition">¶</a></dt>
-<dd><p>Variant set representing variants contained in underlying VCF file specified
-on initialization. By default it searches for Tabix index and uses it
-for random access of variants.</p>
-<dl class="py method">
-<dt id="genomvar.varset.IndexedVariantFileSet.comm_vrt">
-<code class="sig-name descname">comm_vrt</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span></em>, <em class="sig-param"><span class="n">match_partial</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">match_ambig</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.IndexedVariantFileSet.comm_vrt" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generate variants common between <code class="docutils literal notranslate"><span class="pre">self</span></code> and <code class="docutils literal notranslate"><span class="pre">other</span></code>.</p>
-<p>This creates a lazily evaluated object of class <a class="reference internal" href="#genomvar.varset.CmpSet" title="genomvar.varset.CmpSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmpSet</span></code></a>. This
-object can be further inspected with <code class="docutils literal notranslate"><span class="pre">.iter_vrt()</span></code> or <code class="docutils literal notranslate"><span class="pre">.region()</span></code></p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>other</strong> (<em>variant set</em>) – Variant set to compare against <code class="docutils literal notranslate"><span class="pre">self</span></code></p></li>
-<li><p><strong>match_partial</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <code class="docutils literal notranslate"><span class="pre">False</span></code> common positions won’t be searched in non-identical
-MNPs. <em>Default: True</em></p></li>
-<li><p><strong>match_ambig</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <code class="docutils literal notranslate"><span class="pre">False</span></code> ambigous indels will be treated as regular indels.
-<em>Default: False</em></p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Transient comparison set</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="#genomvar.varset.CmpSet" title="genomvar.varset.CmpSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmpSet</span></code></a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="genomvar.varset.IndexedVariantFileSet.diff_vrt">
-<code class="sig-name descname">diff_vrt</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span></em>, <em class="sig-param"><span class="n">match_partial</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">match_ambig</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.IndexedVariantFileSet.diff_vrt" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generate variants different between <code class="docutils literal notranslate"><span class="pre">self</span></code> and <code class="docutils literal notranslate"><span class="pre">other</span></code>.</p>
-<p>This creates a lazily evaluated object of class <a class="reference internal" href="#genomvar.varset.CmpSet" title="genomvar.varset.CmpSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmpSet</span></code></a>. This
-object can be further inspected with <code class="docutils literal notranslate"><span class="pre">.iter_vrt()</span></code> or <code class="docutils literal notranslate"><span class="pre">.region()</span></code></p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>other</strong> (<em>variant set</em>) – Variant set to compare against <code class="docutils literal notranslate"><span class="pre">self</span></code></p></li>
-<li><p><strong>match_partial</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <code class="docutils literal notranslate"><span class="pre">False</span></code> common positions won’t be searched in non-identical
-MNPs. <em>Default: True</em></p></li>
-<li><p><strong>match_ambig</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <code class="docutils literal notranslate"><span class="pre">False</span></code> ambigous indels will be treated as regular indels.
-<em>Default: False</em></p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Transient comparison set</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="#genomvar.varset.CmpSet" title="genomvar.varset.CmpSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmpSet</span></code></a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="genomvar.varset.IndexedVariantFileSet.find_vrt">
-<code class="sig-name descname">find_vrt</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">chrom</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">start</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">end</span><span class="o">=</span><span class="default_value">2147483647</span></em>, <em class="sig-param"><span class="n">rgn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">expand</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">check_order</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.IndexedVariantFileSet.find_vrt" title="Permalink to this definition">¶</a></dt>
-<dd><p>Finds variants in specified region.</p>
-<p>If not <code class="docutils literal notranslate"><span class="pre">chrom</span></code> nor <code class="docutils literal notranslate"><span class="pre">rgn</span></code> parameters are given it
-traverses all variants.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>chrom</strong> (<em>str</em><em>, </em><em>optional</em>) – Chromosome to search variants on. If not given, all chroms
-are traversed and <code class="docutils literal notranslate"><span class="pre">start</span></code> and <code class="docutils literal notranslate"><span class="pre">end</span></code> parameters ignored.</p></li>
-<li><p><strong>start</strong> (<em>int</em><em>, </em><em>optional</em>) – Start of search region (0-based). <em>Default: 0</em></p></li>
-<li><p><strong>end</strong> (<em>int</em><em>, </em><em>optional</em>) – End of search region (position <code class="docutils literal notranslate"><span class="pre">end</span></code> is excluded). <em>Default:
-max chrom length</em></p></li>
-<li><p><strong>rgn</strong> (<em>str</em><em>, </em><em>optional</em>) – If given chrom, start and end parameters are
-ignored.  A string specifying search region, e.g.
-<code class="docutils literal notranslate"><span class="pre">chr15:365,008-365,958</span></code>.</p></li>
-<li><p><strong>expand</strong> (<em>bool</em><em>, </em><em>optional</em>) – Indicates whether to traverse haplotypes. <em>Default: False</em></p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>List of <a class="reference internal" href="#genomvar.variant.VariantBase" title="genomvar.variant.VariantBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">genomvar.variant.VariantBase</span></code></a> subclass objects</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="genomvar.varset.IndexedVariantFileSet.get_factory">
-<code class="sig-name descname">get_factory</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.IndexedVariantFileSet.get_factory" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a VariantFactory object. It will inherit the same reference
-as was used for instantiation of <code class="docutils literal notranslate"><span class="pre">self</span></code></p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="genomvar.varset.IndexedVariantFileSet.iter_vrt">
-<code class="sig-name descname">iter_vrt</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">expand</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.IndexedVariantFileSet.iter_vrt" title="Permalink to this definition">¶</a></dt>
+<dt id="genomvar.varset.VariantSetFromFile.iter_vrt">
+<code class="sig-name descname">iter_vrt</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">expand</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.VariantSetFromFile.iter_vrt" title="Permalink to this definition">¶</a></dt>
 <dd><p>Iterate over all variants in underlying VCF.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -2027,14 +1487,8 @@ as was used for instantiation of <code class="docutils literal notranslate"><spa
 </dd></dl>
 
 <dl class="py method">
-<dt id="genomvar.varset.IndexedVariantFileSet.iter_vrt_by_chrom">
-<code class="sig-name descname">iter_vrt_by_chrom</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">check_order</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.IndexedVariantFileSet.iter_vrt_by_chrom" title="Permalink to this definition">¶</a></dt>
-<dd><p>Iterates variants grouped by chromosome.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="genomvar.varset.IndexedVariantFileSet.match">
-<code class="sig-name descname">match</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vrt</span></em>, <em class="sig-param"><span class="n">match_partial</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">match_ambig</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.IndexedVariantFileSet.match" title="Permalink to this definition">¶</a></dt>
+<dt id="genomvar.varset.VariantSetFromFile.match">
+<code class="sig-name descname">match</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vrt</span></em>, <em class="sig-param"><span class="n">match_partial</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">match_ambig</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.VariantSetFromFile.match" title="Permalink to this definition">¶</a></dt>
 <dd><p>Find variants mathing vrt.</p>
 <p>The method checks whether variant <code class="docutils literal notranslate"><span class="pre">vrt</span></code>
 is present in the set.</p>
@@ -2060,8 +1514,8 @@ these). <em>Default: True</em></p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt id="genomvar.varset.IndexedVariantFileSet.ovlp">
-<code class="sig-name descname">ovlp</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vrt0</span></em>, <em class="sig-param"><span class="n">match_ambig</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.IndexedVariantFileSet.ovlp" title="Permalink to this definition">¶</a></dt>
+<dt id="genomvar.varset.VariantSetFromFile.ovlp">
+<code class="sig-name descname">ovlp</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vrt0</span></em>, <em class="sig-param"><span class="n">match_ambig</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.VariantSetFromFile.ovlp" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns variants altering the same positions as <code class="docutils literal notranslate"><span class="pre">vrt0</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -2080,8 +1534,8 @@ these). <em>Default: True</em></p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt id="genomvar.varset.IndexedVariantFileSet.to_vcf">
-<code class="sig-name descname">to_vcf</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">out</span></em>, <em class="sig-param"><span class="n">reference</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">info_spec</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.IndexedVariantFileSet.to_vcf" title="Permalink to this definition">¶</a></dt>
+<dt id="genomvar.varset.VariantSetFromFile.to_vcf">
+<code class="sig-name descname">to_vcf</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">out</span></em>, <em class="sig-param"><span class="n">reference</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">info_spec</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">format_spec</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">samples</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.varset.VariantSetFromFile.to_vcf" title="Permalink to this definition">¶</a></dt>
 <dd><p>Writes a minimal VCF with variants from the set.</p>
 <p>INFO and SAMPLE data from source data is not preserved.</p>
 <dl class="field-list simple">
@@ -2089,11 +1543,18 @@ these). <em>Default: True</em></p></li>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>out</strong> (<em>handle</em><em> or </em><em>str</em>) – If string then it’s path to file, otherwise a handle
 to write variants.</p></li>
-<li><p><strong>reference</strong> (<em>Reference</em><em> or </em><em>str</em><em>, </em><em>optional</em>) – <p>If string then it’s path to reference FASTA. Otherwise
-object of <code class="xref py py-class docutils literal notranslate"><span class="pre">genomvar.Reference</span></code> is expected.</p>
-<p>This is not necessary if self was instantiated with a reference.
-If however given, this argument takes precedence.</p>
-</p></li>
+<li><p><strong>reference</strong> (<em>Reference</em><em> or </em><em>str</em><em>, </em><em>optional</em>) – If string then it’s path to reference FASTA. Otherwise
+object of <code class="xref py py-class docutils literal notranslate"><span class="pre">genomvar.Reference</span></code> is expected. Not
+necessary if self was instantiated with a reference.
+If given, this argument takes precedence over the ref
+used at instantiation.</p></li>
+<li><p><strong>info_spec</strong> (<em>list of tuples containing specification of</em>) – an INFO field in Order per VCF spec, i.e. <cite>NAME</cite>,
+<cite>NUMBER</cite>,  <cite>TYPE</cite>,  <cite>DESCRIPTION</cite>,  <cite>SOURCE</cite>,  <cite>VERSION</cite>.
+Only the first three fiels (name, number and type)
+are required. If variant set was instantiated from VCF
+file spec obtained from it will be used. Providing
+empty sequence will omit INFO fields in output.</p></li>
+<li><p><strong>format_spec</strong> (<em>spec of FORMAT fields</em><em>, </em><em>similar to info_spec</em>) – </p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -2103,11 +1564,17 @@ If however given, this argument takes precedence.</p>
 <dd class="field-odd"><p>None</p>
 </dd>
 </dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s1">&#39;wt&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">vs</span><span class="o">.</span><span class="n">to_vcf</span><span class="p">(</span><span class="n">fh</span><span class="p">,</span> <span class="n">info_spec</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;DP4&#39;</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="s1">&#39;Integer&#39;</span><span class="p">),</span>
+<span class="gp">... </span>                             <span class="p">(</span><span class="s1">&#39;NSV&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;Integer&#39;</span><span class="p">)])</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py method">
-<dt id="genomvar.varset.IndexedVariantFileSet.chroms">
-<em class="property">property </em><code class="sig-name descname">chroms</code><a class="headerlink" href="#genomvar.varset.IndexedVariantFileSet.chroms" title="Permalink to this definition">¶</a></dt>
+<dt id="genomvar.varset.VariantSetFromFile.chroms">
+<em class="property">property </em><code class="sig-name descname">chroms</code><a class="headerlink" href="#genomvar.varset.VariantSetFromFile.chroms" title="Permalink to this definition">¶</a></dt>
 <dd><p>Chromosome set</p>
 </dd></dl>
 
@@ -2141,7 +1608,7 @@ parsed.</p>
 <p>.bcf format is supported, use <a class="reference internal" href="#genomvar.vcf.BCFReader" title="genomvar.vcf.BCFReader"><code class="xref py py-class docutils literal notranslate"><span class="pre">BCFReader</span></code></a>.</p>
 <dl class="py class">
 <dt id="genomvar.vcf.VCFWriter">
-<em class="property">class </em><code class="sig-prename descclassname">genomvar.vcf.</code><code class="sig-name descname">VCFWriter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">reference</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">info_spec</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.vcf.VCFWriter" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">genomvar.vcf.</code><code class="sig-name descname">VCFWriter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">reference</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">info_spec</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">format_spec</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">samples</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.vcf.VCFWriter" title="Permalink to this definition">¶</a></dt>
 <dd><p>Class for writing variant to VCF format.</p>
 <dl class="py method">
 <dt id="genomvar.vcf.VCFWriter.get_row">
@@ -2153,9 +1620,9 @@ might be needeed to costruct correct REF field.</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>vrt</strong> (<em>Variant instance</em>) – variant to get row for.</p></li>
-<li><p><strong>kwds</strong> (<em>VCF fields</em>) – <p>optional. If given, these and only these parameters are
+<li><p><strong>kwds</strong> (<em>VCF fields #FIXME remove kwds here</em>) – <p>optional. If given, these and only these parameters are
 used to populate corresponding VCF fields: <code class="docutils literal notranslate"><span class="pre">id</span></code>,
-<code class="docutils literal notranslate"><span class="pre">qual</span></code>, <code class="docutils literal notranslate"><span class="pre">filter</span></code>, <code class="docutils literal notranslate"><span class="pre">info</span></code>.
+<code class="docutils literal notranslate"><span class="pre">qual</span></code>, <code class="docutils literal notranslate"><span class="pre">filter</span></code>, <code class="docutils literal notranslate"><span class="pre">info</span></code>, <code class="docutils literal notranslate"><span class="pre">sampdata</span></code>.
 These parameters are taken as is and converted to string
 before returning a VCFRow.
 If the keyword is not given corresponding field will be
@@ -2375,53 +1842,53 @@ instantiated with reference. <em>Default: False</em></p></li>
 <div class="section" id="module-vcf-utils-py">
 <h2>Module vcf_utils.py<a class="headerlink" href="#module-vcf-utils-py" title="Permalink to this headline">¶</a></h2>
 <span class="target" id="module-genomvar.vcf_utils"></span><dl class="py class">
-<dt id="genomvar.vcf_utils.VCFInfoSpec">
-<em class="property">class </em><code class="sig-prename descclassname">genomvar.vcf_utils.</code><code class="sig-name descname">VCFInfoSpec</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">NAME</span></em>, <em class="sig-param"><span class="n">NUMBER</span></em>, <em class="sig-param"><span class="n">TYPE</span></em>, <em class="sig-param"><span class="n">DESCRIPTION</span></em>, <em class="sig-param"><span class="n">SOURCE</span></em>, <em class="sig-param"><span class="n">VERSION</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.vcf_utils.VCFInfoSpec" title="Permalink to this definition">¶</a></dt>
+<dt id="genomvar.vcf_utils.VCF_INFO_OR_FORMAT_SPEC">
+<em class="property">class </em><code class="sig-prename descclassname">genomvar.vcf_utils.</code><code class="sig-name descname">VCF_INFO_OR_FORMAT_SPEC</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">NAME</span></em>, <em class="sig-param"><span class="n">NUMBER</span></em>, <em class="sig-param"><span class="n">TYPE</span></em>, <em class="sig-param"><span class="n">DESCRIPTION</span></em>, <em class="sig-param"><span class="n">SOURCE</span></em>, <em class="sig-param"><span class="n">VERSION</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.vcf_utils.VCF_INFO_OR_FORMAT_SPEC" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="py attribute">
-<dt id="genomvar.vcf_utils.VCFInfoSpec.DESCRIPTION">
-<code class="sig-name descname">DESCRIPTION</code><a class="headerlink" href="#genomvar.vcf_utils.VCFInfoSpec.DESCRIPTION" title="Permalink to this definition">¶</a></dt>
+<dt id="genomvar.vcf_utils.VCF_INFO_OR_FORMAT_SPEC.DESCRIPTION">
+<code class="sig-name descname">DESCRIPTION</code><a class="headerlink" href="#genomvar.vcf_utils.VCF_INFO_OR_FORMAT_SPEC.DESCRIPTION" title="Permalink to this definition">¶</a></dt>
 <dd><p>Alias for field number 3</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="genomvar.vcf_utils.VCFInfoSpec.NAME">
-<code class="sig-name descname">NAME</code><a class="headerlink" href="#genomvar.vcf_utils.VCFInfoSpec.NAME" title="Permalink to this definition">¶</a></dt>
+<dt id="genomvar.vcf_utils.VCF_INFO_OR_FORMAT_SPEC.NAME">
+<code class="sig-name descname">NAME</code><a class="headerlink" href="#genomvar.vcf_utils.VCF_INFO_OR_FORMAT_SPEC.NAME" title="Permalink to this definition">¶</a></dt>
 <dd><p>Alias for field number 0</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="genomvar.vcf_utils.VCFInfoSpec.NUMBER">
-<code class="sig-name descname">NUMBER</code><a class="headerlink" href="#genomvar.vcf_utils.VCFInfoSpec.NUMBER" title="Permalink to this definition">¶</a></dt>
+<dt id="genomvar.vcf_utils.VCF_INFO_OR_FORMAT_SPEC.NUMBER">
+<code class="sig-name descname">NUMBER</code><a class="headerlink" href="#genomvar.vcf_utils.VCF_INFO_OR_FORMAT_SPEC.NUMBER" title="Permalink to this definition">¶</a></dt>
 <dd><p>Alias for field number 1</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="genomvar.vcf_utils.VCFInfoSpec.SOURCE">
-<code class="sig-name descname">SOURCE</code><a class="headerlink" href="#genomvar.vcf_utils.VCFInfoSpec.SOURCE" title="Permalink to this definition">¶</a></dt>
+<dt id="genomvar.vcf_utils.VCF_INFO_OR_FORMAT_SPEC.SOURCE">
+<code class="sig-name descname">SOURCE</code><a class="headerlink" href="#genomvar.vcf_utils.VCF_INFO_OR_FORMAT_SPEC.SOURCE" title="Permalink to this definition">¶</a></dt>
 <dd><p>Alias for field number 4</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="genomvar.vcf_utils.VCFInfoSpec.TYPE">
-<code class="sig-name descname">TYPE</code><a class="headerlink" href="#genomvar.vcf_utils.VCFInfoSpec.TYPE" title="Permalink to this definition">¶</a></dt>
+<dt id="genomvar.vcf_utils.VCF_INFO_OR_FORMAT_SPEC.TYPE">
+<code class="sig-name descname">TYPE</code><a class="headerlink" href="#genomvar.vcf_utils.VCF_INFO_OR_FORMAT_SPEC.TYPE" title="Permalink to this definition">¶</a></dt>
 <dd><p>Alias for field number 2</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="genomvar.vcf_utils.VCFInfoSpec.VERSION">
-<code class="sig-name descname">VERSION</code><a class="headerlink" href="#genomvar.vcf_utils.VCFInfoSpec.VERSION" title="Permalink to this definition">¶</a></dt>
+<dt id="genomvar.vcf_utils.VCF_INFO_OR_FORMAT_SPEC.VERSION">
+<code class="sig-name descname">VERSION</code><a class="headerlink" href="#genomvar.vcf_utils.VCF_INFO_OR_FORMAT_SPEC.VERSION" title="Permalink to this definition">¶</a></dt>
 <dd><p>Alias for field number 5</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="genomvar.vcf_utils.VCFInfoSpec.count">
-<code class="sig-name descname">count</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em>, <em class="sig-param"><span class="o">/</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.vcf_utils.VCFInfoSpec.count" title="Permalink to this definition">¶</a></dt>
+<dt id="genomvar.vcf_utils.VCF_INFO_OR_FORMAT_SPEC.count">
+<code class="sig-name descname">count</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em>, <em class="sig-param"><span class="o">/</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.vcf_utils.VCF_INFO_OR_FORMAT_SPEC.count" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return number of occurrences of value.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="genomvar.vcf_utils.VCFInfoSpec.index">
-<code class="sig-name descname">index</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em>, <em class="sig-param"><span class="n">start</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">stop</span><span class="o">=</span><span class="default_value">9223372036854775807</span></em>, <em class="sig-param"><span class="o">/</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.vcf_utils.VCFInfoSpec.index" title="Permalink to this definition">¶</a></dt>
+<dt id="genomvar.vcf_utils.VCF_INFO_OR_FORMAT_SPEC.index">
+<code class="sig-name descname">index</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em>, <em class="sig-param"><span class="n">start</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">stop</span><span class="o">=</span><span class="default_value">9223372036854775807</span></em>, <em class="sig-param"><span class="o">/</span></em><span class="sig-paren">)</span><a class="headerlink" href="#genomvar.vcf_utils.VCF_INFO_OR_FORMAT_SPEC.index" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return first index of value.</p>
 <p>Raises ValueError if the value is not present.</p>
 </dd></dl>

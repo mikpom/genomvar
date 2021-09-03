@@ -1,0 +1,103 @@
+__init__ samples ['SAMP1']
+!!specs {'info_spec': [('NSV', 1, 'Integer', 'Number of Simple Variants', None, None), ('AF', 'A', 'Float', 'Allele Frequency', None, None), ('DP4', 4, 'Integer', 'Test for multinumber field', None, None), ('ECNT', 1, 'Integer', 'Number of events in haplotype', None, None), ('pl', 1, 'Integer', 'Dummy description', None, None), ('mt', 1, 'String', 'Variant Type: SUBSTITUTE/INSERT/DELETE', None, None), ('RECN', 1, 'Integer', 'Variant ID: Integer numbering the variants', None, None), ('STR', 0, 'Flag', 'Flag; indicates if a short tandem repeat', None, None)], 'format_spec': [('GT', 1, 'String', 'Phased Genotype', None, None)]}
+!!samples arg in to vcf None
+specs {'info_spec': [('NSV', 1, 'Integer', 'Number of Simple Variants', None, None), ('AF', 'A', 'Float', 'Allele Frequency', None, None), ('DP4', 4, 'Integer', 'Test for multinumber field', None, None), ('ECNT', 1, 'Integer', 'Number of events in haplotype', None, None), ('pl', 1, 'Integer', 'Dummy description', None, None), ('mt', 1, 'String', 'Variant Type: SUBSTITUTE/INSERT/DELETE', None, None), ('RECN', 1, 'Integer', 'Variant ID: Integer numbering the variants', None, None), ('STR', 0, 'Flag', 'Flag; indicates if a short tandem repeat', None, None)], 'format_spec': [('GT', 1, 'String', 'Phased Genotype', None, None)]}
+spec ('NSV', 1, 'Integer', 'Number of Simple Variants', None, None)
+!! VCF_INFO_OR_FORMAT_SPEC(NAME='NSV', NUMBER=1, TYPE='Integer', DESCRIPTION='Number of Simple Variants', SOURCE=None, VERSION=None)
+spec ('AF', 'A', 'Float', 'Allele Frequency', None, None)
+!! VCF_INFO_OR_FORMAT_SPEC(NAME='AF', NUMBER='A', TYPE='Float', DESCRIPTION='Allele Frequency', SOURCE=None, VERSION=None)
+spec ('DP4', 4, 'Integer', 'Test for multinumber field', None, None)
+!! VCF_INFO_OR_FORMAT_SPEC(NAME='DP4', NUMBER=4, TYPE='Integer', DESCRIPTION='Test for multinumber field', SOURCE=None, VERSION=None)
+spec ('ECNT', 1, 'Integer', 'Number of events in haplotype', None, None)
+!! VCF_INFO_OR_FORMAT_SPEC(NAME='ECNT', NUMBER=1, TYPE='Integer', DESCRIPTION='Number of events in haplotype', SOURCE=None, VERSION=None)
+spec ('pl', 1, 'Integer', 'Dummy description', None, None)
+!! VCF_INFO_OR_FORMAT_SPEC(NAME='pl', NUMBER=1, TYPE='Integer', DESCRIPTION='Dummy description', SOURCE=None, VERSION=None)
+spec ('mt', 1, 'String', 'Variant Type: SUBSTITUTE/INSERT/DELETE', None, None)
+!! VCF_INFO_OR_FORMAT_SPEC(NAME='mt', NUMBER=1, TYPE='String', DESCRIPTION='Variant Type: SUBSTITUTE/INSERT/DELETE', SOURCE=None, VERSION=None)
+spec ('RECN', 1, 'Integer', 'Variant ID: Integer numbering the variants', None, None)
+!! VCF_INFO_OR_FORMAT_SPEC(NAME='RECN', NUMBER=1, TYPE='Integer', DESCRIPTION='Variant ID: Integer numbering the variants', SOURCE=None, VERSION=None)
+spec ('STR', 0, 'Flag', 'Flag; indicates if a short tandem repeat', None, None)
+!! VCF_INFO_OR_FORMAT_SPEC(NAME='STR', NUMBER=0, TYPE='Flag', DESCRIPTION='Flag; indicates if a short tandem repeat', SOURCE=None, VERSION=None)
+spec ('GT', 1, 'String', 'Phased Genotype', None, None)
+!! VCF_INFO_OR_FORMAT_SPEC(NAME='GT', NUMBER=1, TYPE='String', DESCRIPTION='Phased Genotype', SOURCE=None, VERSION=None)
+writer.samples ['SAMP1']
+self._info [(2, 0.5, [11, 22, 33, 44], 1,  3., 'SUBSTITUTE', 18, False)
+ (2, 0.5, [11, 22, 33, 44], 1,  3., 'SUBSTITUTE', 18, False)
+ (1, 1. , [11, 22, 33, 44], 1,  3., 'INSERT', 15, False)
+ (1, 1. , [11, 22, 33, 44], 1,  3., 'SUBSTITUTE', 17, False)
+ (1, 1. , [11, 22, 33, 44], 1, nan, 'SUBSTITUTE', 21, False)
+ (1, 1. , [11, 22, 33, 44], 1,  3., 'SUBSTITUTE',  1, False)
+ (1, 1. , [11, 22, 33, 44], 1,  3., 'SUBSTITUTE', 19, False)
+ (2, 1. , [11, 22, 33, 44], 3,  3., 'SUBSTITUTE',  2, False)
+ (1, 1. , [11, 22, 33, 44], 3,  3., 'SUBSTITUTE', 16, False)
+ (2, 1. , [11, 22, 33, 44], 3,  3., 'SUBSTITUTE',  3, False)
+ (1, 1. , [11, 22, 33, 44], 1,  3., 'INSERT',  4, False)
+ (1, 1. , [11, 22, 33, 44], 3,  3., 'INSERT',  7,  True)
+ (1, 1. , [11, 22, 33, 44], 3,  3., 'SUBSTITUTE',  8, False)
+ (1, 1. , [11, 22, 33, 44], 3,  3., 'SUBSTITUTE', 20, False)
+ (1, 1. , [11, 22, 33, 44], 1,  3., 'SUBSTITUTE', 11, False)
+ (1, 1. , [11, 22, 33, 44], 1,  3., 'SUBSTITUTE', 10, False)]
+writer.writers {'info': {'NSV': <function _make_field_writer_func.<locals>.<lambda> at 0x7f1c32054040>, 'AF': <function _make_field_writer_func.<locals>.<lambda> at 0x7f1c320541f0>, 'DP4': <function _make_field_writer_func.<locals>.<lambda> at 0x7f1c320543a0>, 'ECNT': <function _make_field_writer_func.<locals>.<lambda> at 0x7f1c32054550>, 'pl': <function _make_field_writer_func.<locals>.<lambda> at 0x7f1c32054700>, 'mt': <function _make_field_writer_func.<locals>.<lambda> at 0x7f1c320548b0>, 'RECN': <function _make_field_writer_func.<locals>.<lambda> at 0x7f1c32054af0>, 'STR': <function _make_field_writer_func.<locals>.<lambda> at 0x7f1c32054b80>}, 'format': {'GT': <function VCFWriter.__init__.<locals>.<lambda> at 0x7f1c32054c10>}}
+>>_format_sampdata(self, writer, idx) <genomvar.vcf.VCFWriter object at 0x7f1c32022490> [ 0  1  2  3  4  6  5  7  8  9 10 11 13 12 15 14]
+len(variants) 16
+sampdata None
+>row  chr24	23	1	AG	A	100.0	PASS	NSV=2;AF=0.5;DP4=11,22,33,44;ECNT=1;pl=3;mt=SUBSTITUTE;RECN=18;STR	.	.
+sampdata None
+>row  chr24	24	1	G	GG	100.0	PASS	NSV=2;AF=0.5;DP4=11,22,33,44;ECNT=1;pl=3;mt=SUBSTITUTE;RECN=18;STR	.	.
+sampdata None
+>row  chr24	155	2	T	TT	100.0	haplotype	NSV=1;AF=1.0;DP4=11,22,33,44;ECNT=1;pl=3;mt=INSERT;RECN=15;STR	.	.
+sampdata None
+>row  chr24	166	.	T	TG	100.0	haplotype;n_ratio	NSV=1;AF=1.0;DP4=11,22,33,44;ECNT=1;pl=3;mt=SUBSTITUTE;RECN=17;STR	.	.
+sampdata None
+>row  chr24	453	.	C	CT	100.0	PASS	NSV=1;AF=1.0;DP4=11,22,33,44;ECNT=1;pl=.;mt=SUBSTITUTE;RECN=21;STR	.	.
+sampdata None
+>row  chr24	1207	.	G	T	100.0	PASS	NSV=1;AF=1.0;DP4=11,22,33,44;ECNT=1;pl=3;mt=SUBSTITUTE;RECN=19;STR	.	.
+sampdata None
+>row  chr24	1207	5	G	C	100.0	PASS	NSV=1;AF=1.0;DP4=11,22,33,44;ECNT=1;pl=3;mt=SUBSTITUTE;RECN=1;STR	.	.
+sampdata None
+>row  chr24	2094	.	TG	CC	100.0	PASS	NSV=2;AF=1.0;DP4=11,22,33,44;ECNT=3;pl=3;mt=SUBSTITUTE;RECN=2;STR	.	.
+sampdata None
+>row  chr24	2096	.	G	C	100.0	PASS	NSV=1;AF=1.0;DP4=11,22,33,44;ECNT=3;pl=3;mt=SUBSTITUTE;RECN=16;STR	.	.
+sampdata None
+>row  chr24	2099	.	TT	GG	100.0	n_ratio	NSV=2;AF=1.0;DP4=11,22,33,44;ECNT=3;pl=3;mt=SUBSTITUTE;RECN=3;STR	.	.
+sampdata None
+>row  chr24	3201	.	G	GG	100.0	n_ratio	NSV=1;AF=1.0;DP4=11,22,33,44;ECNT=1;pl=3;mt=INSERT;RECN=4;STR	.	.
+sampdata None
+>row  chr24	4755	.	T	TCG	100.0	PASS	NSV=1;AF=1.0;DP4=11,22,33,44;ECNT=3;pl=3;mt=INSERT;RECN=7;STR	.	.
+sampdata None
+>row  chr24	6146	.	T	G	100.0	PASS	NSV=1;AF=1.0;DP4=11,22,33,44;ECNT=3;pl=3;mt=SUBSTITUTE;RECN=20;STR	.	.
+sampdata None
+>row  chr24	6146	.	T	C	100.0	PASS	NSV=1;AF=1.0;DP4=11,22,33,44;ECNT=3;pl=3;mt=SUBSTITUTE;RECN=8;STR	.	.
+sampdata None
+>row  chr24	10045	.	C	T	100.0	PASS	NSV=1;AF=1.0;DP4=11,22,33,44;ECNT=1;pl=3;mt=SUBSTITUTE;RECN=10;STR	.	.
+sampdata None
+>row  chr24	10045	.	C	G	100.0	PASS	NSV=1;AF=1.0;DP4=11,22,33,44;ECNT=1;pl=3;mt=SUBSTITUTE;RECN=11;STR	.	.
+##fileformat=VCFv4.2
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##INFO=<ID=NSV,Number=1,Type=Integer,Description="Number of Simple Variants">
+##INFO=<ID=AF,Number=A,Type=Float,Description="Allele Frequency">
+##INFO=<ID=DP4,Number=4,Type=Integer,Description="Test for multinumber field">
+##INFO=<ID=ECNT,Number=1,Type=Integer,Description="Number of events in haplotype">
+##INFO=<ID=pl,Number=1,Type=Integer,Description="Dummy description">
+##INFO=<ID=mt,Number=1,Type=String,Description="Variant Type: SUBSTITUTE/INSERT/DELETE">
+##INFO=<ID=RECN,Number=1,Type=Integer,Description="Variant ID: Integer numbering the variants">
+##INFO=<ID=STR,Number=0,Type=Flag,Description="Flag; indicates if a short tandem repeat">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Phased Genotype">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	SAMP1
+chr24	23	1	AG	A	100.0	PASS	NSV=2;AF=0.5;DP4=11,22,33,44;ECNT=1;pl=3;mt=SUBSTITUTE;RECN=18;STR	.	.
+chr24	24	1	G	GG	100.0	PASS	NSV=2;AF=0.5;DP4=11,22,33,44;ECNT=1;pl=3;mt=SUBSTITUTE;RECN=18;STR	.	.
+chr24	155	2	T	TT	100.0	haplotype	NSV=1;AF=1.0;DP4=11,22,33,44;ECNT=1;pl=3;mt=INSERT;RECN=15;STR	.	.
+chr24	166	.	T	TG	100.0	haplotype;n_ratio	NSV=1;AF=1.0;DP4=11,22,33,44;ECNT=1;pl=3;mt=SUBSTITUTE;RECN=17;STR	.	.
+chr24	453	.	C	CT	100.0	PASS	NSV=1;AF=1.0;DP4=11,22,33,44;ECNT=1;pl=.;mt=SUBSTITUTE;RECN=21;STR	.	.
+chr24	1207	.	G	T	100.0	PASS	NSV=1;AF=1.0;DP4=11,22,33,44;ECNT=1;pl=3;mt=SUBSTITUTE;RECN=19;STR	.	.
+chr24	1207	5	G	C	100.0	PASS	NSV=1;AF=1.0;DP4=11,22,33,44;ECNT=1;pl=3;mt=SUBSTITUTE;RECN=1;STR	.	.
+chr24	2094	.	TG	CC	100.0	PASS	NSV=2;AF=1.0;DP4=11,22,33,44;ECNT=3;pl=3;mt=SUBSTITUTE;RECN=2;STR	.	.
+chr24	2096	.	G	C	100.0	PASS	NSV=1;AF=1.0;DP4=11,22,33,44;ECNT=3;pl=3;mt=SUBSTITUTE;RECN=16;STR	.	.
+chr24	2099	.	TT	GG	100.0	n_ratio	NSV=2;AF=1.0;DP4=11,22,33,44;ECNT=3;pl=3;mt=SUBSTITUTE;RECN=3;STR	.	.
+chr24	3201	.	G	GG	100.0	n_ratio	NSV=1;AF=1.0;DP4=11,22,33,44;ECNT=1;pl=3;mt=INSERT;RECN=4;STR	.	.
+chr24	4755	.	T	TCG	100.0	PASS	NSV=1;AF=1.0;DP4=11,22,33,44;ECNT=3;pl=3;mt=INSERT;RECN=7;STR	.	.
+chr24	6146	.	T	G	100.0	PASS	NSV=1;AF=1.0;DP4=11,22,33,44;ECNT=3;pl=3;mt=SUBSTITUTE;RECN=20;STR	.	.
+chr24	6146	.	T	C	100.0	PASS	NSV=1;AF=1.0;DP4=11,22,33,44;ECNT=3;pl=3;mt=SUBSTITUTE;RECN=8;STR	.	.
+chr24	10045	.	C	T	100.0	PASS	NSV=1;AF=1.0;DP4=11,22,33,44;ECNT=1;pl=3;mt=SUBSTITUTE;RECN=10;STR	.	.
+chr24	10045	.	C	G	100.0	PASS	NSV=1;AF=1.0;DP4=11,22,33,44;ECNT=1;pl=3;mt=SUBSTITUTE;RECN=11;STR	.	.
+
