@@ -9,7 +9,7 @@ def readme():
         return desc
 
 setup(name='genomvar',
-      version='0.3.dev1',
+      version='0.3.dev2',
       description='Sequence variant analysis in Python',
       long_description=readme(),
       classifiers=[

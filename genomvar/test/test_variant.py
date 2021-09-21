@@ -143,7 +143,6 @@ class TestVariantsCase(MyTestCase):
             str(row),'chr24\t2094\tvrtid\tTGG\tCCC\t100\tLOWQUAL\t.')
         
         vrt = factory.from_edit('chr20', 1253922,'TGT','G')
-        # test vcf notations TODO
         
         row = self.writer.get_row(vrt)
         self.assertEqual(str(row), 'chr20\t1253923\t.\tTGT\tG\t.\t.\t.')

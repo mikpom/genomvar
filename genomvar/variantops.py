@@ -101,10 +101,8 @@ def _mnp_isect(mnp0,mnps):
     for mnp in mnps:
         _start = max(mnp0.start,mnp.start)
         _end = min(mnp0.end,mnp.end)
-        #print('_start','_end',_start,_end)
         isect[_start-mnp0.start:_end-mnp0.start] = \
             mnp.alt[_start-mnp.start:_end-mnp.start]
-    #print('isect',isect)
 
     rt = ['-']*len(mnp0.alt)
     for i in range(len(isect)):
@@ -133,12 +131,9 @@ def _cmp_mnps(vrt,variants,action):
                                          _mnp_isect(vrt,cmbtn))))
     for grp in novlp_grp(variants):
         ovlp = _mnp_isect(vrt,grp)
-        #print('ovlp',ovlp)
         for ind,nucl in enumerate(ovlp):
             if nucl!='-':
                 alt[ind] = nucl
-
-    #print('alt',alt)
 
     # Find contigous blocks depending on action
     blocks = []
@@ -229,7 +224,7 @@ def matchv2(v1,v2,match_partial=True,match_ambig=False):
             m.append( (vrt,1) )
     return m
 
-def matchv(target,locus,match_partial=True,match_ambig=False):
+def matchv(target, locus, match_partial=True, match_ambig=False):
     """If target is a haplotype returns a dictionary with the variant keys 
     from target as keys and list of corresponding matches from locus as values.
     If not a haplotype just a corresponding list.

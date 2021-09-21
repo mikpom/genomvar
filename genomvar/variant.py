@@ -110,7 +110,7 @@ class VariantBase(object):
     #     return object.__getattribute__(self,name)
 
     @classmethod
-    def is_subclass(cls,other):
+    def is_variant_subclass(cls,other):
         """
         Checks is variant class is subclass of ``other``.  See module
         :mod:`genomvar.variant` documentaion for class hierarchy.

@@ -402,7 +402,28 @@ class VCFWriter(object):
     
 class VCFReader(object):
     """Class to read VCF files."""
-    def __init__(self, vcf, index=False, reference=None):
+
+    def __init__(self, vcf, index=None, reference=None):
+        """
+        VCFReader is instantiated from VCF file. Optionally,
+        index and reference arguments can be given.
+
+        Parameters
+        ----------
+        index : str or bool
+            By default tries ``vcf``.tbi as index file. 
+            if index=True and index not found NoIndexFoundError
+            is raised.
+            A string with path to index can be given. *Default: None*
+
+        reference : Reference or str
+            Genome reference. *Default: None*
+
+        Returns
+        -------
+        reader : VCFReader
+            VCFReader object.
+        """
         if isinstance(vcf,str):
             self.fl = vcf
             if self.fl.endswith('.gz') or self.fl.endswith('.bgz'):
@@ -499,7 +520,7 @@ class VCFReader(object):
                 ind[sample] = self._samples.index(sample)
         return ind
 
-    def find_rows(self,chrom=None,start=None,end=None,
+    def find_rows(self, chrom=None, start=None, end=None,
                   rgn=None):
         """Yields rows of variant file"""
         cnt = 0
@@ -636,7 +657,7 @@ class VCFReader(object):
                             'Structural variants are not yet supported, '\
                             +'skipping row '+str(row.rnum))
                         continue
-                    if base[-1].is_subclass(variant.AmbigIndel):
+                    if base[-1].is_variant_subclass(variant.AmbigIndel):
                         chrom,(start,start2),(end,end2),ref,alt,cls = base
                         tups['vrt'].append( (chrom,start,end,ref,alt,\
                                              cls,start2,end2) )
@@ -873,16 +894,15 @@ class VCFReader(object):
                 
                 cnt += 1
 
-    def find_vrt(self,chrom=None,start=0,end=MAX_END,
-                 check_order=False,parse_info=False,normindel=False,
+    def find_vrt(self, chrom=None, start=0, end=MAX_END,
+                 check_order=False, parse_info=False, normindel=False,
                  parse_samples=False):
         """Yields variant objects from a specified region"""
         factory = self.get_factory(normindel=normindel)
         # -1 for the case of insertions which are leftier in VCF notation
         # than they are in `genomvar` notation
-        _rows = self.find_rows(chrom=chrom,
-                               start=start-1 if start else None,
-                               end=end)
+        _rows = self.find_rows(
+            chrom=chrom, start=start-1 if start else None, end=end)
         if check_order:
             rows = _check_VCF_order(_rows)
         else:
@@ -892,7 +912,8 @@ class VCFReader(object):
         else:
             samps = self._normalize_samples(parse_samples)
 
-        _variants = self._variants_from_rows(rows,factory,parse_info,samps)
+        _variants = self._variants_from_rows(
+            rows, factory, parse_info, samps)
         for vrt in _ensure_sorted(_variants):
             if vrt.start>=end or vrt.end<=start:
                 continue
@@ -918,7 +939,7 @@ class VCFReader(object):
                     else:
                         raise exc
             else:
-                raise NoIndexFoundError
+                raise NoIndexFoundError('No idx file')
         return self.tabix
             
     def _query(self,chrom,start=None,end=None):
@@ -1379,18 +1400,17 @@ def _get_reader(file, index=False, reference=None):
                          index=index)
 
 def check_index(file, index):
-    if isinstance(index, bool):
-        if index:
-            idx = file+'.tbi'
-            if os.path.isfile(idx):
-                return idx
-            else:
-                raise NoIndexFoundError('no index for '+str(file))
+    if index is True or index is None:
+        idx = file+'.tbi'
+        if os.path.isfile(idx):
+            return idx
+        elif index is True:
+            raise NoIndexFoundError('no index found for '+str(file))
         else:
             return None
     elif isinstance(index, str):
         if os.path.isfile(index):
             return index
         else:
-            raise OSError('{} not found'.format(index))
+            raise ValueError('{} not found'.format(index))
     

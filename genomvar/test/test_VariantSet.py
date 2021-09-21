@@ -322,12 +322,19 @@ class TestVariantFileSetWithIndexCase(MyTestCase):
         match = vs1.match(vrt)
         self.assertEqual(len(match),1)
 
-    def test_error_on_format(self):
+    def test_index_errors(self):
+        file = pkg_file('genomvar.test','data/example1.vcf')
         with self.assertRaises(NoIndexFoundError):
             vset = VariantSetFromFile(
-                pkg_file('genomvar.test','data/example1.vcf'),
-                reference=self.chr24, index=True)
-            vset.find_vrt('chr1', 1, 100)
+                file, reference=self.chr24, index=True)
+
+        vset = VariantSetFromFile(
+            file, reference=self.chr24)
+
+        with self.assertRaises(ValueError) as cm:
+            list(vset.find_vrt('chr1', 1, 100))
+        error = cm.exception
+        self.assertIn('index is required', error.args[0].lower())
 
     def test_wrong_chrom_name_in_ref(self):
         ref = Reference(pkg_file(__name__,'data/chr25.fasta'))
@@ -343,8 +350,7 @@ class TestVariantFileSetWithIndexCase(MyTestCase):
             pkg_file('genomvar.test','data/example1.vcf.gz'),
             parse_info=True,
             reference=self.chr24,
-            parse_samples='SAMP1',
-            index=True)
+            parse_samples='SAMP1')
 
         # Test find_vrt and returned INFO
         vrt = list(vset.find_vrt('chr24',1200,1210))
@@ -545,7 +551,6 @@ class TestIO(MyTestCase):
                            key=lambda v: v.key)
         self.assertEqual(len(variants1),len(variants2))
         cnt = 0
-        # print('result', open(tf.name).read())
         for v1,v2 in zip(variants1,variants2):
             self.assertTrue(v1.edit_equal(v2))
             self.assertEqual(v1.attrib['info']['NSV'], v2.attrib['info']['NSV'])

@@ -110,9 +110,10 @@ class TestSetComparisonCase(MyTestCase):
         s2 = VariantSet.from_variants(
             [factory.from_edit('chr24',9945,'CTT','C')])
 
-        diff = s1.diff(s2)
-        mset = list(diff.iter_vrt())
-        self.assertEqual(len(mset),1) #TODO fix/reconsider
+        # diff1 = s1.diff(s2, match_partial=False).iter_vrt()
+        # self.assertEqual(len(list(diff1)), 0) #TODO fix/reconsider
+        diff2 = s1.diff(s2).iter_vrt()
+        self.assertEqual(len(list(diff2)), 1) #TODO fix/reconsider
 
     def test_consistency_of_diff_and_com(self):
         # REF    G     TTGG         CACAGTTC---CA-C
@@ -353,16 +354,6 @@ class TestSetComparisonCase(MyTestCase):
         v1,v2 = comm
         self.assertEqual(v1.attrib['info']['AF'],1.0)
         self.assertEqual(v1.attrib['samples']['SAMP1']['GT'],(0,1))
-
-    def test_ValueError_on_nonindexed(self):
-        vs1 = VariantSetFromFile(
-            pkg_file('genomvar.test','data/example_1000genomes_1.vcf.gz'),
-            parse_samples=True)
-        vs2 = VariantSetFromFile(
-            pkg_file('genomvar.test','data/example_1000genomes_2.vcf.gz'),
-            parse_samples=True)
-        with self.assertRaises(NoIndexFoundError) as cm:
-            list(vs1.comm_vrt(vs2).region(rgn='7:152134922-152436005'))
 
     def test_cmp_vrt_region_multisample2(self):
         vs1 = VariantSetFromFile(
