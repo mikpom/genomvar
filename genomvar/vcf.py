@@ -1293,7 +1293,6 @@ class RowIterator:
     def iterate(self):
         cnt = 0
         for line in dropwhile(lambda l: l.startswith('#'),self.fh):
-            # TODO maybe avoid stripping
             row = VCFRow(*line.strip().split('\t',maxsplit=9),
                          rnum=cnt)
             yield row

@@ -375,7 +375,6 @@ class _VariantSetBase(object):
             if specs[spec] is None:
                 # in this case check maybe VariantSet was
                 # instantiated with dtype
-                # TODO don't use hasaatr for checks
                 key = 'info' if spec=='info_spec' else 'format'
                 if not self.dtype is None and key in self.dtype:
                 # if key in self.dtype:
